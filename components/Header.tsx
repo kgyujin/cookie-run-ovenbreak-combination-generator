@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import { useAppStore } from '@/store/useAppStore';
 import SettingsModal from './SettingsModal';
@@ -12,6 +12,15 @@ export default function Header() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectingType, setSelectingType] = useState<'dish' | 'ingredient' | null>(null);
   const [selectingIndex, setSelectingIndex] = useState<number>(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // textarea 높이 자동 조절
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [seasonName, fontSettings.fontSize]);
 
   const openDishModal = () => {
     setSelectingType('dish');
@@ -48,29 +57,21 @@ export default function Header() {
 
         {/* Header Layout - 고정 높이로 제한 */}
         <div className="flex gap-1.5 h-full">
-          {/* Left: Season Name (60%) */}
+          {/* Left: Season Name (80%) */}
           <div className={clsx(
-            "w-[60%] h-full px-2 flex items-center",
-            glassStyle
+            "w-[80%] h-full px-2 flex items-center justify-center",
+            seasonName && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
           )}>
             <textarea
+              ref={textareaRef}
               value={seasonName}
               onChange={(e) => {
                 const newValue = e.target.value;
                 const lines = newValue.split('\n');
                 
-                // 엔터키로 인한 줄바꿈은 최대 2번(3줄)까지만 허용
+                // 줄바꿈은 최대 2번(총 3줄)까지만 허용
                 if (lines.length <= 3) {
-                  // textarea의 실제 높이를 확인하여 스크롤이 발생하는지 체크
-                  const textarea = e.target as HTMLTextAreaElement;
-                  const currentScrollHeight = textarea.scrollHeight;
-                  const currentClientHeight = textarea.clientHeight;
-                  
-                  // 스크롤이 발생하지 않으면 입력 허용
-                  if (currentScrollHeight <= currentClientHeight + 5) { // 5px 여유
-                    setSeasonName(newValue);
-                  }
-                  // 스크롤이 발생할 것 같으면 이전 값 유지 (입력 막음)
+                  setSeasonName(newValue);
                 }
               }}
               onKeyDown={(e) => {
@@ -80,24 +81,25 @@ export default function Header() {
                 }
               }}
               placeholder="시즌명"
-              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide overflow-hidden"
-              rows={3}
+              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide"
               style={{
                 fontSize: `${fontSettings.fontSize}px`,
                 fontFamily: fontSettings.fontFamily === 'CookieRun' ? 'CookieRun' : fontSettings.fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
                 textAlign: fontSettings.textAlign as any,
                 padding: '0',
                 lineHeight: '1.2',
+                maxHeight: `calc(${fontSettings.fontSize}px * 1.2 * 3)`,
+                overflow: 'hidden',
               }}
             />
           </div>
 
-          {/* Right: Season Dish + Ingredients (40%) */}
-          <div className="w-[40%] h-full flex flex-col gap-1">
+          {/* Right: Season Dish + Ingredients (20%) */}
+          <div className="w-[20%] h-full flex flex-col gap-1">
             {/* Season Dish */}
             <div className={clsx(
               "p-0.5 h-[55%]",
-              glassStyle
+              seasonDish && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
             )}>
               <div
                 onClick={openDishModal}
@@ -120,7 +122,7 @@ export default function Header() {
             {/* Ingredients (3 columns) */}
             <div className={clsx(
               "grid grid-cols-3 gap-0.5 p-0.5 h-[40%]",
-              glassStyle
+              seasonIngredients.some(ing => ing) && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
             )}>
               {[0, 1, 2].map((index) => (
                 <div key={index} className="flex flex-col items-center h-full">

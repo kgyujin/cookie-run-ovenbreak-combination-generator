@@ -53,7 +53,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainCookie1')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.cookie1 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 10, 
@@ -64,7 +64,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.cookie1 ? (
-          <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain" />
+          <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain object-bottom" />
         ) : (
           !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-lg font-bold">선달 쿠키</span>
         )}
@@ -75,7 +75,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainCookie2')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.cookie2 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 10, 
@@ -86,7 +86,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.cookie2 ? (
-          <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain" />
+          <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain object-bottom" />
         ) : (
           !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-base font-bold">이달 쿠키</span>
         )}
@@ -99,7 +99,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainPet')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.pet && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -121,7 +121,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainTreasure0')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.treasures[0] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -143,7 +143,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainTreasure1')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.treasures[1] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -165,7 +165,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('mainTreasure2')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.mainCombo.treasures[2] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -205,7 +205,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
-          glassStyle
+          arena.magicCandy.cookie1Candy && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -251,7 +251,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
-          glassStyle
+          arena.magicCandy.cookie2Candy && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -309,7 +309,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           onClick={() => handleImageClick('subPet')}
           className={clsx(
             'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-            glassStyle
+            arena.subCombo.pet && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
           )}
           style={{ 
             top: '2%',
@@ -350,12 +350,12 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             onClick={() => handleImageClick('subCookie1')}
             className={clsx(
               'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              glassStyle
+              arena.subCombo.cookie1 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
             )}
             style={{ width: '60%' }}
           >
             {arena.subCombo.cookie1 ? (
-              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain" />
+              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain object-bottom" />
             ) : (
               !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>선달<br/>쿠키</span>
             )}
@@ -366,12 +366,12 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             onClick={() => handleImageClick('subCookie2')}
             className={clsx(
               'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              glassStyle
+              arena.subCombo.cookie2 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
             )}
             style={{ width: '38%' }}
           >
             {arena.subCombo.cookie2 ? (
-              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain" />
+              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain object-bottom" />
             ) : (
               !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>이달<br/>쿠키</span>
             )}
@@ -384,7 +384,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('subTreasure0')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.subCombo.treasures[0] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -406,7 +406,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('subTreasure1')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.subCombo.treasures[1] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
@@ -428,7 +428,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('subTreasure2')}
         className={clsx(
           'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          arena.subCombo.treasures[2] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
         )}
         style={{ 
           zIndex: 20, 
