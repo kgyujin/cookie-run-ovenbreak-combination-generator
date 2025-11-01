@@ -1,0 +1,46 @@
+{
+  "cookies": [
+    { "id": "cookie001", "name": "선달 쿠키", "image": "/images/cookies/1_선달.png" },
+    { "id": "cookie002", "name": "이달 쿠키", "image": "/images/cookies/1_이달.png" },
+    { "id": "cookie003", "name": "대체조합 선달 쿠키", "image": "/images/cookies/1_대체조합 선달.png" },
+    { "id": "cookie004", "name": "대체조합 이달 쿠키", "image": "/images/cookies/1_대체조합 이달.png" }
+  ],
+  "pets": [
+    { "id": "pet001", "name": "펫", "image": "/images/pets/1_펫.png" },
+    { "id": "pet002", "name": "대체조합 펫", "image": "/images/pets/1_대체조합 펫.png" }
+  ],
+  "treasures": [
+    { "id": "treasure001", "name": "보물1", "image": "/images/treasures/1_보물1.png" },
+    { "id": "treasure002", "name": "보물2", "image": "/images/treasures/1_보물2.png" },
+    { "id": "treasure003", "name": "보물3", "image": "/images/treasures/1_보물3.png" },
+    { "id": "treasure004", "name": "대체조합 보물1", "image": "/images/treasures/1_대체조합 보물1.png" },
+    { "id": "treasure005", "name": "대체조합 보물2", "image": "/images/treasures/1_대체조합 보물2.png" },
+    { "id": "treasure006", "name": "대체조합 보물3", "image": "/images/treasures/1_대체조합 보물3.png" }
+  ],
+  "dishes": [
+    { "id": "dish001", "name": "시즌요리", "image": "/images/dishes/1_시즌요리.png" }
+  ],
+  "ingredients": [
+    { "id": "ingredient001", "name": "재료1", "image": "/images/ingredients/1_재료1.png" },
+    { "id": "ingredient002", "name": "재료2", "image": "/images/ingredients/1_재료2.png" },
+    { "id": "ingredient003", "name": "재료3", "image": "/images/ingredients/1_재료3.png" }
+  ],
+  "magicCandies": [
+    { "id": "candy001", "name": "마법사탕1", "image": "/images/magic_candies/1_마법사탕1.png" },
+    { "id": "candy002", "name": "마법사탕2", "image": "/images/magic_candies/1_마법사탕2.png" }
+  ],
+  "blessings": [
+    { 
+      "id": "bless001", 
+      "name": "무지개젤리", 
+      "image": "/images/blessings/무지개젤리.png", 
+      "description": "무지개 곰 젤리 점수 10,000점 증가" 
+    },
+    { 
+      "id": "bless002", 
+      "name": "장애물주의", 
+      "image": "/images/blessings/장애물주의인가.png", 
+      "description": "장애물 파괴 점수 5,000점 증가" 
+    }
+  ]
+}

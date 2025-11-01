@@ -1,0 +1,67 @@
+export interface GameData {
+  cookies: GameItem[];
+  pets: GameItem[];
+  treasures: GameItem[];
+  dishes: GameItem[];
+  ingredients: GameItem[];
+  magicCandies: GameItem[];
+  blessings: BlessingItem[];
+}
+
+export interface GameItem {
+  id: string;
+  name: string;
+  image: string;
+}
+
+export interface BlessingItem extends GameItem {
+  description: string;
+}
+
+export interface ComboData {
+  pet: string;
+  cookie1: string;
+  cookie2: string;
+  treasures: [string, string, string];
+}
+
+export interface MagicCandyData {
+  cookie1Candy: string;
+  cookie1Blessing: string;
+  cookie2Candy: string;
+  cookie2Blessing: string;
+}
+
+export interface ScoreData {
+  value: string;
+  unit: '-' | '점' | 'M' | 'K' | '억' | '만';
+}
+
+export interface ArenaData {
+  youtubeUrl: string | null;
+  mainCombo: ComboData;
+  magicCandy: MagicCandyData;
+  score: ScoreData;
+  dish: string;
+  subCombo: ComboData;
+  subScore: ScoreData;
+  isSubComboExpanded: boolean;
+}
+
+export type BackgroundType = 'color' | 'gradient' | 'image';
+
+export interface BackgroundData {
+  type: BackgroundType;
+  color?: string;
+  gradient?: [string, string];
+  imageUrl?: string;
+}
+
+export interface AppState {
+  background: BackgroundData;
+  seasonName: string;
+  seasonDish: string;
+  seasonIngredients: [string, string, string];
+  arenas: ArenaData[];
+  gameData: GameData | null;
+}
