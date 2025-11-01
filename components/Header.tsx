@@ -57,7 +57,7 @@ export default function Header() {
               type="text"
               value={seasonName}
               onChange={(e) => setSeasonName(e.target.value)}
-              placeholder="시즌명 입력"
+              placeholder="시즌명"
               className="w-full bg-transparent border-none text-white text-xl font-bold placeholder-white/50 focus:outline-none text-center"
             />
           </div>

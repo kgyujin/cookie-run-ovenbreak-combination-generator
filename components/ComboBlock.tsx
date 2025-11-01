@@ -46,7 +46,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
     >
       {/* ===== BASE LAYER (z-10) ===== */}
       
-      {/* A. 선달 쿠키 - Base Layer */}
+      {/* A. 선달 쿠키 - Base Layer (수정 5: 가로 축소 40% -> 35%) */}
       <div 
         onClick={() => handleImageClick('mainCookie1')}
         className={clsx(
@@ -55,7 +55,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 10, 
-          width: '40%', 
+          width: '35%', 
           height: '60%', 
           top: '20%', 
           left: '2%' 
@@ -68,7 +68,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
       </div>
 
-      {/* B. 이달 쿠키 - Base Layer */}
+      {/* B. 이달 쿠키 - Base Layer (수정 5: 가로 확대 20% -> 25%, left 조정) */}
       <div 
         onClick={() => handleImageClick('mainCookie2')}
         className={clsx(
@@ -77,10 +77,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 10, 
-          width: '20%', 
+          width: '25%', 
           height: '60%', 
           top: '20%', 
-          left: '44%' 
+          left: '39%' 
         }}
       >
         {arena.mainCombo.cookie2 ? (
@@ -135,7 +135,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
       </div>
 
-      {/* E. 보물 1/2/3 Container - Mid Layer */}
+      {/* E. 보물 1/2/3 Container - Mid Layer (수정: width 35%) */}
       <div 
         className={clsx(
           'absolute grid grid-cols-3 gap-2 p-2',
@@ -143,7 +143,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 20, 
-          width: '40%', 
+          width: '35%', 
           bottom: '5%', 
           left: '2%',
           overflow: 'visible'
@@ -167,36 +167,26 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         ))}
       </div>
 
-      {/* F. 최고점 - Mid Layer */}
-      <div 
+      {/* F. 최고점 - Mid Layer (부모 영역 제거, 입력란만) */}
+      <input
+        type="text"
+        value={arena.score.value}
+        onChange={(e) => setArenaScore(arenaIndex, 'value', e.target.value)}
+        placeholder={isExporting ? '' : '최고점'}
         className={clsx(
-          'absolute flex items-center gap-2 px-3 py-2',
+          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none',
           glassStyle
         )}
         style={{ 
           zIndex: 20, 
-          width: '15%', 
-          height: '8%', 
+          width: '12%', 
+          height: '6%', 
           top: '8%', 
           left: '66%' 
         }}
-      >
-        {!isExporting && <span className="text-white text-xs font-bold whitespace-nowrap">최고점:</span>}
-        <select
-          value={arena.score.unit}
-          onChange={(e) => setArenaScore(arenaIndex, 'unit', e.target.value)}
-          className="bg-white/20 text-white text-xs px-1 py-0.5 rounded focus:outline-none"
-        >
-          <option value="-">-</option>
-          <option value="점">점</option>
-          <option value="M">M</option>
-          <option value="K">K</option>
-          <option value="억">억</option>
-          <option value="만">만</option>
-        </select>
-      </div>
+      />
 
-      {/* G. 선달 마법사탕 + 축복 (겹침) - Mid Layer */}
+      {/* G. 선달 마법사탕 + 축복 (겹침) - Mid Layer (위치 조정) */}
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
@@ -207,7 +197,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           width: '8%', 
           height: '8%', 
           top: '8%', 
-          left: '44%',
+          left: '40%',
           position: 'absolute'
         }}
         onClick={() => handleImageClick('candy1')}
@@ -242,7 +232,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         </div>
       </div>
 
-      {/* H. 이달 마법사탕 + 축복 (겹침) - Mid Layer */}
+      {/* H. 이달 마법사탕 + 축복 (겹침) - Mid Layer (위치 조정) */}
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
@@ -253,7 +243,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           width: '8%', 
           height: '8%', 
           top: '8%', 
-          left: '54%',
+          left: '50%',
           position: 'absolute'
         }}
         onClick={() => handleImageClick('candy2')}
@@ -290,22 +280,28 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
 
       {/* I. 대체 조합 Contents - Mid Layer (대체 조합 Base 위에 겹침) */}
       <div 
-        className="absolute flex flex-col gap-2 p-3"
+        className="absolute"
         style={{ 
           zIndex: 20, 
           top: '22%', 
           right: '3%', 
-          width: '30%' 
+          width: '30%',
+          height: '56%'
         }}
       >
-        {/* 대체 펫 */}
+        {/* 대체 펫 - 좌상단 */}
         <div 
           onClick={() => handleImageClick('subPet')}
           className={clsx(
-            'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+            'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
             glassStyle
           )}
-          style={{ width: '100%', aspectRatio: '1' }}
+          style={{ 
+            top: '2%',
+            left: '2%',
+            width: '35%', 
+            height: '20%' 
+          }}
         >
           {arena.subCombo.pet ? (
             <Image src={arena.subCombo.pet} alt="대체 펫" fill className="object-contain" />
@@ -314,53 +310,55 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           )}
         </div>
 
-        {/* 대체 최고점 */}
-        <div 
+        {/* 대체 최고점 - 대체 펫 옆 */}
+        <input
+          type="text"
+          value={arena.subScore.value}
+          onChange={(e) => setArenaSubScore(arenaIndex, 'value', e.target.value)}
+          placeholder={isExporting ? '' : '대체 최고점'}
           className={clsx(
-            'flex items-center gap-2 px-2 py-1',
+            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none',
             glassStyle
           )}
-        >
-          {!isExporting && <span className="text-white text-[10px] font-bold">점수:</span>}
-          <input
-            type="text"
-            value={arena.subScore.value}
-            onChange={(e) => setArenaSubScore(arenaIndex, 'value', e.target.value)}
-            className="flex-1 bg-white/20 text-white text-xs px-1 py-0.5 rounded focus:outline-none"
-            placeholder={isExporting ? '' : '점수'}
-          />
-          <select
-            value={arena.subScore.unit}
-            onChange={(e) => setArenaSubScore(arenaIndex, 'unit', e.target.value)}
-            className="bg-white/20 text-white text-xs px-1 py-0.5 rounded focus:outline-none"
-          >
-            <option value="-">-</option>
-            <option value="점">점</option>
-            <option value="M">M</option>
-            <option value="K">K</option>
-            <option value="억">억</option>
-            <option value="만">만</option>
-          </select>
-        </div>
+          style={{ 
+            top: '2%',
+            right: '2%',
+            width: '60%', 
+            height: '20%' 
+          }}
+        />
 
-        {/* 대체 쿠키 1, 2 */}
-        <div className="grid grid-cols-2 gap-2">
-          {[0, 1].map((idx) => (
-            <div 
-              key={idx}
-              onClick={() => handleImageClick(`subCookie${idx+1}`)}
-              className={clsx(
-                'relative aspect-square cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-                glassStyle
-              )}
-            >
-              {arena.subCombo[`cookie${idx+1}` as 'cookie1' | 'cookie2'] ? (
-                <Image src={arena.subCombo[`cookie${idx+1}` as 'cookie1' | 'cookie2']} alt={`대체쿠키${idx+1}`} fill className="object-contain" />
-              ) : (
-                !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>쿠키{idx+1}</span>
-              )}
-            </div>
-          ))}
+        {/* 대체 쿠키 1, 2 - 나란히 배치 */}
+        <div className="absolute flex gap-2" style={{ top: '25%', left: '2%', right: '2%', height: '70%' }}>
+          {/* 대체 선달 쿠키 */}
+          <div 
+            onClick={() => handleImageClick('subCookie1')}
+            className={clsx(
+              'relative flex-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+              glassStyle
+            )}
+          >
+            {arena.subCombo.cookie1 ? (
+              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain" />
+            ) : (
+              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>선달<br/>쿠키</span>
+            )}
+          </div>
+          
+          {/* 대체 이달 쿠키 */}
+          <div 
+            onClick={() => handleImageClick('subCookie2')}
+            className={clsx(
+              'relative flex-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+              glassStyle
+            )}
+          >
+            {arena.subCombo.cookie2 ? (
+              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain" />
+            ) : (
+              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>이달<br/>쿠키</span>
+            )}
+          </div>
         </div>
       </div>
 
