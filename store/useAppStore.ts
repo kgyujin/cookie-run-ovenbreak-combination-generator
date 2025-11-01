@@ -56,6 +56,8 @@ interface AppStore extends AppState {
   setGameData: (data: any) => void;
   loadStateFromUrl: (state: Partial<AppState>) => void;
   reset: () => void;
+  setFontSettings: (settings: Partial<{ fontSize: number; fontFamily: 'Pretendard' | 'CookieRun' | 'Custom'; textAlign: 'left' | 'center' | 'right'; customFontUrl?: string; customFontName?: string }>) => void;
+  setDisplaySettings: (settings: Partial<{ scoreDisplayType: 'abbreviated' | 'comma' | 'korean' }>) => void;
 }
 
 const initialState: AppState = {
@@ -68,6 +70,14 @@ const initialState: AppState = {
   seasonIngredients: ['', '', ''],
   arenas: Array.from({ length: 12 }, () => createEmptyArena()),
   gameData: null,
+  fontSettings: {
+    fontSize: 24,
+    fontFamily: 'Pretendard',
+    textAlign: 'center',
+  },
+  displaySettings: {
+    scoreDisplayType: 'comma',
+  },
 };
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -204,4 +214,20 @@ export const useAppStore = create<AppStore>((set) => ({
     })),
 
   reset: () => set(initialState),
+
+  setFontSettings: (settings) =>
+    set((state) => ({
+      fontSettings: {
+        ...state.fontSettings,
+        ...settings,
+      },
+    })),
+
+  setDisplaySettings: (settings) =>
+    set((state) => ({
+      displaySettings: {
+        ...state.displaySettings,
+        ...settings,
+      },
+    })),
 }));

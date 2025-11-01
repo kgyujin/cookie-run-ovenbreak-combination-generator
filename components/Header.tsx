@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import { useAppStore } from '@/store/useAppStore';
-import BackgroundModal from './BackgroundModal';
+import SettingsModal from './SettingsModal';
 import ImageSelectModal from './ImageSelectModal';
 
 export default function Header() {
-  const { seasonName, setSeasonName, seasonDish, seasonIngredients, isExporting } = useAppStore();
-  const [showBgModal, setShowBgModal] = useState(false);
+  const { seasonName, setSeasonName, seasonDish, seasonIngredients, isExporting, fontSettings } = useAppStore();
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectingType, setSelectingType] = useState<'dish' | 'ingredient' | null>(null);
   const [selectingIndex, setSelectingIndex] = useState<number>(0);
@@ -31,49 +31,78 @@ export default function Header() {
 
   return (
     <>
-      <div className="relative mb-4">
+      <div className="relative mb-4" style={{ height: '400px' }}>
         {/* Settings Button - Floating */}
         {!isExporting && (
           <button
-            onClick={() => setShowBgModal(true)}
-            className="absolute -top-2 -left-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-2 text-white hover:bg-white/20 transition-colors z-30 shadow-lg"
-            title="배경 설정"
+            onClick={() => setShowSettingsModal(true)}
+            className="absolute -top-1 -left-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1.5 text-white hover:bg-white/20 transition-colors z-30 shadow-lg"
+            title="설정"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
         )}
 
-        {/* Header Layout */}
-        <div className="flex gap-3">
+        {/* Header Layout - 고정 높이로 제한 */}
+        <div className="flex gap-1.5 h-full">
           {/* Left: Season Name (60%) */}
           <div className={clsx(
-            "w-[60%] p-4 flex items-center justify-center",
+            "w-[60%] h-full px-2 flex items-center",
             glassStyle
           )}>
-            <input
-              type="text"
+            <textarea
               value={seasonName}
-              onChange={(e) => setSeasonName(e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                const lines = newValue.split('\n');
+                
+                // 엔터키로 인한 줄바꿈은 최대 2번(3줄)까지만 허용
+                if (lines.length <= 3) {
+                  // textarea의 실제 높이를 확인하여 스크롤이 발생하는지 체크
+                  const textarea = e.target as HTMLTextAreaElement;
+                  const currentScrollHeight = textarea.scrollHeight;
+                  const currentClientHeight = textarea.clientHeight;
+                  
+                  // 스크롤이 발생하지 않으면 입력 허용
+                  if (currentScrollHeight <= currentClientHeight + 5) { // 5px 여유
+                    setSeasonName(newValue);
+                  }
+                  // 스크롤이 발생할 것 같으면 이전 값 유지 (입력 막음)
+                }
+              }}
+              onKeyDown={(e) => {
+                const lines = seasonName.split('\n');
+                if (e.key === 'Enter' && lines.length >= 3) {
+                  e.preventDefault();
+                }
+              }}
               placeholder="시즌명"
-              className="w-full bg-transparent border-none text-white text-xl font-bold placeholder-white/50 focus:outline-none text-center"
+              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide overflow-hidden"
+              rows={3}
+              style={{
+                fontSize: `${fontSettings.fontSize}px`,
+                fontFamily: fontSettings.fontFamily === 'CookieRun' ? 'CookieRun' : fontSettings.fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
+                textAlign: fontSettings.textAlign as any,
+                padding: '0',
+                lineHeight: '1.2',
+              }}
             />
           </div>
 
           {/* Right: Season Dish + Ingredients (40%) */}
-          <div className="w-[40%] flex flex-col gap-2">
+          <div className="w-[40%] h-full flex flex-col gap-1">
             {/* Season Dish */}
             <div className={clsx(
-              "p-3",
+              "p-0.5 h-[55%]",
               glassStyle
             )}>
-              {!isExporting && <p className="text-white text-xs font-semibold mb-2 text-center">시즌 요리</p>}
               <div
                 onClick={openDishModal}
                 className={clsx(
-                  "w-full aspect-square rounded-lg cursor-pointer transition-all flex items-center justify-center overflow-hidden",
+                  "w-full h-full rounded-lg cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                   {
                     "bg-white/10 border border-white/20 hover:bg-white/20": !isExporting && !seasonDish,
                     "bg-transparent border-none": isExporting || seasonDish
@@ -83,23 +112,22 @@ export default function Header() {
                 {seasonDish ? (
                   <img src={seasonDish} alt="시즌 요리" className="w-full h-full object-contain" />
                 ) : (
-                  !isExporting && <span className="text-white/60 text-2xl">+</span>
+                  !isExporting && <span className="text-white/60 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
                 )}
               </div>
             </div>
 
             {/* Ingredients (3 columns) */}
             <div className={clsx(
-              "grid grid-cols-3 gap-2 p-2",
+              "grid grid-cols-3 gap-0.5 p-0.5 h-[40%]",
               glassStyle
             )}>
               {[0, 1, 2].map((index) => (
-                <div key={index} className="flex flex-col items-center">
-                  {!isExporting && <p className="text-white text-[10px] font-semibold mb-1">재료{index + 1}</p>}
+                <div key={index} className="flex flex-col items-center h-full">
                   <div
                     onClick={() => openIngredientModal(index)}
                     className={clsx(
-                      "w-full aspect-square rounded-md cursor-pointer transition-all flex items-center justify-center overflow-hidden",
+                      "w-full h-full rounded-md cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                       {
                         "bg-white/10 border border-white/20 hover:bg-white/20": !isExporting && !seasonIngredients[index],
                         "bg-transparent border-none": isExporting || seasonIngredients[index]
@@ -107,9 +135,9 @@ export default function Header() {
                     )}
                   >
                     {seasonIngredients[index] ? (
-                      <img src={seasonIngredients[index]} alt={`재료${index+1}`} className="w-full h-full object-contain" />
+                      <img src={seasonIngredients[index]} alt={`재료${index+1}`} className="max-w-full max-h-full object-contain" />
                     ) : (
-                      !isExporting && <span className="text-white/60 text-sm">+</span>
+                      !isExporting && <span className="text-white/60 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
                     )}
                   </div>
                 </div>
@@ -120,7 +148,7 @@ export default function Header() {
       </div>
 
       {/* Modals */}
-      {showBgModal && <BackgroundModal onClose={() => setShowBgModal(false)} />}
+      {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} />}
       {showImageModal && (
         <ImageSelectModal
           category={selectingType === 'dish' ? 'dishes' : 'ingredients'}

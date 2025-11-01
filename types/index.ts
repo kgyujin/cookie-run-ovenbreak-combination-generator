@@ -57,6 +57,20 @@ export interface BackgroundData {
   imageUrl?: string;
 }
 
+export type ScoreDisplayType = 'abbreviated' | 'comma' | 'korean';
+
+export interface FontSettings {
+  fontSize: number;
+  fontFamily: 'Pretendard' | 'CookieRun' | 'Custom';
+  textAlign: 'left' | 'center' | 'right';
+  customFontUrl?: string;
+  customFontName?: string;
+}
+
+export interface DisplaySettings {
+  scoreDisplayType: ScoreDisplayType;
+}
+
 export interface AppState {
   background: BackgroundData;
   seasonName: string;
@@ -64,4 +78,6 @@ export interface AppState {
   seasonIngredients: [string, string, string];
   arenas: ArenaData[];
   gameData: GameData | null;
+  fontSettings: FontSettings;
+  displaySettings: DisplaySettings;
 }

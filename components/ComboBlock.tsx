@@ -3,11 +3,13 @@
 import clsx from 'clsx';
 import { useAppStore } from '@/store/useAppStore';
 import Image from 'next/image';
+import { formatScore } from '@/utils/scoreFormatter';
 
 export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const arena = useAppStore((state) => state.arenas[arenaIndex]);
   const isExporting = useAppStore((state) => state.isExporting);
   const gameData = useAppStore((state) => state.gameData);
+  const displaySettings = useAppStore((state) => state.displaySettings);
   const setModalOpen = useAppStore((state) => state.setModalOpen);
   const setArenaMainCombo = useAppStore((state) => state.setArenaMainCombo);
   const setArenaMagicCandy = useAppStore((state) => state.setArenaMagicCandy);
@@ -42,11 +44,11 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   return (
     <div 
       className="relative w-full"
-      style={{ height: '700px' }}
+      style={{ height: '425px' }}
     >
       {/* ===== BASE LAYER (z-10) ===== */}
       
-      {/* A. 선달 쿠키 - Base Layer (수정 5: 가로 축소 40% -> 35%) */}
+      {/* A. 선달 쿠키 - Base Layer */}
       <div 
         onClick={() => handleImageClick('mainCookie1')}
         className={clsx(
@@ -55,9 +57,9 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 10, 
-          width: '35%', 
-          height: '60%', 
-          top: '20%', 
+          width: '32%', 
+          height: '44.3%', 
+          top: '22%', 
           left: '2%' 
         }}
       >
@@ -68,7 +70,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
       </div>
 
-      {/* B. 이달 쿠키 - Base Layer (수정 5: 가로 확대 20% -> 25%, left 조정) */}
+      {/* B. 이달 쿠키 - Base Layer */}
       <div 
         onClick={() => handleImageClick('mainCookie2')}
         className={clsx(
@@ -77,37 +79,16 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 10, 
-          width: '25%', 
-          height: '60%', 
-          top: '20%', 
-          left: '39%' 
+          width: '23%', 
+          height: '44.3%', 
+          top: '22%', 
+          left: '36%' 
         }}
       >
         {arena.mainCombo.cookie2 ? (
           <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain" />
         ) : (
           !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-base font-bold">이달 쿠키</span>
-        )}
-      </div>
-
-      {/* C. 대체 조합 Base - Base Layer */}
-      <div 
-        className={clsx(
-          'absolute',
-          glassStyle
-        )}
-        style={{ 
-          zIndex: 10, 
-          width: '32%', 
-          height: '60%', 
-          top: '20%', 
-          right: '2%' 
-        }}
-      >
-        {!isExporting && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-sm">
-            대체 조합
-          </div>
         )}
       </div>
 
@@ -135,58 +116,92 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
       </div>
 
-      {/* E. 보물 1/2/3 Container - Mid Layer (수정: width 35%) */}
+      {/* E. 보물 1 - Mid Layer */}
       <div 
+        onClick={() => handleImageClick('mainTreasure0')}
         className={clsx(
-          'absolute grid grid-cols-3 gap-2 p-2',
-          glassStyle
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '35%', 
-          bottom: '5%', 
-          left: '2%',
-          overflow: 'visible'
-        }}
-      >
-        {[0, 1, 2].map((idx) => (
-          <div 
-            key={idx}
-            onClick={() => handleImageClick(`mainTreasure${idx}`)}
-            className={clsx(
-              'relative aspect-square cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              glassStyle
-            )}
-          >
-            {arena.mainCombo.treasures[idx] ? (
-              <Image src={arena.mainCombo.treasures[idx]} alt={`보물${idx+1}`} fill className="object-contain" />
-            ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물{idx+1}</span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* F. 최고점 - Mid Layer (부모 영역 제거, 입력란만) */}
-      <input
-        type="text"
-        value={arena.score.value}
-        onChange={(e) => setArenaScore(arenaIndex, 'value', e.target.value)}
-        placeholder={isExporting ? '' : '최고점'}
-        className={clsx(
-          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none',
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
           glassStyle
         )}
         style={{ 
           zIndex: 20, 
           width: '12%', 
-          height: '6%', 
-          top: '8%', 
-          left: '66%' 
+          height: '50px',
+          bottom: '80px', 
+          left: '2%'
+        }}
+      >
+        {arena.mainCombo.treasures[0] ? (
+          <Image src={arena.mainCombo.treasures[0]} alt="보물1" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물1</span>
+        )}
+      </div>
+
+      {/* 보물 2 - Mid Layer */}
+      <div 
+        onClick={() => handleImageClick('mainTreasure1')}
+        className={clsx(
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+          glassStyle
+        )}
+        style={{ 
+          zIndex: 20, 
+          width: '12%', 
+          height: '50px',
+          bottom: '80px', 
+          left: '15%'
+        }}
+      >
+        {arena.mainCombo.treasures[1] ? (
+          <Image src={arena.mainCombo.treasures[1]} alt="보물2" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물2</span>
+        )}
+      </div>
+
+      {/* 보물 3 - Mid Layer */}
+      <div 
+        onClick={() => handleImageClick('mainTreasure2')}
+        className={clsx(
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+          glassStyle
+        )}
+        style={{ 
+          zIndex: 20, 
+          width: '12%', 
+          height: '50px',
+          bottom: '80px', 
+          left: '28%'
+        }}
+      >
+        {arena.mainCombo.treasures[2] ? (
+          <Image src={arena.mainCombo.treasures[2]} alt="보물3" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물3</span>
+        )}
+      </div>
+
+      {/* F. 최고점 - Mid Layer */}
+      <input
+        type="text"
+        value={isExporting && arena.score.value ? formatScore(arena.score.value, displaySettings.scoreDisplayType) : arena.score.value}
+        onChange={(e) => setArenaScore(arenaIndex, 'value', e.target.value)}
+        placeholder={isExporting ? '' : '최고점 (숫자만 입력)'}
+        className={clsx(
+          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70',
+          glassStyle
+        )}
+        style={{ 
+          zIndex: 20, 
+          width: '35%', 
+          height: '10%', 
+          top: '9%', 
+          right: '3%' 
         }}
       />
 
-      {/* G. 선달 마법사탕 + 축복 (겹침) - Mid Layer (위치 조정) */}
+      {/* G. 선달 마법사탕 + 축복 (겹침) - Mid Layer */}
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
@@ -194,10 +209,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 20, 
-          width: '8%', 
-          height: '8%', 
-          top: '8%', 
-          left: '40%',
+          width: '10%', 
+          height: '10%', 
+          top: '9%', 
+          left: '38%',
           position: 'absolute'
         }}
         onClick={() => handleImageClick('candy1')}
@@ -232,7 +247,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         </div>
       </div>
 
-      {/* H. 이달 마법사탕 + 축복 (겹침) - Mid Layer (위치 조정) */}
+      {/* H. 이달 마법사탕 + 축복 (겹침) - Mid Layer */}
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden',
@@ -240,10 +255,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         )}
         style={{ 
           zIndex: 20, 
-          width: '8%', 
-          height: '8%', 
-          top: '8%', 
-          left: '50%',
+          width: '10%', 
+          height: '10%', 
+          top: '9%', 
+          left: '49%',
           position: 'absolute'
         }}
         onClick={() => handleImageClick('candy2')}
@@ -278,14 +293,14 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         </div>
       </div>
 
-      {/* I. 대체 조합 Contents - Mid Layer (대체 조합 Base 위에 겹침) */}
+      {/* I. 대체 조합 Contents - Mid Layer (대체 조합 Base 위에 겹침, width 35%) */}
       <div 
         className="absolute"
         style={{ 
           zIndex: 20, 
           top: '22%', 
           right: '3%', 
-          width: '30%',
+          width: '35%',
           height: '56%'
         }}
       >
@@ -313,11 +328,11 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {/* 대체 최고점 - 대체 펫 옆 */}
         <input
           type="text"
-          value={arena.subScore.value}
+          value={isExporting && arena.subScore.value ? formatScore(arena.subScore.value, displaySettings.scoreDisplayType) : arena.subScore.value}
           onChange={(e) => setArenaSubScore(arenaIndex, 'value', e.target.value)}
-          placeholder={isExporting ? '' : '대체 최고점'}
+          placeholder={isExporting ? '' : '대체 최고점 (숫자만 입력)'}
           className={clsx(
-            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none',
+            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70',
             glassStyle
           )}
           style={{ 
@@ -328,15 +343,16 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           }}
         />
 
-        {/* 대체 쿠키 1, 2 - 나란히 배치 */}
-        <div className="absolute flex gap-2" style={{ top: '25%', left: '2%', right: '2%', height: '70%' }}>
-          {/* 대체 선달 쿠키 */}
+        {/* 대체 쿠키 1, 2 - 나란히 배치 (수정 4: 비율 60% / 40%) */}
+        <div className="absolute flex gap-2" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
+          {/* 대체 선달 쿠키 (60%) */}
           <div 
             onClick={() => handleImageClick('subCookie1')}
             className={clsx(
-              'relative flex-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+              'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
               glassStyle
             )}
+            style={{ width: '60%' }}
           >
             {arena.subCombo.cookie1 ? (
               <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain" />
@@ -345,13 +361,14 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             )}
           </div>
           
-          {/* 대체 이달 쿠키 */}
+          {/* 대체 이달 쿠키 (38%) */}
           <div 
             onClick={() => handleImageClick('subCookie2')}
             className={clsx(
-              'relative flex-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+              'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
               glassStyle
             )}
+            style={{ width: '38%' }}
           >
             {arena.subCombo.cookie2 ? (
               <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain" />
@@ -362,36 +379,70 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         </div>
       </div>
 
-      {/* J. 대체 보물 1/2/3 Container - Mid Layer */}
+      {/* J. 대체 보물 1 - Mid Layer */}
       <div 
+        onClick={() => handleImageClick('subTreasure0')}
         className={clsx(
-          'absolute grid grid-cols-3 gap-2 p-2',
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
           glassStyle
         )}
         style={{ 
           zIndex: 20, 
-          bottom: '5%', 
-          right: '2%', 
-          width: '32%',
-          overflow: 'visible'
+          width: '9%', 
+          height: '40px',
+          bottom: '80px', 
+          right: '24%'
         }}
       >
-        {[0, 1, 2].map((idx) => (
-          <div 
-            key={idx}
-            onClick={() => handleImageClick(`subTreasure${idx}`)}
-            className={clsx(
-              'relative aspect-square cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              glassStyle
-            )}
-          >
-            {arena.subCombo.treasures[idx] ? (
-              <Image src={arena.subCombo.treasures[idx]} alt={`대체보물${idx+1}`} fill className="object-contain" />
-            ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물{idx+1}</span>
-            )}
-          </div>
-        ))}
+        {arena.subCombo.treasures[0] ? (
+          <Image src={arena.subCombo.treasures[0]} alt="대체보물1" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물1</span>
+        )}
+      </div>
+
+      {/* 대체 보물 2 - Mid Layer */}
+      <div 
+        onClick={() => handleImageClick('subTreasure1')}
+        className={clsx(
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+          glassStyle
+        )}
+        style={{ 
+          zIndex: 20, 
+          width: '9%', 
+          height: '40px',
+          bottom: '80px', 
+          right: '13.5%'
+        }}
+      >
+        {arena.subCombo.treasures[1] ? (
+          <Image src={arena.subCombo.treasures[1]} alt="대체보물2" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물2</span>
+        )}
+      </div>
+
+      {/* 대체 보물 3 - Mid Layer */}
+      <div 
+        onClick={() => handleImageClick('subTreasure2')}
+        className={clsx(
+          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
+          glassStyle
+        )}
+        style={{ 
+          zIndex: 20, 
+          width: '9%', 
+          height: '40px',
+          bottom: '80px', 
+          right: '3%'
+        }}
+      >
+        {arena.subCombo.treasures[2] ? (
+          <Image src={arena.subCombo.treasures[2]} alt="대체보물3" fill className="object-contain" />
+        ) : (
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">보물3</span>
+        )}
       </div>
 
       {/* ===== TOP LAYER (z-30) ===== */}
