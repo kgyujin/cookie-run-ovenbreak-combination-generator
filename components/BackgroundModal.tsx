@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function BackgroundModal({ onClose }: { onClose: () => void }) {
@@ -10,6 +10,14 @@ export default function BackgroundModal({ onClose }: { onClose: () => void }) {
   const [gradient1, setGradient1] = useState(background.gradient?.[0] || '#667eea');
   const [gradient2, setGradient2] = useState(background.gradient?.[1] || '#764ba2');
   const [imageUrl, setImageUrl] = useState(background.imageUrl || '');
+
+  // 모달 오픈 시 body 스크롤 방지
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
 
   const randomGradient = () => {
     const colors = [
@@ -34,7 +42,7 @@ export default function BackgroundModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div className="glass rounded-2xl w-full max-w-md">
         {/* Header */}
         <div className="p-4 border-b border-white/30 flex items-center justify-between">

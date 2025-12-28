@@ -35,10 +35,10 @@ export default function Header() {
     setShowImageModal(true);
   };
 
-  // 글라스모피즘 스타일
-  const glassStyle = isExporting 
-    ? 'bg-transparent border-none backdrop-filter-none' 
-    : 'bg-white/10 backdrop-blur-md border border-white/20 rounded-lg';
+  // macOS 스타일
+  const macosStyle = isExporting 
+    ? 'bg-transparent border-none backdrop-filter-none shadow-none' 
+    : 'macos-card-elevated';
 
   return (
     <>
@@ -47,7 +47,7 @@ export default function Header() {
         {!isExporting && (
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="absolute -top-1 -left-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-1.5 text-white hover:bg-white/20 transition-colors z-30 shadow-lg"
+            className="absolute -top-1 -left-1 macos-button p-1.5 text-gray-700 hover:text-gray-900 z-30"
             title="설정"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ export default function Header() {
           {/* Left: Season Name (80%) */}
           <div className={clsx(
             "w-[80%] h-full px-2 flex items-center justify-center",
-            seasonName && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+            seasonName && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
           )}>
             <textarea
               ref={textareaRef}
@@ -84,16 +84,17 @@ export default function Header() {
               }}
               disabled={isExporting}
               placeholder="시즌명"
-              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide disabled:cursor-not-allowed"
+              className="w-full bg-transparent border-none text-gray-800 font-bold placeholder-gray-400 focus:outline-none resize-none scrollbar-hide disabled:cursor-not-allowed"
               style={{
                 fontSize: `${fontSettings.fontSize}px`,
-                fontFamily: fontSettings.fontFamily === 'CookieRun' ? 'CookieRun' : fontSettings.fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
+                fontFamily: fontSettings.fontFamily === 'CookieRun' ? 'CookieRun' : fontSettings.fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard',
                 textAlign: fontSettings.textAlign as any,
-                color: fontSettings.fontColor || '#ffffff',
+                color: fontSettings.fontColor || '#1f2937',
                 padding: '0',
                 lineHeight: '1.2',
                 maxHeight: `calc(${fontSettings.fontSize}px * 1.2 * 3)`,
                 overflow: 'hidden',
+                whiteSpace: 'pre-wrap',
               }}
             />
           </div>
@@ -103,22 +104,22 @@ export default function Header() {
             {/* Season Dish */}
             <div className={clsx(
               "p-0.5 h-[55%]",
-              seasonDish && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+              seasonDish && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
             )}>
               <div
                 onClick={openDishModal}
                 className={clsx(
                   "w-full h-full rounded-lg cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                   {
-                    "bg-white/10 border border-white/20 hover:bg-white/20": !isExporting && !seasonDish,
-                    "bg-transparent border-none": isExporting || seasonDish
+                    "bg-gray-100 hover:bg-gray-200": !isExporting && !seasonDish,
+                    "bg-transparent": isExporting || seasonDish
                   }
                 )}
               >
                 {seasonDish ? (
                   <img crossOrigin="anonymous" src={seasonDish} alt="시즌 요리" className="w-full h-full object-contain" />
                 ) : (
-                  !isExporting && <span className="text-white/60 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
+                  !isExporting && <span className="text-gray-500 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
                 )}
               </div>
             </div>
@@ -126,7 +127,7 @@ export default function Header() {
             {/* Ingredients (3 columns) */}
             <div className={clsx(
               "grid grid-cols-3 gap-0.5 p-0.5 h-[40%]",
-              seasonIngredients.some(ing => ing) && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+              seasonIngredients.some(ing => ing) && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
             )}>
               {[0, 1, 2].map((index) => (
                 <div key={index} className="flex flex-col items-center h-full">
@@ -135,15 +136,15 @@ export default function Header() {
                     className={clsx(
                       "w-full h-full rounded-md cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                       {
-                        "bg-white/10 border border-white/20 hover:bg-white/20": !isExporting && !seasonIngredients[index],
-                        "bg-transparent border-none": isExporting || seasonIngredients[index]
+                        "bg-gray-100 hover:bg-gray-200": !isExporting && !seasonIngredients[index],
+                        "bg-transparent": isExporting || seasonIngredients[index]
                       }
                     )}
                   >
                     {seasonIngredients[index] ? (
                       <img crossOrigin="anonymous" src={seasonIngredients[index]} alt={`재료${index+1}`} className="max-w-full max-h-full object-contain" />
                     ) : (
-                      !isExporting && <span className="text-white/60 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
+                      !isExporting && <span className="text-gray-500 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
                     )}
                   </div>
                 </div>

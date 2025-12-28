@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import clsx from 'clsx';
 import { useAppStore } from '@/store/useAppStore';
@@ -10,6 +10,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const isExporting = useAppStore((state) => state.isExporting);
   const gameData = useAppStore((state) => state.gameData);
   const displaySettings = useAppStore((state) => state.displaySettings);
+  const fontSettings = useAppStore((state) => state.fontSettings);
   const setModalOpen = useAppStore((state) => state.setModalOpen);
   const setArenaMainCombo = useAppStore((state) => state.setArenaMainCombo);
   const setArenaMagicCandy = useAppStore((state) => state.setArenaMagicCandy);
@@ -26,10 +27,18 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
     setModalOpen(true, arenaIndex, type);
   };
 
-  // 글라스모피즘 스타일 - isExporting에 따라 변경
-  const glassStyle = isExporting 
-    ? 'bg-transparent border-none backdrop-filter-none' 
-    : 'bg-white/10 backdrop-blur-md border border-white/20 rounded-lg';
+  // 통일된 그림자 스타일 (모든 요소에 동일한 깊이감)
+  const unifiedShadow = isExporting
+    ? ''
+    : 'shadow-[0_4px_16px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.08)]';
+  
+  const macosBase = isExporting 
+    ? 'bg-transparent' 
+    : 'bg-white/95 backdrop-blur-lg rounded-lg';
+  
+  const badgeStyle = isExporting
+    ? ''
+    : 'badge';
 
   // 메인 조합 쿠키 크기 계산 (총 56% 공간을 비율에 따라 분배)
   const mainCookie1Width = (arena.mainCookieRatio / 100) * 56;
@@ -64,8 +73,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainCookie1')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          arena.mainCombo.cookie1 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden',
+          arena.mainCombo.cookie1 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 10, 
@@ -78,7 +87,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.cookie1 ? (
           <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-lg font-bold">선달 쿠키</span>
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-lg font-bold">선달 쿠키</span>
         )}
       </div>
 
@@ -92,9 +101,9 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             height: '44.3%', 
             top: '22%', 
             left: `${2 + mainCookie1Width}%`,
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderLeft: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRight: '2px solid rgba(255, 255, 255, 0.3)',
+            background: 'rgba(0, 0, 0, 0.08)',
+            borderLeft: '2px solid rgba(0, 0, 0, 0.15)',
+            borderRight: '2px solid rgba(0, 0, 0, 0.15)',
           }}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -122,7 +131,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             document.addEventListener('mouseup', handleMouseUp);
           }}
         >
-          <div className="text-white text-xs opacity-70">⋮</div>
+          <div className="text-gray-600 text-xs opacity-70">⋮</div>
         </div>
       )}
 
@@ -130,8 +139,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainCookie2')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          arena.mainCombo.cookie2 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden',
+          arena.mainCombo.cookie2 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 10, 
@@ -144,7 +153,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.cookie2 ? (
           <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-base font-bold">이달 쿠키</span>
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-base font-bold">이달 쿠키</span>
         )}
       </div>
 
@@ -154,8 +163,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainPet')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.mainCombo.pet && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.mainCombo.pet && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -169,7 +178,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.pet ? (
           <Image src={arena.mainCombo.pet} alt="펫" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs font-semibold">펫</span>
+          !isExporting && <span className="text-gray-500 text-xs font-semibold">펫</span>
         )}
       </div>
 
@@ -177,8 +186,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainTreasure0')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[0] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.mainCombo.treasures[0] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -192,7 +201,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.treasures[0] ? (
           <Image src={arena.mainCombo.treasures[0]} alt="보물1" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물1</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물1</span>
         )}
       </div>
 
@@ -200,8 +209,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainTreasure1')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[1] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.mainCombo.treasures[1] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -215,7 +224,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.treasures[1] ? (
           <Image src={arena.mainCombo.treasures[1]} alt="보물2" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물2</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물2</span>
         )}
       </div>
 
@@ -223,8 +232,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('mainTreasure2')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[2] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.mainCombo.treasures[2] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -238,7 +247,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.mainCombo.treasures[2] ? (
           <Image src={arena.mainCombo.treasures[2]} alt="보물3" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물3</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물3</span>
         )}
       </div>
 
@@ -250,15 +259,15 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         disabled={isExporting}
         placeholder={isExporting ? '' : '최고점 (숫자만 입력)'}
         className={clsx(
-          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70 disabled:cursor-not-allowed',
-          glassStyle
+          'absolute px-2 py-1 text-xs text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all text-gray-800',
+          `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
           width: '35%', 
           height: '10%', 
           top: '9%', 
-          right: '3%' 
+          right: '3%'
         }}
       />
 
@@ -266,7 +275,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden flex items-center justify-center',
-          arena.magicCandy.cookie1Candy && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          arena.magicCandy.cookie1Candy && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -282,20 +291,20 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.magicCandy.cookie1Candy ? (
           <Image src={arena.magicCandy.cookie1Candy} alt="선달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-[10px] text-center leading-tight">선달<br/>사탕</span>
+          !isExporting && <span className="text-gray-500 text-[10px] text-center leading-tight">선달<br/>사탕</span>
         )}
         
         {/* 선달 축복 - Child (우측 하단 1/4 영역) */}
         <div 
           onClick={(e) => { e.stopPropagation(); handleImageClick('blessing1'); }}
           className={clsx(
-            'absolute cursor-pointer overflow-hidden',
-            glassStyle
+            'absolute cursor-pointer overflow-hidden hover:scale-105 transition-all',
+            arena.magicCandy.cookie1Blessing && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
           )}
           style={{ 
             zIndex: 30, 
-            bottom: 0, 
-            right: 0, 
+            bottom: -2, 
+            right: -2, 
             width: '50%', 
             height: '50%' 
           }}
@@ -304,7 +313,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           {arena.magicCandy.cookie1Blessing ? (
             <Image src={arena.magicCandy.cookie1Blessing} alt="선달 축복" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
-            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[8px]">축복</span>
+            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[8px]">축복</span>
           )}
         </div>
       </div>
@@ -313,7 +322,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         className={clsx(
           'absolute cursor-pointer overflow-hidden flex items-center justify-center',
-          arena.magicCandy.cookie2Candy && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          arena.magicCandy.cookie2Candy && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -329,20 +338,20 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.magicCandy.cookie2Candy ? (
           <Image src={arena.magicCandy.cookie2Candy} alt="이달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-[10px] text-center leading-tight">이달<br/>사탕</span>
+          !isExporting && <span className="text-gray-500 text-[10px] text-center leading-tight">이달<br/>사탕</span>
         )}
         
         {/* 이달 축복 - Child (우측 하단 1/4 영역) */}
         <div 
           onClick={(e) => { e.stopPropagation(); handleImageClick('blessing2'); }}
           className={clsx(
-            'absolute cursor-pointer overflow-hidden',
-            glassStyle
+            'absolute cursor-pointer overflow-hidden hover:scale-105 transition-all',
+            arena.magicCandy.cookie2Blessing && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
           )}
           style={{ 
             zIndex: 30, 
-            bottom: 0, 
-            right: 0, 
+            bottom: -2, 
+            right: -2, 
             width: '50%', 
             height: '50%' 
           }}
@@ -351,7 +360,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           {arena.magicCandy.cookie2Blessing ? (
             <Image src={arena.magicCandy.cookie2Blessing} alt="이달 축복" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
-            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[8px]">축복</span>
+            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[8px]">축복</span>
           )}
         </div>
       </div>
@@ -371,8 +380,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         <div 
           onClick={() => handleImageClick('subPet')}
           className={clsx(
-            'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-            arena.subCombo.pet && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+            'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+            arena.subCombo.pet && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
           )}
           style={{ 
             top: '2%',
@@ -385,7 +394,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           {arena.subCombo.pet ? (
             <Image src={arena.subCombo.pet} alt="대체 펫" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
-            !isExporting && <span className="text-white/60 text-xs">대체 펫</span>
+            !isExporting && <span className="text-gray-500 text-xs">대체 펫</span>
           )}
         </div>
 
@@ -397,14 +406,14 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           disabled={isExporting}
           placeholder={isExporting ? '' : '대체 최고점 (숫자만 입력)'}
           className={clsx(
-            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70 disabled:cursor-not-allowed',
-            glassStyle
+            'absolute px-2 py-1 text-xs text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all text-gray-800',
+            `${macosBase} ${unifiedShadow}`
           )}
           style={{ 
             top: '2%',
             left: 'calc(2% + 50px)',
             right: '2%',
-            height: '40px' 
+            height: '40px'
           }}
         />
 
@@ -414,15 +423,15 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           <div 
             onClick={() => handleImageClick('subCookie1')}
             className={clsx(
-              'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              arena.subCombo.cookie1 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+              'relative cursor-pointer hover:opacity-90 transition-all overflow-hidden',
+              arena.subCombo.cookie1 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
             )}
             style={{ width: `${subCookie1Width}%` }}
           >
             {arena.subCombo.cookie1 ? (
               <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
             ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>선달<br/>쿠키</span>
+              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[10px]">대체<br/>선달<br/>쿠키</span>
             )}
           </div>
           
@@ -432,9 +441,9 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
               className="cursor-ew-resize flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
               style={{ 
                 width: '2%',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderLeft: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRight: '2px solid rgba(255, 255, 255, 0.3)',
+                background: 'rgba(0, 0, 0, 0.08)',
+                borderLeft: '2px solid rgba(0, 0, 0, 0.15)',
+                borderRight: '2px solid rgba(0, 0, 0, 0.15)',
               }}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -462,7 +471,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
                 document.addEventListener('mouseup', handleMouseUp);
               }}
             >
-              <div className="text-white text-xs opacity-70">⋮</div>
+              <div className="text-gray-600 text-xs opacity-70">⋮</div>
             </div>
           )}
           
@@ -470,15 +479,15 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           <div 
             onClick={() => handleImageClick('subCookie2')}
             className={clsx(
-              'relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-              arena.subCombo.cookie2 && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+              'relative cursor-pointer hover:opacity-90 transition-all overflow-hidden',
+              arena.subCombo.cookie2 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
             )}
             style={{ width: `${subCookie2Width}%` }}
           >
             {arena.subCombo.cookie2 ? (
               <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
             ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>이달<br/>쿠키</span>
+              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[10px]">대체<br/>이달<br/>쿠키</span>
             )}
           </div>
         </div>
@@ -488,8 +497,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('subTreasure0')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[0] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.subCombo.treasures[0] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -503,7 +512,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.subCombo.treasures[0] ? (
           <Image src={arena.subCombo.treasures[0]} alt="대체보물1" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물1</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물1</span>
         )}
       </div>
 
@@ -511,8 +520,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('subTreasure1')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[1] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.subCombo.treasures[1] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -526,7 +535,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.subCombo.treasures[1] ? (
           <Image src={arena.subCombo.treasures[1]} alt="대체보물2" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물2</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물2</span>
         )}
       </div>
 
@@ -534,8 +543,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('subTreasure2')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[2] && !isExporting ? 'bg-transparent border-none backdrop-filter-none' : glassStyle
+          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
+          arena.subCombo.treasures[2] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
@@ -549,7 +558,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         {arena.subCombo.treasures[2] ? (
           <Image src={arena.subCombo.treasures[2]} alt="대체보물3" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
-          !isExporting && <span className="text-white/60 text-xs">보물3</span>
+          !isExporting && <span className="text-gray-500 text-xs">보물3</span>
         )}
       </div>
 
@@ -558,31 +567,36 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       {/* K. 아레나 숫자 (유튜브 링크) - Top Layer */}
       <div 
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity flex items-center justify-center group',
-          glassStyle
+          'absolute cursor-pointer hover:scale-105 transition-all flex items-center justify-center group',
+          badgeStyle
         )}
         style={{ 
           zIndex: 30, 
-          width: '12%', 
-          height: '8%', 
-          top: '2%', 
-          left: '2%' 
+          width: '48px', 
+          height: '48px', 
+          top: '12px', 
+          left: '12px' 
         }}
         onClick={() => {
-          if (isExporting) return; // 저장 중에는 YouTube 링크 변경 불가
+          if (isExporting) return;
           const url = prompt('유튜브 링크를 입력하세요:', arena.youtubeUrl || '');
           if (url !== null) setArenaYoutubeUrl(arenaIndex, url || null);
         }}
       >
-        <span className={clsx(
-          'font-bold text-sm',
-          arena.youtubeUrl ? 'text-red-400' : 'text-white'
-        )}>
-          {arenaIndex + 1}
-          {arena.youtubeUrl && ' ▶'}
+        <span 
+          className={clsx(
+            'font-bold text-lg',
+            arena.youtubeUrl && 'text-red-500'
+          )}
+          style={{
+            color: arena.youtubeUrl ? '#ef4444' : fontSettings.fontColor,
+            textShadow: '0 0 3px white, 0 0 5px white, 0 0 8px white, 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white'
+          }}
+        >
+          {arena.youtubeUrl && '▶ '}{arenaIndex + 1}
         </span>
         {!isExporting && (
-          <div className="opacity-0 group-hover:opacity-100 absolute top-full left-0 mt-1 text-white text-[9px] whitespace-nowrap bg-black/70 px-2 py-0.5 rounded z-50">
+          <div className="opacity-0 group-hover:opacity-100 absolute top-full left-1/2 -translate-x-1/2 mt-2 text-white text-xs whitespace-nowrap bg-gray-800 px-3 py-1 rounded-lg z-50 shadow-lg">
             유튜브 링크 {arena.youtubeUrl ? '수정' : '추가'}
           </div>
         )}
@@ -592,24 +606,25 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       <div 
         onClick={() => handleImageClick('dish')}
         className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-opacity overflow-hidden',
-          glassStyle
+          'absolute cursor-pointer hover:scale-105 transition-all overflow-hidden flex items-center justify-center',
+          arena.dish && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
         )}
         style={{ 
           zIndex: 30, 
-          width: '10%', 
-          height: '8%', 
-          top: '2%', 
-          right: '3%' 
+          width: '60px', 
+          height: '60px', 
+          top: '12px', 
+          right: '12px' 
         }}
       >
         {arena.dish ? (
           <Image src={arena.dish} alt="요리" fill className="object-contain" />
         ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-xs">요리</span>
+          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-xs">요리</span>
         )}
       </div>
 
     </div>
   );
 }
+

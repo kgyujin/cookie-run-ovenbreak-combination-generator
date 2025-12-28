@@ -35,7 +35,7 @@ export default function RootLayout({
         {/* Google Search Console - 사용자가 직접 추가 가능 */}
         {/* <meta name="google-site-verification" content="VERIFICATION_CODE" /> */}
       </head>
-      <body className="font-sans flex justify-center items-center h-screen overflow-hidden bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900" style={{ overscrollBehavior: 'none' }}>
+      <body className="font-sans min-h-screen">
         <OrientationGuard />
         {children}
       </body>

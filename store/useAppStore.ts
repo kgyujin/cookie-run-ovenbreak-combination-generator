@@ -80,7 +80,7 @@ const initialState: AppState = {
     fontSize: 24,
     fontFamily: 'Pretendard',
     textAlign: 'center',
-    fontColor: '#ffffff',
+    fontColor: '#111827',
   },
   displaySettings: {
     scoreDisplayType: 'comma',
@@ -217,21 +217,21 @@ export const useAppStore = create<AppStore>((set) => ({
 
   setMainCookieRatio: (arenaIndex, ratio) =>
     set((state) => {
-      const newArenas = [...state.arenas];
-      newArenas[arenaIndex] = {
-        ...newArenas[arenaIndex],
+      // 모든 아레나의 mainCookieRatio를 동기화
+      const newArenas = state.arenas.map((arena) => ({
+        ...arena,
         mainCookieRatio: ratio,
-      };
+      }));
       return { arenas: newArenas };
     }),
 
   setSubCookieRatio: (arenaIndex, ratio) =>
     set((state) => {
-      const newArenas = [...state.arenas];
-      newArenas[arenaIndex] = {
-        ...newArenas[arenaIndex],
+      // 모든 아레나의 subCookieRatio를 동기화
+      const newArenas = state.arenas.map((arena) => ({
+        ...arena,
         subCookieRatio: ratio,
-      };
+      }));
       return { arenas: newArenas };
     }),
 

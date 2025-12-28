@@ -1,11 +1,19 @@
-'use client';
+﻿'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 
 export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const { background, setBackground, fontSettings, setFontSettings, displaySettings, setDisplaySettings } = useAppStore();
   const [activeSection, setActiveSection] = useState<'background' | 'font' | 'display'>('background');
+  
+  // 모달 오픈 시 body 스크롤 방지
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
   
   // Background states
   const [activeTab, setActiveTab] = useState<'color' | 'gradient' | 'image'>(background.type);
@@ -20,7 +28,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [textAlign, setTextAlign] = useState(fontSettings.textAlign);
   const [customFontUrl, setCustomFontUrl] = useState(fontSettings.customFontUrl || '');
   const [customFontName, setCustomFontName] = useState(fontSettings.customFontName || '');
-  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#ffffff');
+  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#1f2937');
 
   // Display states
   const [scoreDisplayType, setScoreDisplayType] = useState(displaySettings.scoreDisplayType);
@@ -113,14 +121,14 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="glass rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 modal-backdrop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div className="macos-card-high rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col modal-content">
         {/* Header */}
-        <div className="p-4 border-b border-white/30 flex items-center justify-between sticky top-0 glass">
-          <h2 className="text-white text-xl font-bold">설정</h2>
+        <div className="p-5 border-b border-gray-200 flex items-center justify-between bg-white/95 backdrop-blur-xl shrink-0">
+          <h2 className="text-gray-800 text-xl font-bold">설정</h2>
           <button
             onClick={onClose}
-            className="text-white hover:text-white/70 transition-colors"
+            className="text-gray-800 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,59 +137,65 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Section Tabs */}
-        <div className="flex border-b border-white/30">
+        <div className="flex border-b border-gray-200 shrink-0">
           <button
             onClick={() => setActiveSection('background')}
-            className={`flex-1 py-3 text-white text-sm font-semibold transition-colors ${
-              activeSection === 'background' ? 'bg-white/20' : 'hover:bg-white/10'
+            className={`flex-1 py-3 text-sm font-semibold transition-all ${
+              activeSection === 'background' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
             🎨 배경
           </button>
           <button
             onClick={() => setActiveSection('font')}
-            className={`flex-1 py-3 text-white text-sm font-semibold transition-colors ${
-              activeSection === 'font' ? 'bg-white/20' : 'hover:bg-white/10'
+            className={`flex-1 py-3 text-sm font-semibold transition-all ${
+              activeSection === 'font' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
             ✍️ 폰트
           </button>
           <button
             onClick={() => setActiveSection('display')}
-            className={`flex-1 py-3 text-white text-sm font-semibold transition-colors ${
-              activeSection === 'display' ? 'bg-white/20' : 'hover:bg-white/10'
+            className={`flex-1 py-3 text-sm font-semibold transition-all ${
+              activeSection === 'display' 
+                ? 'bg-white text-gray-900 shadow-sm' 
+                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
             }`}
           >
             📊 표기
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-5">
           {activeSection === 'background' && (
             <div className="space-y-4">
               {/* Background Type Tabs */}
-              <div className="flex border border-white/30 rounded-lg overflow-hidden">
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setActiveTab('color')}
-                  className={`flex-1 py-2 text-white text-sm font-semibold transition-colors ${
-                    activeTab === 'color' ? 'bg-white/20' : 'hover:bg-white/10'
+                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
+                    activeTab === 'color' ? 'bg-gray-200' : 'hover:bg-white/10'
                   }`}
                 >
                   단색
                 </button>
                 <button
                   onClick={() => setActiveTab('gradient')}
-                  className={`flex-1 py-2 text-white text-sm font-semibold transition-colors ${
-                    activeTab === 'gradient' ? 'bg-white/20' : 'hover:bg-white/10'
+                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
+                    activeTab === 'gradient' ? 'bg-gray-200' : 'hover:bg-white/10'
                   }`}
                 >
                   그라데이션
                 </button>
                 <button
                   onClick={() => setActiveTab('image')}
-                  className={`flex-1 py-2 text-white text-sm font-semibold transition-colors ${
-                    activeTab === 'image' ? 'bg-white/20' : 'hover:bg-white/10'
+                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
+                    activeTab === 'image' ? 'bg-gray-200' : 'hover:bg-white/10'
                   }`}
                 >
                   이미지
@@ -190,7 +204,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
               {activeTab === 'color' && (
                 <div>
-                  <label className="block text-white text-sm font-semibold mb-2">배경 색상</label>
+                  <label className="block text-gray-800 text-sm font-semibold mb-2">배경 색상</label>
                   <input
                     type="color"
                     value={colorValue}
@@ -203,7 +217,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               {activeTab === 'gradient' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-white text-sm font-semibold mb-2">색상 1</label>
+                    <label className="block text-gray-800 text-sm font-semibold mb-2">색상 1</label>
                     <input
                       type="color"
                       value={gradient1}
@@ -212,7 +226,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-white text-sm font-semibold mb-2">색상 2</label>
+                    <label className="block text-gray-800 text-sm font-semibold mb-2">색상 2</label>
                     <input
                       type="color"
                       value={gradient2}
@@ -222,7 +236,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   </div>
                   <button
                     onClick={randomGradient}
-                    className="w-full glass-dark rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/20 transition-colors"
+                    className="w-full bg-gray-100 rounded-lg px-4 py-2 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
                   >
                     🎲 랜덤 조합
                   </button>
@@ -232,18 +246,18 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               {activeTab === 'image' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-white text-sm font-semibold mb-2">이미지 URL</label>
+                    <label className="block text-gray-800 text-sm font-semibold mb-2">이미지 URL</label>
                     <input
                       type="text"
                       value={imageUrl}
                       onChange={(e) => setImageUrl(e.target.value)}
                       placeholder="https://example.com/image.jpg"
-                      className="w-full bg-white/30 border border-white/40 rounded-lg px-4 py-2 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+                      className="w-full bg-white/30 border border-white/40 rounded-lg px-4 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
                     />
                   </div>
                   
                   <div className="relative">
-                    <label className="block text-white text-sm font-semibold mb-2">또는 파일 업로드</label>
+                    <label className="block text-gray-800 text-sm font-semibold mb-2">또는 파일 업로드</label>
                     <input
                       type="file"
                       accept="image/*"
@@ -263,7 +277,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     />
                     <label
                       htmlFor="bg-image-upload"
-                      className="w-full glass-dark rounded-lg px-4 py-3 text-white font-semibold hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full bg-gray-100 rounded-lg px-4 py-3 text-gray-800 font-semibold hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -294,7 +308,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-4">
               {/* Font Size */}
               <div>
-                <label className="block text-white text-sm font-semibold mb-2">
+                <label className="block text-gray-800 text-sm font-semibold mb-2">
                   시즌명 폰트 크기: {fontSize}px
                 </label>
                 <input
@@ -305,7 +319,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   onChange={(e) => setFontSize(Number(e.target.value))}
                   className="w-full"
                 />
-                <div className="flex justify-between text-white/60 text-xs mt-1">
+                <div className="flex justify-between text-gray-500 text-xs mt-1">
                   <span>12px</span>
                   <span>52px</span>
                 </div>
@@ -313,14 +327,14 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
               {/* Font Family */}
               <div>
-                <label className="block text-white text-sm font-semibold mb-2">폰트 종류</label>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 종류</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setFontFamily('Pretendard')}
                     className={`py-3 rounded-lg font-semibold transition-colors ${
                       fontFamily === 'Pretendard'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                     style={{ fontFamily: 'Pretendard Variable' }}
                   >
@@ -330,8 +344,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setFontFamily('CookieRun')}
                     className={`py-3 rounded-lg font-semibold transition-colors ${
                       fontFamily === 'CookieRun'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                     style={{ fontFamily: 'CookieRun' }}
                   >
@@ -341,8 +355,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setFontFamily('Custom')}
                     className={`py-3 rounded-lg font-semibold transition-colors ${
                       fontFamily === 'Custom'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     커스텀
@@ -352,9 +366,9 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
               {/* Custom Font Upload */}
               {fontFamily === 'Custom' && (
-                <div className="space-y-3 glass-dark rounded-lg p-4">
+                <div className="space-y-3 bg-gray-100 rounded-lg p-4">
                   <div>
-                    <label className="block text-white text-sm font-semibold mb-2">폰트 파일 업로드</label>
+                    <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 파일 업로드</label>
                     <input
                       type="file"
                       accept=".ttf,.otf,.woff,.woff2"
@@ -375,7 +389,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     />
                     <label
                       htmlFor="custom-font-upload"
-                      className="w-full glass rounded-lg px-4 py-3 text-white font-semibold hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full bg-white rounded-lg px-4 py-3 text-gray-800 font-semibold hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -385,7 +399,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   </div>
                   {customFontUrl && (
                     <div className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2">
-                      <span className="text-white text-sm truncate">{customFontName}</span>
+                      <span className="text-gray-800 text-sm truncate">{customFontName}</span>
                       <button
                         onClick={() => {
                           setCustomFontUrl('');
@@ -404,14 +418,14 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
               {/* Text Align */}
               <div>
-                <label className="block text-white text-sm font-semibold mb-2">텍스트 정렬</label>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">텍스트 정렬</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => setTextAlign('left')}
                     className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                       textAlign === 'left'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,8 +437,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setTextAlign('center')}
                     className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                       textAlign === 'center'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -436,8 +450,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setTextAlign('right')}
                     className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
                       textAlign === 'right'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -450,7 +464,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
               {/* Font Color */}
               <div>
-                <label className="block text-white text-sm font-semibold mb-2">폰트 색상</label>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 색상</label>
                 <input
                   type="color"
                   value={fontColor}
@@ -460,8 +474,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Preview */}
-              <div className="glass-dark rounded-lg p-4">
-                <label className="block text-white text-xs font-semibold mb-2">미리보기</label>
+              <div className="bg-gray-100 rounded-lg p-4">
+                <label className="block text-gray-800 text-xs font-semibold mb-2">미리보기</label>
                 <div
                   className="text-white"
                   style={{
@@ -481,14 +495,14 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-4">
               {/* Score Display Type */}
               <div>
-                <label className="block text-white text-sm font-semibold mb-2">점수 표기 방식</label>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 표기 방식</label>
                 <div className="space-y-2">
                   <button
                     onClick={() => setScoreDisplayType('abbreviated')}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
                       scoreDisplayType === 'abbreviated'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <div className="font-bold mb-1">숫자 간략화 (M/B 단위)</div>
@@ -498,8 +512,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setScoreDisplayType('comma')}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
                       scoreDisplayType === 'comma'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <div className="font-bold mb-1">기본 숫자 (콤마 자동 추가)</div>
@@ -509,8 +523,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                     onClick={() => setScoreDisplayType('korean')}
                     className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
                       scoreDisplayType === 'korean'
-                        ? 'bg-white/30 text-white border-2 border-white/50'
-                        : 'glass-dark text-white/70 hover:bg-white/20'
+                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     <div className="font-bold mb-1">한글 단위 표기</div>
@@ -520,9 +534,9 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
               </div>
 
               {/* Preview */}
-              <div className="glass-dark rounded-lg p-4">
-                <label className="block text-white text-xs font-semibold mb-3">점수 미리보기</label>
-                <div className="space-y-2 text-white text-sm">
+              <div className="bg-gray-100 rounded-lg p-4">
+                <label className="block text-gray-800 text-xs font-semibold mb-3">점수 미리보기</label>
+                <div className="space-y-2 text-gray-800 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="opacity-70">입력:</span>
                     <span className="font-mono">331000000</span>
@@ -542,22 +556,22 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-white/30 flex gap-2 sticky bottom-0 glass">
+        <div className="p-5 border-t border-gray-200 flex gap-3 bg-white/95 backdrop-blur-xl shrink-0">
           <button
             onClick={onClose}
-            className="flex-1 glass-dark rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/20 transition-colors"
+            className="flex-1 bg-gray-100 rounded-lg px-4 py-2.5 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
           >
             취소
           </button>
           <button
             onClick={handleReset}
-            className="flex-1 glass-dark rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/20 transition-colors"
+            className="flex-1 bg-gray-100 rounded-lg px-4 py-2.5 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
           >
             초기화
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 bg-white/30 border border-white/40 rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/40 transition-colors"
+            className="flex-1 bg-blue-500 rounded-lg px-4 py-2.5 text-white font-semibold hover:bg-blue-600 transition-colors shadow-sm"
           >
             적용
           </button>
@@ -566,3 +580,5 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+
