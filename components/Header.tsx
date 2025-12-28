@@ -23,11 +23,13 @@ export default function Header() {
   }, [seasonName, fontSettings.fontSize]);
 
   const openDishModal = () => {
+    if (isExporting) return; // 저장 중에는 이미지 변경 불가
     setSelectingType('dish');
     setShowImageModal(true);
   };
 
   const openIngredientModal = (index: number) => {
+    if (isExporting) return; // 저장 중에는 이미지 변경 불가
     setSelectingType('ingredient');
     setSelectingIndex(index);
     setShowImageModal(true);
@@ -80,12 +82,14 @@ export default function Header() {
                   e.preventDefault();
                 }
               }}
+              disabled={isExporting}
               placeholder="시즌명"
-              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide"
+              className="w-full bg-transparent border-none text-white font-bold placeholder-white/70 focus:outline-none resize-none scrollbar-hide disabled:cursor-not-allowed"
               style={{
                 fontSize: `${fontSettings.fontSize}px`,
                 fontFamily: fontSettings.fontFamily === 'CookieRun' ? 'CookieRun' : fontSettings.fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
                 textAlign: fontSettings.textAlign as any,
+                color: fontSettings.fontColor || '#ffffff',
                 padding: '0',
                 lineHeight: '1.2',
                 maxHeight: `calc(${fontSettings.fontSize}px * 1.2 * 3)`,
@@ -112,7 +116,7 @@ export default function Header() {
                 )}
               >
                 {seasonDish ? (
-                  <img src={seasonDish} alt="시즌 요리" className="w-full h-full object-contain" />
+                  <img crossOrigin="anonymous" src={seasonDish} alt="시즌 요리" className="w-full h-full object-contain" />
                 ) : (
                   !isExporting && <span className="text-white/60 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
                 )}
@@ -137,7 +141,7 @@ export default function Header() {
                     )}
                   >
                     {seasonIngredients[index] ? (
-                      <img src={seasonIngredients[index]} alt={`재료${index+1}`} className="max-w-full max-h-full object-contain" />
+                      <img crossOrigin="anonymous" src={seasonIngredients[index]} alt={`재료${index+1}`} className="max-w-full max-h-full object-contain" />
                     ) : (
                       !isExporting && <span className="text-white/60 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
                     )}

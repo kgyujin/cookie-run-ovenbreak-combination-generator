@@ -165,7 +165,7 @@ export default function BackgroundModal({ onClose }: { onClose: () => void }) {
 
               {imageUrl && imageUrl.startsWith('data:image') && (
                 <div className="relative">
-                  <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+                  <img crossOrigin="anonymous" src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
                   <button
                     onClick={() => setImageUrl('')}
                     className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600/80 rounded-full p-1 transition-colors"

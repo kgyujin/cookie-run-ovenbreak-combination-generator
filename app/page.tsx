@@ -12,7 +12,8 @@ import { decompressFromEncodedURIComponent } from 'lz-string';
 function PageContent() {
   const { 
     background, 
-    isExporting, 
+    isExporting,
+    exportProgress,
     arenas, 
     modalOpen,
     modalArenaIndex,
@@ -69,8 +70,8 @@ function PageContent() {
       <main 
         id="capture-area" 
         className={`
-          w-full max-w-7xl h-[90vh] 
-          overflow-y-auto overflow-x-hidden
+          w-full max-w-7xl 
+          ${!isExporting ? 'h-[90vh] overflow-y-auto overflow-x-hidden' : 'h-auto overflow-visible'}
           rounded-2xl
           p-6
           ${!isExporting ? 'bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl' : ''}
@@ -92,15 +93,31 @@ function PageContent() {
         </div>
 
         {/* Action Buttons - 하단 배치 */}
-        {!isExporting && (
-          <div className="mt-8 mb-4">
-            <ActionButtons />
-          </div>
-        )}
+        <div className="mt-8 mb-4" style={{ visibility: isExporting ? 'hidden' : 'visible' }}>
+          <ActionButtons />
+        </div>
       </main>
 
+      {/* Export Progress Overlay and Interaction Blocker - outside capture-area */}
+      {isExporting && (
+        <>
+          {/* 전체 화면 차단 오버레이 */}
+          <div className="fixed inset-0 z-40 bg-black/50" />
+          {/* 프로그레스 표시 */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="w-full max-w-md bg-black/60 glass rounded-lg p-6 pointer-events-auto">
+              <div className="text-white font-bold mb-3">이미지 저장 중...</div>
+              <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                <div className="h-3 bg-white transition-all" style={{ width: `${exportProgress}%` }} />
+              </div>
+              <div className="text-white text-xs mt-2 text-right">{exportProgress}%</div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Image Select Modal */}
-      {modalOpen && modalArenaIndex !== null && modalType && (
+      {modalOpen && modalArenaIndex !== null && modalType && !isExporting && (
         <ImageSelectModal
           category={getModalCategory(modalType)}
           onClose={() => setModalOpen(false)}

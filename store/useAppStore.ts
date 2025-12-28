@@ -37,10 +37,12 @@ const createEmptyArena = (): ArenaData => ({
 
 interface AppStore extends AppState {
   isExporting: boolean;
+  exportProgress: number;
   modalOpen: boolean;
   modalArenaIndex: number | null;
   modalType: string | null;
   setIsExporting: (isExporting: boolean) => void;
+  setExportProgress: (progress: number) => void;
   setModalOpen: (open: boolean, arenaIndex?: number, type?: string) => void;
   updateArenaItem: (arenaIndex: number, field: string, value: any) => void;
   setBackground: (background: BackgroundData) => void;
@@ -60,7 +62,7 @@ interface AppStore extends AppState {
   setGameData: (data: any) => void;
   loadStateFromUrl: (state: Partial<AppState>) => void;
   reset: () => void;
-  setFontSettings: (settings: Partial<{ fontSize: number; fontFamily: 'Pretendard' | 'CookieRun' | 'Custom'; textAlign: 'left' | 'center' | 'right'; customFontUrl?: string; customFontName?: string }>) => void;
+  setFontSettings: (settings: Partial<{ fontSize: number; fontFamily: 'Pretendard' | 'CookieRun' | 'Custom'; textAlign: 'left' | 'center' | 'right'; customFontUrl?: string; customFontName?: string; fontColor?: string }>) => void;
   setDisplaySettings: (settings: Partial<{ scoreDisplayType: 'abbreviated' | 'comma' | 'korean' }>) => void;
 }
 
@@ -78,6 +80,7 @@ const initialState: AppState = {
     fontSize: 24,
     fontFamily: 'Pretendard',
     textAlign: 'center',
+    fontColor: '#ffffff',
   },
   displaySettings: {
     scoreDisplayType: 'comma',
@@ -87,11 +90,14 @@ const initialState: AppState = {
 export const useAppStore = create<AppStore>((set) => ({
   ...initialState,
   isExporting: false,
+  exportProgress: 0,
   modalOpen: false,
   modalArenaIndex: null,
   modalType: null,
 
   setIsExporting: (isExporting) => set({ isExporting }),
+
+  setExportProgress: (progress) => set({ exportProgress: progress }),
 
   setModalOpen: (open, arenaIndex, type) => 
     set({ modalOpen: open, modalArenaIndex: arenaIndex ?? null, modalType: type ?? null }),
@@ -237,7 +243,14 @@ export const useAppStore = create<AppStore>((set) => ({
       ...newState,
     })),
 
-  reset: () => set(initialState),
+  reset: () => {
+    set(initialState);
+    try {
+      if (typeof window !== 'undefined') localStorage.removeItem('appState');
+    } catch (e) {
+      console.error('Failed to remove persisted state on reset:', e);
+    }
+  },
 
   setFontSettings: (settings) =>
     set((state) => ({
@@ -255,3 +268,38 @@ export const useAppStore = create<AppStore>((set) => ({
       },
     })),
 }));
+
+// Persist/load state to localStorage (selections + settings)
+if (typeof window !== 'undefined') {
+  try {
+    const saved = localStorage.getItem('appState');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Merge persisted state into current store
+      useAppStore.setState({
+        ...parsed,
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load persisted state:', e);
+  }
+
+  // Subscribe to store changes and persist relevant parts
+  useAppStore.subscribe((state) => {
+    try {
+      const toPersist = {
+        background: state.background,
+        seasonName: state.seasonName,
+        seasonDish: state.seasonDish,
+        seasonIngredients: state.seasonIngredients,
+        arenas: state.arenas,
+        fontSettings: state.fontSettings,
+        displaySettings: state.displaySettings,
+        gameData: state.gameData,
+      };
+      localStorage.setItem('appState', JSON.stringify(toPersist));
+    } catch (e) {
+      console.error('Failed to persist state:', e);
+    }
+  });
+}

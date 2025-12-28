@@ -20,6 +20,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [textAlign, setTextAlign] = useState(fontSettings.textAlign);
   const [customFontUrl, setCustomFontUrl] = useState(fontSettings.customFontUrl || '');
   const [customFontName, setCustomFontName] = useState(fontSettings.customFontName || '');
+  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#ffffff');
 
   // Display states
   const [scoreDisplayType, setScoreDisplayType] = useState(displaySettings.scoreDisplayType);
@@ -52,6 +53,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
       textAlign,
       customFontUrl,
       customFontName,
+      fontColor,
     });
 
     // Save display settings
@@ -85,6 +87,29 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     }
 
     onClose();
+  };
+
+  const handleReset = () => {
+    // Use store.reset to clear state and persisted storage
+    try {
+      useAppStore.getState().reset();
+    } catch (e) {
+      console.error('Failed to reset store:', e);
+    }
+    // reset local inputs to defaults
+    const defaultBackground = { type: 'gradient', gradient: ['#667eea', '#764ba2'] };
+    setActiveTab('color');
+    setColorValue(defaultBackground.gradient?.[0] || '#667eea');
+    setGradient1(defaultBackground.gradient?.[0] || '#667eea');
+    setGradient2(defaultBackground.gradient?.[1] || '#764ba2');
+    setImageUrl('');
+    setFontSize(24);
+    setFontFamily('Pretendard');
+    setTextAlign('center');
+    setCustomFontUrl('');
+    setCustomFontName('');
+    setFontColor('#ffffff');
+    setScoreDisplayType('comma');
   };
 
   return (
@@ -249,7 +274,7 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
 
                   {imageUrl && imageUrl.startsWith('data:image') && (
                     <div className="relative">
-                      <img src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
+                      <img crossOrigin="anonymous" src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
                       <button
                         onClick={() => setImageUrl('')}
                         className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600/80 rounded-full p-1 transition-colors"
@@ -423,6 +448,17 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
 
+              {/* Font Color */}
+              <div>
+                <label className="block text-white text-sm font-semibold mb-2">폰트 색상</label>
+                <input
+                  type="color"
+                  value={fontColor}
+                  onChange={(e) => setFontColor(e.target.value)}
+                  className="w-full h-12 rounded-lg cursor-pointer"
+                />
+              </div>
+
               {/* Preview */}
               <div className="glass-dark rounded-lg p-4">
                 <label className="block text-white text-xs font-semibold mb-2">미리보기</label>
@@ -431,7 +467,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   style={{
                     fontSize: `${fontSize}px`,
                     fontFamily: fontFamily === 'CookieRun' ? 'CookieRun' : fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
-                    textAlign: textAlign as any,
+                      textAlign: textAlign as any,
+                      color: fontColor,
                   }}
                 >
                   시즌명 예시
@@ -511,6 +548,12 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
             className="flex-1 glass-dark rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/20 transition-colors"
           >
             취소
+          </button>
+          <button
+            onClick={handleReset}
+            className="flex-1 glass-dark rounded-lg px-4 py-2 text-white font-semibold hover:bg-white/20 transition-colors"
+          >
+            초기화
           </button>
           <button
             onClick={handleSave}

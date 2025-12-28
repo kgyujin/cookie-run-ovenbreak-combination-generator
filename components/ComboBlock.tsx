@@ -22,6 +22,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const setSubCookieRatio = useAppStore((state) => state.setSubCookieRatio);
 
   const handleImageClick = (type: string) => {
+    if (isExporting) return; // 저장 중에는 이미지 변경 불가
     setModalOpen(true, arenaIndex, type);
   };
 
@@ -75,7 +76,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.cookie1 ? (
-          <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain object-bottom" />
+          <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-lg font-bold">선달 쿠키</span>
         )}
@@ -141,7 +142,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.cookie2 ? (
-          <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain object-bottom" />
+          <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-base font-bold">이달 쿠키</span>
         )}
@@ -166,7 +167,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.pet ? (
-          <Image src={arena.mainCombo.pet} alt="펫" fill className="object-contain" />
+          <Image src={arena.mainCombo.pet} alt="펫" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs font-semibold">펫</span>
         )}
@@ -189,7 +190,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.treasures[0] ? (
-          <Image src={arena.mainCombo.treasures[0]} alt="보물1" fill className="object-contain" />
+          <Image src={arena.mainCombo.treasures[0]} alt="보물1" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물1</span>
         )}
@@ -212,7 +213,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.treasures[1] ? (
-          <Image src={arena.mainCombo.treasures[1]} alt="보물2" fill className="object-contain" />
+          <Image src={arena.mainCombo.treasures[1]} alt="보물2" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물2</span>
         )}
@@ -235,7 +236,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.mainCombo.treasures[2] ? (
-          <Image src={arena.mainCombo.treasures[2]} alt="보물3" fill className="object-contain" />
+          <Image src={arena.mainCombo.treasures[2]} alt="보물3" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물3</span>
         )}
@@ -246,9 +247,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         type="text"
         value={isExporting && arena.score.value ? formatScore(arena.score.value, displaySettings.scoreDisplayType) : arena.score.value}
         onChange={(e) => setArenaScore(arenaIndex, 'value', e.target.value)}
+        disabled={isExporting}
         placeholder={isExporting ? '' : '최고점 (숫자만 입력)'}
         className={clsx(
-          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70',
+          'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70 disabled:cursor-not-allowed',
           glassStyle
         )}
         style={{ 
@@ -278,7 +280,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('candy1')}
       >
         {arena.magicCandy.cookie1Candy ? (
-          <Image src={arena.magicCandy.cookie1Candy} alt="선달 마법사탕" fill className="object-contain" />
+          <Image src={arena.magicCandy.cookie1Candy} alt="선달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-[10px] text-center leading-tight">선달<br/>사탕</span>
         )}
@@ -300,7 +302,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           title={getBlessing1Desc()}
         >
           {arena.magicCandy.cookie1Blessing ? (
-            <Image src={arena.magicCandy.cookie1Blessing} alt="선달 축복" fill className="object-contain" />
+            <Image src={arena.magicCandy.cookie1Blessing} alt="선달 축복" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
             !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[8px]">축복</span>
           )}
@@ -325,7 +327,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         onClick={() => handleImageClick('candy2')}
       >
         {arena.magicCandy.cookie2Candy ? (
-          <Image src={arena.magicCandy.cookie2Candy} alt="이달 마법사탕" fill className="object-contain" />
+          <Image src={arena.magicCandy.cookie2Candy} alt="이달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-[10px] text-center leading-tight">이달<br/>사탕</span>
         )}
@@ -347,7 +349,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           title={getBlessing2Desc()}
         >
           {arena.magicCandy.cookie2Blessing ? (
-            <Image src={arena.magicCandy.cookie2Blessing} alt="이달 축복" fill className="object-contain" />
+            <Image src={arena.magicCandy.cookie2Blessing} alt="이달 축복" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
             !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[8px]">축복</span>
           )}
@@ -381,7 +383,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           }}
         >
           {arena.subCombo.pet ? (
-            <Image src={arena.subCombo.pet} alt="대체 펫" fill className="object-contain" />
+            <Image src={arena.subCombo.pet} alt="대체 펫" fill className="object-contain" crossOrigin="anonymous" />
           ) : (
             !isExporting && <span className="text-white/60 text-xs">대체 펫</span>
           )}
@@ -392,9 +394,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           type="text"
           value={isExporting && arena.subScore.value ? formatScore(arena.subScore.value, displaySettings.scoreDisplayType) : arena.subScore.value}
           onChange={(e) => setArenaSubScore(arenaIndex, 'value', e.target.value)}
+          disabled={isExporting}
           placeholder={isExporting ? '' : '대체 최고점 (숫자만 입력)'}
           className={clsx(
-            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70',
+            'absolute px-2 py-1 text-white text-xs text-center focus:outline-none placeholder-white/70 disabled:cursor-not-allowed',
             glassStyle
           )}
           style={{ 
@@ -417,7 +420,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             style={{ width: `${subCookie1Width}%` }}
           >
             {arena.subCombo.cookie1 ? (
-              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain object-bottom" />
+              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
             ) : (
               !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>선달<br/>쿠키</span>
             )}
@@ -473,7 +476,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             style={{ width: `${subCookie2Width}%` }}
           >
             {arena.subCombo.cookie2 ? (
-              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain object-bottom" />
+              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
             ) : (
               !isExporting && <span className="absolute inset-0 flex items-center justify-center text-white/60 text-[10px]">대체<br/>이달<br/>쿠키</span>
             )}
@@ -498,7 +501,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.subCombo.treasures[0] ? (
-          <Image src={arena.subCombo.treasures[0]} alt="대체보물1" fill className="object-contain" />
+          <Image src={arena.subCombo.treasures[0]} alt="대체보물1" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물1</span>
         )}
@@ -521,7 +524,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.subCombo.treasures[1] ? (
-          <Image src={arena.subCombo.treasures[1]} alt="대체보물2" fill className="object-contain" />
+          <Image src={arena.subCombo.treasures[1]} alt="대체보물2" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물2</span>
         )}
@@ -544,7 +547,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         }}
       >
         {arena.subCombo.treasures[2] ? (
-          <Image src={arena.subCombo.treasures[2]} alt="대체보물3" fill className="object-contain" />
+          <Image src={arena.subCombo.treasures[2]} alt="대체보물3" fill className="object-contain" crossOrigin="anonymous" />
         ) : (
           !isExporting && <span className="text-white/60 text-xs">보물3</span>
         )}
@@ -566,6 +569,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           left: '2%' 
         }}
         onClick={() => {
+          if (isExporting) return; // 저장 중에는 YouTube 링크 변경 불가
           const url = prompt('유튜브 링크를 입력하세요:', arena.youtubeUrl || '');
           if (url !== null) setArenaYoutubeUrl(arenaIndex, url || null);
         }}

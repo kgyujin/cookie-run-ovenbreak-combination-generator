@@ -68,6 +68,7 @@ export interface FontSettings {
   textAlign: 'left' | 'center' | 'right';
   customFontUrl?: string;
   customFontName?: string;
+  fontColor?: string;
 }
 
 export interface DisplaySettings {
