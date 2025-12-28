@@ -89,7 +89,11 @@ export default function ImageSelectModal({ category, onClose, onSelect }: ImageS
                 className="glass-dark rounded-lg p-2 cursor-pointer hover:bg-white/30 transition-colors"
               >
                 <div className="w-full aspect-square bg-white/20 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <p className="text-white text-xs text-center truncate">{item.name}</p>
                 {item.description && (

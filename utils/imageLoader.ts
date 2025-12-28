@@ -1,98 +1,84 @@
-// 폴더 내 모든 PNG 이미지를 동적으로 로드하는 유틸리티
-
-export interface ImageItem {
-  id: string;
-  name: string;
-  path: string;
-}
-
-const categories = {
-  cookies: 'cookies',
-  pets: 'pets',
-  treasures: 'treasures',
-  dishes: 'dishes',
-  ingredients: 'ingredients',
-  magicCandies: 'magic_candies',
-  blessings: 'blessings'
-} as const;
-
-export type CategoryKey = keyof typeof categories;
+import { GameData, GameItem } from '@/types';
 
 /**
- * 특정 카테고리의 모든 PNG 이미지를 로드
+ * API에서 모든 이미지 데이터를 가져오기
  */
-export async function loadImagesFromCategory(category: CategoryKey): Promise<ImageItem[]> {
-  const folderName = categories[category];
-  const basePath = `/images/${folderName}`;
-  
+export async function loadAllImages(): Promise<GameData> {
   try {
-    // public 폴더는 빌드 시 정적으로 제공되므로
-    // 파일 시스템 접근 대신 이미지 경로를 직접 생성
-    const response = await fetch(`${basePath}/list.json`).catch(() => null);
+    const response = await fetch('/api/images', {
+      cache: 'no-store' // 항상 최신 데이터 가져오기
+    });
     
-    if (response && response.ok) {
-      const fileList = await response.json();
-      return fileList.map((filename: string, index: number) => ({
-        id: `${category}_${index}`,
-        name: filename.replace(/\.\w+$/, '').replace(/^\d+_/, ''),
-        path: `${basePath}/${filename}`
-      }));
+    if (!response.ok) {
+      throw new Error('Failed to load images');
     }
+    
+    const data = await response.json();
+    
+    return {
+      cookies: data.cookies || [],
+      pets: data.pets || [],
+      treasures: data.treasures || [],
+      dishes: data.dishes || [],
+      ingredients: data.ingredients || [],
+      magicCandies: data.magicCandies || [],
+      blessings: data.blessings || []
+    };
   } catch (error) {
-    console.warn(`Failed to load image list for ${category}:`, error);
+    console.error('Error loading images:', error);
+    // 빈 데이터 반환
+    return {
+      cookies: [],
+      pets: [],
+      treasures: [],
+      dishes: [],
+      ingredients: [],
+      magicCandies: [],
+      blessings: []
+    };
   }
-  
-  // Fallback: 기본 이미지 패턴으로 시도
-  return await loadImagesWithPattern(basePath);
 }
 
 /**
- * 특정 패턴의 이미지를 순차적으로 시도하여 로드
+ * 특정 카테고리의 이미지만 가져오기
  */
-async function loadImagesWithPattern(basePath: string): Promise<ImageItem[]> {
-  const images: ImageItem[] = [];
-  
-  // 실제 파일 시스템을 스캔할 수 없으므로
-  // 클라이언트에서 동적으로 이미지를 발견하는 방법 사용
-  // img 태그의 onerror를 활용하여 존재하는 이미지만 수집
-  
-  return images;
-}
-
-/**
- * 브라우저에서 실행: 폴더 내 모든 이미지를 동적으로 발견
- */
-export function discoverImagesInBrowser(category: CategoryKey, onComplete: (images: ImageItem[]) => void): void {
-  const folderName = categories[category];
-  const basePath = `/images/${folderName}`;
-  const images: ImageItem[] = [];
-  let checkCount = 0;
-  const maxChecks = 50; // 최대 50개 파일 확인
-  
-  function checkImage(index: number) {
-    if (checkCount >= maxChecks) {
-      onComplete(images);
-      return;
+export async function loadCategoryImages(category: string): Promise<GameItem[]> {
+  try {
+    const response = await fetch(`/api/images?category=${category}`, {
+      cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to load ${category} images`);
     }
     
-    const img = new Image();
-    const patterns = [
-      `${basePath}/${index}_*.png`,
-      `${basePath}/*.png`,
-    ];
-    
-    // 실제로는 서버에서 파일 목록을 제공받아야 함
-    // 여기서는 간단히 알려진 파일들을 하드코딩
-    onComplete(images);
+    const data = await response.json();
+    return data[category] || [];
+  } catch (error) {
+    console.error(`Error loading ${category} images:`, error);
+    return [];
   }
-  
-  checkImage(0);
 }
 
 /**
- * 서버 사이드에서 이미지 목록 생성 (Next.js API route에서 사용)
+ * 등급별로 이미지 그룹화
  */
-export async function generateImageList() {
-  // 이 함수는 빌드 타임이나 API route에서 실행되어야 함
-  return null;
+export function groupByRarity(items: GameItem[]): Record<string, GameItem[]> {
+  const grouped: Record<string, GameItem[]> = {
+    legendary: [],
+    epic: [],
+    rare: [],
+    common: [],
+    none: [] // 등급 정보 없는 아이템
+  };
+  
+  items.forEach((item) => {
+    const rarity = item.rarity || 'none';
+    if (!grouped[rarity]) {
+      grouped[rarity] = [];
+    }
+    grouped[rarity].push(item);
+  });
+  
+  return grouped;
 }

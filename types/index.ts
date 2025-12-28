@@ -12,6 +12,7 @@ export interface GameItem {
   id: string;
   name: string;
   image: string;
+  rarity?: string; // legendary, epic, rare, common
 }
 
 export interface BlessingItem extends GameItem {
@@ -46,6 +47,8 @@ export interface ArenaData {
   subCombo: ComboData;
   subScore: ScoreData;
   isSubComboExpanded: boolean;
+  mainCookieRatio: number; // 메인 조합 선달/이달 쿠키 비율 (0-100, 기본 54)
+  subCookieRatio: number; // 대체 조합 선달/이달 쿠키 비율 (0-100, 기본 56)
 }
 
 export type BackgroundType = 'color' | 'gradient' | 'image';

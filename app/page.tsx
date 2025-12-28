@@ -27,7 +27,7 @@ function PageContent() {
   } = useAppStore();
   const searchParams = useSearchParams();
 
-  // Load game data
+  // Load game data from generated JSON
   useEffect(() => {
     fetch('/data/gameData.json')
       .then((res) => res.json())

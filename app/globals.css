@@ -55,6 +55,12 @@ body {
   /* 확대/축소 방지 */
   touch-action: pan-x pan-y;
   -ms-touch-action: pan-x pan-y;
+  /* 오버스크롤(bounce) 방지 */
+  overscroll-behavior: none;
+  -webkit-overscroll-behavior: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 html {

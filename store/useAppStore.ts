@@ -31,6 +31,8 @@ const createEmptyArena = (): ArenaData => ({
     unit: '-',
   },
   isSubComboExpanded: false,
+  mainCookieRatio: 54, // 메인 조합 선달 쿠키 비율 (기본 54%, 이달 46%)
+  subCookieRatio: 56, // 대체 조합 선달 쿠키 비율 (기본 56%, 이달 44%)
 });
 
 interface AppStore extends AppState {
@@ -53,6 +55,8 @@ interface AppStore extends AppState {
   setArenaSubCombo: (arenaIndex: number, field: string, value: any) => void;
   setArenaSubScore: (arenaIndex: number, field: 'value' | 'unit', value: string) => void;
   toggleSubCombo: (arenaIndex: number) => void;
+  setMainCookieRatio: (arenaIndex: number, ratio: number) => void;
+  setSubCookieRatio: (arenaIndex: number, ratio: number) => void;
   setGameData: (data: any) => void;
   loadStateFromUrl: (state: Partial<AppState>) => void;
   reset: () => void;
@@ -201,6 +205,26 @@ export const useAppStore = create<AppStore>((set) => ({
       newArenas[arenaIndex] = {
         ...newArenas[arenaIndex],
         isSubComboExpanded: !newArenas[arenaIndex].isSubComboExpanded,
+      };
+      return { arenas: newArenas };
+    }),
+
+  setMainCookieRatio: (arenaIndex, ratio) =>
+    set((state) => {
+      const newArenas = [...state.arenas];
+      newArenas[arenaIndex] = {
+        ...newArenas[arenaIndex],
+        mainCookieRatio: ratio,
+      };
+      return { arenas: newArenas };
+    }),
+
+  setSubCookieRatio: (arenaIndex, ratio) =>
+    set((state) => {
+      const newArenas = [...state.arenas];
+      newArenas[arenaIndex] = {
+        ...newArenas[arenaIndex],
+        subCookieRatio: ratio,
       };
       return { arenas: newArenas };
     }),

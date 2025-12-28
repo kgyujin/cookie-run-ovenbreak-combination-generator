@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/generateImageData.js && next dev",
+    "build": "node scripts/generateImageData.js && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-images": "node scripts/generateImageData.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

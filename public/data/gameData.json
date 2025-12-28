@@ -1,46 +1,4966 @@
 {
   "cookies": [
-    { "id": "cookie001", "name": "선달 쿠키", "image": "/images/cookies/1_선달.png" },
-    { "id": "cookie002", "name": "이달 쿠키", "image": "/images/cookies/1_이달.png" },
-    { "id": "cookie003", "name": "대체조합 선달 쿠키", "image": "/images/cookies/1_대체조합 선달.png" },
-    { "id": "cookie004", "name": "대체조합 이달 쿠키", "image": "/images/cookies/1_대체조합 이달.png" }
+    {
+      "id": "cookies_legendary_1",
+      "name": "꿈길잡이",
+      "image": "/images/cookies/legendary/꿈길잡이.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_2",
+      "name": "달빛술사",
+      "image": "/images/cookies/legendary/달빛술사.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_3",
+      "name": "리치 드래곤",
+      "image": "/images/cookies/legendary/리치 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_4",
+      "name": "바다요정",
+      "image": "/images/cookies/legendary/바다요정.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_5",
+      "name": "바람궁수",
+      "image": "/images/cookies/legendary/바람궁수.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_6",
+      "name": "백련 드래곤",
+      "image": "/images/cookies/legendary/백련 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_7",
+      "name": "불꽃정령",
+      "image": "/images/cookies/legendary/불꽃정령.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_8",
+      "name": "설탕백조",
+      "image": "/images/cookies/legendary/설탕백조.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_9",
+      "name": "설탕흑조",
+      "image": "/images/cookies/legendary/설탕흑조.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_10",
+      "name": "스테비아 노바",
+      "image": "/images/cookies/legendary/스테비아 노바.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_11",
+      "name": "시간지기",
+      "image": "/images/cookies/legendary/시간지기.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_12",
+      "name": "심해군주",
+      "image": "/images/cookies/legendary/심해군주.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_13",
+      "name": "어둠마녀",
+      "image": "/images/cookies/legendary/어둠마녀.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_14",
+      "name": "용과 드래곤",
+      "image": "/images/cookies/legendary/용과 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_15",
+      "name": "용안 드래곤",
+      "image": "/images/cookies/legendary/용안 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_16",
+      "name": "자일리톨",
+      "image": "/images/cookies/legendary/자일리톨.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_17",
+      "name": "천년나무",
+      "image": "/images/cookies/legendary/천년나무.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_18",
+      "name": "파인 드래곤",
+      "image": "/images/cookies/legendary/파인 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_legendary_19",
+      "name": "흑마교주",
+      "image": "/images/cookies/legendary/흑마교주.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "cookies_epic_1",
+      "name": "감귤탕후루",
+      "image": "/images/cookies/epic/감귤탕후루.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_2",
+      "name": "감자",
+      "image": "/images/cookies/epic/감자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_3",
+      "name": "감초",
+      "image": "/images/cookies/epic/감초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_4",
+      "name": "고블린",
+      "image": "/images/cookies/epic/고블린.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_5",
+      "name": "괴도",
+      "image": "/images/cookies/epic/괴도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_6",
+      "name": "구미호",
+      "image": "/images/cookies/epic/구미호.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_7",
+      "name": "구슬아이스",
+      "image": "/images/cookies/epic/구슬아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_8",
+      "name": "구운달걀",
+      "image": "/images/cookies/epic/구운달걀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_9",
+      "name": "김",
+      "image": "/images/cookies/epic/김.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_10",
+      "name": "난초",
+      "image": "/images/cookies/epic/난초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_11",
+      "name": "눈설탕",
+      "image": "/images/cookies/epic/눈설탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_12",
+      "name": "다이노사워",
+      "image": "/images/cookies/epic/다이노사워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_13",
+      "name": "다크초코",
+      "image": "/images/cookies/epic/다크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_14",
+      "name": "닥터 뼈다귀",
+      "image": "/images/cookies/epic/닥터 뼈다귀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_15",
+      "name": "닥터 와사비",
+      "image": "/images/cookies/epic/닥터 와사비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_16",
+      "name": "단팥",
+      "image": "/images/cookies/epic/단팥.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_17",
+      "name": "달토끼",
+      "image": "/images/cookies/epic/달토끼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_18",
+      "name": "당근",
+      "image": "/images/cookies/epic/당근.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_19",
+      "name": "대왕고래",
+      "image": "/images/cookies/epic/대왕고래.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_20",
+      "name": "대추",
+      "image": "/images/cookies/epic/대추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_21",
+      "name": "대파",
+      "image": "/images/cookies/epic/대파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_22",
+      "name": "더덕꽃",
+      "image": "/images/cookies/epic/더덕꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_23",
+      "name": "독버섯",
+      "image": "/images/cookies/epic/독버섯.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_24",
+      "name": "드래곤 아이",
+      "image": "/images/cookies/epic/드래곤 아이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_25",
+      "name": "디제이",
+      "image": "/images/cookies/epic/디제이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_26",
+      "name": "딸기생크림",
+      "image": "/images/cookies/epic/딸기생크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_27",
+      "name": "딸기초코스틱",
+      "image": "/images/cookies/epic/딸기초코스틱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_28",
+      "name": "딸기크레페",
+      "image": "/images/cookies/epic/딸기크레페.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_29",
+      "name": "라일락",
+      "image": "/images/cookies/epic/라일락.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_30",
+      "name": "라임",
+      "image": "/images/cookies/epic/라임.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_31",
+      "name": "라즈베리 무스",
+      "image": "/images/cookies/epic/라즈베리 무스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_32",
+      "name": "람부탄",
+      "image": "/images/cookies/epic/람부탄.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_33",
+      "name": "랍스터",
+      "image": "/images/cookies/epic/랍스터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_34",
+      "name": "랑그드샤",
+      "image": "/images/cookies/epic/랑그드샤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_35",
+      "name": "레드판나코타",
+      "image": "/images/cookies/epic/레드판나코타.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_36",
+      "name": "레몬",
+      "image": "/images/cookies/epic/레몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_37",
+      "name": "롤리팝",
+      "image": "/images/cookies/epic/롤리팝.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_38",
+      "name": "롤케이크",
+      "image": "/images/cookies/epic/롤케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_39",
+      "name": "마라",
+      "image": "/images/cookies/epic/마라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_40",
+      "name": "마법사",
+      "image": "/images/cookies/epic/마법사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_41",
+      "name": "마블식빵",
+      "image": "/images/cookies/epic/마블식빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_42",
+      "name": "마시멜로",
+      "image": "/images/cookies/epic/마시멜로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_43",
+      "name": "마카롱",
+      "image": "/images/cookies/epic/마카롱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_44",
+      "name": "말차",
+      "image": "/images/cookies/epic/말차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_45",
+      "name": "망고",
+      "image": "/images/cookies/epic/망고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_46",
+      "name": "매작과",
+      "image": "/images/cookies/epic/매작과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_47",
+      "name": "머스타드",
+      "image": "/images/cookies/epic/머스타드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_48",
+      "name": "메론빵",
+      "image": "/images/cookies/epic/메론빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_49",
+      "name": "모카가오리",
+      "image": "/images/cookies/epic/모카가오리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_50",
+      "name": "무화과",
+      "image": "/images/cookies/epic/무화과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_51",
+      "name": "물망초 다이노",
+      "image": "/images/cookies/epic/물망초 다이노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_52",
+      "name": "민트웨이퍼",
+      "image": "/images/cookies/epic/민트웨이퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_53",
+      "name": "민트초코",
+      "image": "/images/cookies/epic/민트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_54",
+      "name": "밀랍",
+      "image": "/images/cookies/epic/밀랍.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_55",
+      "name": "밀키웨이",
+      "image": "/images/cookies/epic/밀키웨이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_56",
+      "name": "바게트",
+      "image": "/images/cookies/epic/바게트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_57",
+      "name": "바나나",
+      "image": "/images/cookies/epic/바나나.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_58",
+      "name": "바크초코",
+      "image": "/images/cookies/epic/바크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_59",
+      "name": "박하사탕",
+      "image": "/images/cookies/epic/박하사탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_60",
+      "name": "밤톨",
+      "image": "/images/cookies/epic/밤톨.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_61",
+      "name": "방울엿",
+      "image": "/images/cookies/epic/방울엿.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_62",
+      "name": "백도",
+      "image": "/images/cookies/epic/백도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_63",
+      "name": "버터베어",
+      "image": "/images/cookies/epic/버터베어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_64",
+      "name": "버터오징어",
+      "image": "/images/cookies/epic/버터오징어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_65",
+      "name": "버터프레첼",
+      "image": "/images/cookies/epic/버터프레첼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_66",
+      "name": "벚꽃",
+      "image": "/images/cookies/epic/벚꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_67",
+      "name": "복숭아",
+      "image": "/images/cookies/epic/복숭아.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_68",
+      "name": "분모자",
+      "image": "/images/cookies/epic/분모자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_69",
+      "name": "블랙누들",
+      "image": "/images/cookies/epic/블랙누들.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_70",
+      "name": "블랙베리",
+      "image": "/images/cookies/epic/블랙베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_71",
+      "name": "블랙올리브",
+      "image": "/images/cookies/epic/블랙올리브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_72",
+      "name": "블랙페퍼",
+      "image": "/images/cookies/epic/블랙페퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_73",
+      "name": "블루슬러시",
+      "image": "/images/cookies/epic/블루슬러시.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_74",
+      "name": "블루파이",
+      "image": "/images/cookies/epic/블루파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_75",
+      "name": "비트",
+      "image": "/images/cookies/epic/비트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_76",
+      "name": "사워벨트",
+      "image": "/images/cookies/epic/사워벨트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_77",
+      "name": "사이보그",
+      "image": "/images/cookies/epic/사이보그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_78",
+      "name": "샌드위치",
+      "image": "/images/cookies/epic/샌드위치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_79",
+      "name": "생일케이크",
+      "image": "/images/cookies/epic/생일케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_80",
+      "name": "생크림담비",
+      "image": "/images/cookies/epic/생크림담비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_81",
+      "name": "생토노레",
+      "image": "/images/cookies/epic/생토노레.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_82",
+      "name": "샤벳상어",
+      "image": "/images/cookies/epic/샤벳상어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_83",
+      "name": "샤이닝글리터",
+      "image": "/images/cookies/epic/샤이닝글리터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_84",
+      "name": "샤인머스캣",
+      "image": "/images/cookies/epic/샤인머스캣.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_85",
+      "name": "석류",
+      "image": "/images/cookies/epic/석류.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_86",
+      "name": "센티피드",
+      "image": "/images/cookies/epic/센티피드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_87",
+      "name": "소금",
+      "image": "/images/cookies/epic/소금.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_88",
+      "name": "솜사탕",
+      "image": "/images/cookies/epic/솜사탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_89",
+      "name": "쇼콜라봉봉",
+      "image": "/images/cookies/epic/쇼콜라봉봉.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_90",
+      "name": "수국",
+      "image": "/images/cookies/epic/수국.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_91",
+      "name": "슈가글라스",
+      "image": "/images/cookies/epic/슈가글라스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_92",
+      "name": "슈니발렌",
+      "image": "/images/cookies/epic/슈니발렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_93",
+      "name": "슈크림",
+      "image": "/images/cookies/epic/슈크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_94",
+      "name": "슈톨렌",
+      "image": "/images/cookies/epic/슈톨렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_95",
+      "name": "스네이크후르츠",
+      "image": "/images/cookies/epic/스네이크후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_96",
+      "name": "스모어",
+      "image": "/images/cookies/epic/스모어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_97",
+      "name": "스타후르츠",
+      "image": "/images/cookies/epic/스타후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_98",
+      "name": "스테이크",
+      "image": "/images/cookies/epic/스테이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_99",
+      "name": "스트링젤리",
+      "image": "/images/cookies/epic/스트링젤리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_100",
+      "name": "스파클링",
+      "image": "/images/cookies/epic/스파클링.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_101",
+      "name": "시금치",
+      "image": "/images/cookies/epic/시금치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_102",
+      "name": "시나몬",
+      "image": "/images/cookies/epic/시나몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_103",
+      "name": "아몬드",
+      "image": "/images/cookies/epic/아몬드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_104",
+      "name": "아보카도",
+      "image": "/images/cookies/epic/아보카도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_105",
+      "name": "아이스캔디",
+      "image": "/images/cookies/epic/아이스캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_106",
+      "name": "알로에",
+      "image": "/images/cookies/epic/알로에.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_107",
+      "name": "앵두",
+      "image": "/images/cookies/epic/앵두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_108",
+      "name": "양파",
+      "image": "/images/cookies/epic/양파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_109",
+      "name": "얼그레이",
+      "image": "/images/cookies/epic/얼그레이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_110",
+      "name": "에그노그",
+      "image": "/images/cookies/epic/에그노그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_111",
+      "name": "에스카르고",
+      "image": "/images/cookies/epic/에스카르고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_112",
+      "name": "에스트로넛",
+      "image": "/images/cookies/epic/에스트로넛.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_113",
+      "name": "에일리언 도넛",
+      "image": "/images/cookies/epic/에일리언 도넛.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_114",
+      "name": "엘더베리",
+      "image": "/images/cookies/epic/엘더베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_115",
+      "name": "엠버슈가",
+      "image": "/images/cookies/epic/엠버슈가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_116",
+      "name": "예언자",
+      "image": "/images/cookies/epic/예언자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_117",
+      "name": "오렌지",
+      "image": "/images/cookies/epic/오렌지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_118",
+      "name": "오징어먹물",
+      "image": "/images/cookies/epic/오징어먹물.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_119",
+      "name": "옥춘",
+      "image": "/images/cookies/epic/옥춘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_120",
+      "name": "요가",
+      "image": "/images/cookies/epic/요가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_121",
+      "name": "요거트크림",
+      "image": "/images/cookies/epic/요거트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_122",
+      "name": "요정",
+      "image": "/images/cookies/epic/요정.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_123",
+      "name": "우유",
+      "image": "/images/cookies/epic/우유.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_124",
+      "name": "우주비행사",
+      "image": "/images/cookies/epic/우주비행사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_125",
+      "name": "웨어울프",
+      "image": "/images/cookies/epic/웨어울프.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_126",
+      "name": "유과",
+      "image": "/images/cookies/epic/유과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_127",
+      "name": "음유시인",
+      "image": "/images/cookies/epic/음유시인.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_128",
+      "name": "의적",
+      "image": "/images/cookies/epic/의적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_129",
+      "name": "이온맛 쿠키로봇",
+      "image": "/images/cookies/epic/이온맛 쿠키로봇.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_130",
+      "name": "인삼",
+      "image": "/images/cookies/epic/인삼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_131",
+      "name": "자두",
+      "image": "/images/cookies/epic/자두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_132",
+      "name": "자몽",
+      "image": "/images/cookies/epic/자몽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_133",
+      "name": "자색고구마",
+      "image": "/images/cookies/epic/자색고구마.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_134",
+      "name": "장미",
+      "image": "/images/cookies/epic/장미.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_135",
+      "name": "전갈",
+      "image": "/images/cookies/epic/전갈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_136",
+      "name": "전기장어",
+      "image": "/images/cookies/epic/전기장어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_137",
+      "name": "정글전사",
+      "image": "/images/cookies/epic/정글전사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_138",
+      "name": "지초",
+      "image": "/images/cookies/epic/지초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_139",
+      "name": "체리콜라",
+      "image": "/images/cookies/epic/체리콜라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_140",
+      "name": "체스초코",
+      "image": "/images/cookies/epic/체스초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_141",
+      "name": "초코바",
+      "image": "/images/cookies/epic/초코바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_142",
+      "name": "초코볼",
+      "image": "/images/cookies/epic/초코볼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_143",
+      "name": "츄러스",
+      "image": "/images/cookies/epic/츄러스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_144",
+      "name": "칠리",
+      "image": "/images/cookies/epic/칠리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_145",
+      "name": "카놀리",
+      "image": "/images/cookies/epic/카놀리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_146",
+      "name": "카푸치노",
+      "image": "/images/cookies/epic/카푸치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_147",
+      "name": "캔디콘",
+      "image": "/images/cookies/epic/캔디콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_148",
+      "name": "캡틴 아이스",
+      "image": "/images/cookies/epic/캡틴 아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_149",
+      "name": "커런트크림",
+      "image": "/images/cookies/epic/커런트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_150",
+      "name": "커피캔디",
+      "image": "/images/cookies/epic/커피캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_151",
+      "name": "코코아",
+      "image": "/images/cookies/epic/코코아.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_152",
+      "name": "콜리플라워",
+      "image": "/images/cookies/epic/콜리플라워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_153",
+      "name": "쿠키멀즈",
+      "image": "/images/cookies/epic/쿠키멀즈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_154",
+      "name": "크로우베리",
+      "image": "/images/cookies/epic/크로우베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_155",
+      "name": "크루아상",
+      "image": "/images/cookies/epic/크루아상.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_156",
+      "name": "크림 유니콘",
+      "image": "/images/cookies/epic/크림 유니콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_157",
+      "name": "크림소다",
+      "image": "/images/cookies/epic/크림소다.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_158",
+      "name": "키위",
+      "image": "/images/cookies/epic/키위.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_159",
+      "name": "키친싱크파이",
+      "image": "/images/cookies/epic/키친싱크파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_160",
+      "name": "탐험가",
+      "image": "/images/cookies/epic/탐험가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_161",
+      "name": "트러플",
+      "image": "/images/cookies/epic/트러플.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_162",
+      "name": "티라미수",
+      "image": "/images/cookies/epic/티라미수.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_163",
+      "name": "파스텔머랭",
+      "image": "/images/cookies/epic/파스텔머랭.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_164",
+      "name": "파프리카",
+      "image": "/images/cookies/epic/파프리카.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_165",
+      "name": "팝콘",
+      "image": "/images/cookies/epic/팝콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_166",
+      "name": "팝핑 캔디",
+      "image": "/images/cookies/epic/팝핑 캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_167",
+      "name": "팬케이크",
+      "image": "/images/cookies/epic/팬케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_168",
+      "name": "페퍼누스",
+      "image": "/images/cookies/epic/페퍼누스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_169",
+      "name": "페페론치노",
+      "image": "/images/cookies/epic/페페론치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_170",
+      "name": "포두부",
+      "image": "/images/cookies/epic/포두부.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_171",
+      "name": "폭죽",
+      "image": "/images/cookies/epic/폭죽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_172",
+      "name": "푸딩",
+      "image": "/images/cookies/epic/푸딩.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_173",
+      "name": "풋사과",
+      "image": "/images/cookies/epic/풋사과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_174",
+      "name": "피겨여왕",
+      "image": "/images/cookies/epic/피겨여왕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_175",
+      "name": "피자",
+      "image": "/images/cookies/epic/피자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_176",
+      "name": "핑크초코",
+      "image": "/images/cookies/epic/핑크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_177",
+      "name": "하바네로",
+      "image": "/images/cookies/epic/하바네로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_178",
+      "name": "해적",
+      "image": "/images/cookies/epic/해적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_179",
+      "name": "허브",
+      "image": "/images/cookies/epic/허브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_180",
+      "name": "호두",
+      "image": "/images/cookies/epic/호두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_181",
+      "name": "홍고추",
+      "image": "/images/cookies/epic/홍고추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_182",
+      "name": "화이트고스트",
+      "image": "/images/cookies/epic/화이트고스트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_183",
+      "name": "화이트초코",
+      "image": "/images/cookies/epic/화이트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_184",
+      "name": "황소자리",
+      "image": "/images/cookies/epic/황소자리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_185",
+      "name": "휘핑크림",
+      "image": "/images/cookies/epic/휘핑크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_186",
+      "name": "흑마늘",
+      "image": "/images/cookies/epic/흑마늘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_187",
+      "name": "히어로",
+      "image": "/images/cookies/epic/히어로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_rare_1",
+      "name": "공주",
+      "image": "/images/cookies/rare/공주.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_2",
+      "name": "근육",
+      "image": "/images/cookies/rare/근육.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_3",
+      "name": "닌자",
+      "image": "/images/cookies/rare/닌자.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_4",
+      "name": "락스타",
+      "image": "/images/cookies/rare/락스타.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_5",
+      "name": "뱀파이어",
+      "image": "/images/cookies/rare/뱀파이어.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_6",
+      "name": "버블껌",
+      "image": "/images/cookies/rare/버블껌.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_7",
+      "name": "소다",
+      "image": "/images/cookies/rare/소다.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_8",
+      "name": "악마",
+      "image": "/images/cookies/rare/악마.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_9",
+      "name": "연금술사",
+      "image": "/images/cookies/rare/연금술사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_10",
+      "name": "용사",
+      "image": "/images/cookies/rare/용사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_11",
+      "name": "좀비",
+      "image": "/images/cookies/rare/좀비.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_12",
+      "name": "천사",
+      "image": "/images/cookies/rare/천사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_13",
+      "name": "체리",
+      "image": "/images/cookies/rare/체리.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_14",
+      "name": "치어리더",
+      "image": "/images/cookies/rare/치어리더.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_15",
+      "name": "치즈케이크",
+      "image": "/images/cookies/rare/치즈케이크.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_16",
+      "name": "파일럿",
+      "image": "/images/cookies/rare/파일럿.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_rare_17",
+      "name": "피스타치오",
+      "image": "/images/cookies/rare/피스타치오.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "cookies_common_1",
+      "name": "딸기",
+      "image": "/images/cookies/common/딸기.png",
+      "rarity": "common"
+    },
+    {
+      "id": "cookies_common_2",
+      "name": "명랑한 쿠키",
+      "image": "/images/cookies/common/명랑한 쿠키.png",
+      "rarity": "common"
+    },
+    {
+      "id": "cookies_common_3",
+      "name": "보더",
+      "image": "/images/cookies/common/보더.png",
+      "rarity": "common"
+    },
+    {
+      "id": "cookies_common_4",
+      "name": "용감한 쿠키",
+      "image": "/images/cookies/common/용감한 쿠키.png",
+      "rarity": "common"
+    }
   ],
   "pets": [
-    { "id": "pet001", "name": "펫", "image": "/images/pets/1_펫.png" },
-    { "id": "pet002", "name": "대체조합 펫", "image": "/images/pets/1_대체조합 펫.png" }
+    {
+      "id": "pets_legendary_1",
+      "name": "꿈길잡이",
+      "image": "/images/pets/legendary/꿈길잡이.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_2",
+      "name": "눈폭풍 예티",
+      "image": "/images/pets/legendary/눈폭풍 예티.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_3",
+      "name": "달빛술사",
+      "image": "/images/pets/legendary/달빛술사.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_4",
+      "name": "리치 드래곤",
+      "image": "/images/pets/legendary/리치 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_5",
+      "name": "마그마 불새",
+      "image": "/images/pets/legendary/마그마 불새.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_6",
+      "name": "바다요정",
+      "image": "/images/pets/legendary/바다요정.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_7",
+      "name": "바람궁수",
+      "image": "/images/pets/legendary/바람궁수.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_8",
+      "name": "백련 드래곤",
+      "image": "/images/pets/legendary/백련 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_9",
+      "name": "불꽃정령",
+      "image": "/images/pets/legendary/불꽃정령.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_10",
+      "name": "시간지기",
+      "image": "/images/pets/legendary/시간지기.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_11",
+      "name": "어둠마녀",
+      "image": "/images/pets/legendary/어둠마녀.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_12",
+      "name": "에메랄드 수호골렘",
+      "image": "/images/pets/legendary/에메랄드 수호골렘.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_13",
+      "name": "용과 드래곤",
+      "image": "/images/pets/legendary/용과 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_14",
+      "name": "용안 드래곤",
+      "image": "/images/pets/legendary/용안 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_15",
+      "name": "천년나무",
+      "image": "/images/pets/legendary/천년나무.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_16",
+      "name": "파인 드래곤",
+      "image": "/images/pets/legendary/파인 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_legendary_17",
+      "name": "푸른 회오리용",
+      "image": "/images/pets/legendary/푸른 회오리용.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "pets_epic_1",
+      "name": "감귤탕후루",
+      "image": "/images/pets/epic/감귤탕후루.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_2",
+      "name": "감자",
+      "image": "/images/pets/epic/감자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_3",
+      "name": "감초",
+      "image": "/images/pets/epic/감초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_4",
+      "name": "고블린",
+      "image": "/images/pets/epic/고블린.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_5",
+      "name": "괴도",
+      "image": "/images/pets/epic/괴도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_6",
+      "name": "구미호",
+      "image": "/images/pets/epic/구미호.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_7",
+      "name": "구슬아이스",
+      "image": "/images/pets/epic/구슬아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_8",
+      "name": "구운달걀",
+      "image": "/images/pets/epic/구운달걀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_9",
+      "name": "김",
+      "image": "/images/pets/epic/김.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_10",
+      "name": "꿈길잡이",
+      "image": "/images/pets/epic/꿈길잡이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_11",
+      "name": "난초",
+      "image": "/images/pets/epic/난초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_12",
+      "name": "눈설탕",
+      "image": "/images/pets/epic/눈설탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_13",
+      "name": "다이노사워",
+      "image": "/images/pets/epic/다이노사워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_14",
+      "name": "다크초코",
+      "image": "/images/pets/epic/다크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_15",
+      "name": "닥터 뼈다귀",
+      "image": "/images/pets/epic/닥터 뼈다귀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_16",
+      "name": "닥터 와사비",
+      "image": "/images/pets/epic/닥터 와사비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_17",
+      "name": "단팥",
+      "image": "/images/pets/epic/단팥.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_18",
+      "name": "달토끼",
+      "image": "/images/pets/epic/달토끼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_19",
+      "name": "당근",
+      "image": "/images/pets/epic/당근.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_20",
+      "name": "대왕고래",
+      "image": "/images/pets/epic/대왕고래.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_21",
+      "name": "대추",
+      "image": "/images/pets/epic/대추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_22",
+      "name": "대파",
+      "image": "/images/pets/epic/대파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_23",
+      "name": "더덕꽃",
+      "image": "/images/pets/epic/더덕꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_24",
+      "name": "독버섯",
+      "image": "/images/pets/epic/독버섯.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_25",
+      "name": "드래곤 아이",
+      "image": "/images/pets/epic/드래곤 아이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_26",
+      "name": "디제이",
+      "image": "/images/pets/epic/디제이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_27",
+      "name": "딸기생크림",
+      "image": "/images/pets/epic/딸기생크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_28",
+      "name": "딸기초코스틱",
+      "image": "/images/pets/epic/딸기초코스틱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_29",
+      "name": "딸기크레페",
+      "image": "/images/pets/epic/딸기크레페.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_30",
+      "name": "라일락",
+      "image": "/images/pets/epic/라일락.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_31",
+      "name": "라임",
+      "image": "/images/pets/epic/라임.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_32",
+      "name": "라즈베리 무스",
+      "image": "/images/pets/epic/라즈베리 무스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_33",
+      "name": "람부탄",
+      "image": "/images/pets/epic/람부탄.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_34",
+      "name": "랍스터",
+      "image": "/images/pets/epic/랍스터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_35",
+      "name": "랑그드샤",
+      "image": "/images/pets/epic/랑그드샤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_36",
+      "name": "레드판나코타",
+      "image": "/images/pets/epic/레드판나코타.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_37",
+      "name": "레몬",
+      "image": "/images/pets/epic/레몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_38",
+      "name": "롤리팝",
+      "image": "/images/pets/epic/롤리팝.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_39",
+      "name": "롤케이크",
+      "image": "/images/pets/epic/롤케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_40",
+      "name": "리치 드래곤",
+      "image": "/images/pets/epic/리치 드래곤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_41",
+      "name": "마라",
+      "image": "/images/pets/epic/마라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_42",
+      "name": "마법사",
+      "image": "/images/pets/epic/마법사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_43",
+      "name": "마블식빵",
+      "image": "/images/pets/epic/마블식빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_44",
+      "name": "마시멜로",
+      "image": "/images/pets/epic/마시멜로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_45",
+      "name": "마카롱",
+      "image": "/images/pets/epic/마카롱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_46",
+      "name": "말차",
+      "image": "/images/pets/epic/말차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_47",
+      "name": "망고",
+      "image": "/images/pets/epic/망고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_48",
+      "name": "매작과",
+      "image": "/images/pets/epic/매작과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_49",
+      "name": "머스터드",
+      "image": "/images/pets/epic/머스터드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_50",
+      "name": "메론빵",
+      "image": "/images/pets/epic/메론빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_51",
+      "name": "모카가오리",
+      "image": "/images/pets/epic/모카가오리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_52",
+      "name": "무화과",
+      "image": "/images/pets/epic/무화과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_53",
+      "name": "물망초 다이노",
+      "image": "/images/pets/epic/물망초 다이노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_54",
+      "name": "민트웨이퍼",
+      "image": "/images/pets/epic/민트웨이퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_56",
+      "name": "민트초코",
+      "image": "/images/pets/epic/민트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_55",
+      "name": "민트초코 (2)",
+      "image": "/images/pets/epic/민트초코 (2).png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_57",
+      "name": "밀랍",
+      "image": "/images/pets/epic/밀랍.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_58",
+      "name": "밀키웨이",
+      "image": "/images/pets/epic/밀키웨이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_59",
+      "name": "바게트",
+      "image": "/images/pets/epic/바게트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_60",
+      "name": "바나나",
+      "image": "/images/pets/epic/바나나.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_61",
+      "name": "바크초코",
+      "image": "/images/pets/epic/바크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_62",
+      "name": "박하",
+      "image": "/images/pets/epic/박하.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_63",
+      "name": "밤톨",
+      "image": "/images/pets/epic/밤톨.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_64",
+      "name": "방울엿",
+      "image": "/images/pets/epic/방울엿.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_65",
+      "name": "백도",
+      "image": "/images/pets/epic/백도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_66",
+      "name": "백련 드래곤",
+      "image": "/images/pets/epic/백련 드래곤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_67",
+      "name": "버터베어",
+      "image": "/images/pets/epic/버터베어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_68",
+      "name": "버터오징어",
+      "image": "/images/pets/epic/버터오징어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_69",
+      "name": "버터프레첼",
+      "image": "/images/pets/epic/버터프레첼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_70",
+      "name": "벚꽃",
+      "image": "/images/pets/epic/벚꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_71",
+      "name": "분모자",
+      "image": "/images/pets/epic/분모자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_72",
+      "name": "블랙누들",
+      "image": "/images/pets/epic/블랙누들.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_73",
+      "name": "블랙베리",
+      "image": "/images/pets/epic/블랙베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_74",
+      "name": "블랙올리브",
+      "image": "/images/pets/epic/블랙올리브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_75",
+      "name": "블랙페퍼",
+      "image": "/images/pets/epic/블랙페퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_76",
+      "name": "블루슬러시",
+      "image": "/images/pets/epic/블루슬러시.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_77",
+      "name": "블루파이",
+      "image": "/images/pets/epic/블루파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_78",
+      "name": "비트",
+      "image": "/images/pets/epic/비트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_79",
+      "name": "사워벨트",
+      "image": "/images/pets/epic/사워벨트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_80",
+      "name": "사이보그",
+      "image": "/images/pets/epic/사이보그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_81",
+      "name": "샌드위치",
+      "image": "/images/pets/epic/샌드위치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_82",
+      "name": "생일케이크",
+      "image": "/images/pets/epic/생일케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_83",
+      "name": "생크림담비",
+      "image": "/images/pets/epic/생크림담비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_84",
+      "name": "생토노레",
+      "image": "/images/pets/epic/생토노레.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_85",
+      "name": "샤벳상어",
+      "image": "/images/pets/epic/샤벳상어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_86",
+      "name": "샤이닝글리터",
+      "image": "/images/pets/epic/샤이닝글리터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_87",
+      "name": "샤인머스캣",
+      "image": "/images/pets/epic/샤인머스캣.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_88",
+      "name": "석류",
+      "image": "/images/pets/epic/석류.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_89",
+      "name": "설탕백조",
+      "image": "/images/pets/epic/설탕백조.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_90",
+      "name": "설탕흑조",
+      "image": "/images/pets/epic/설탕흑조.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_91",
+      "name": "센티피드",
+      "image": "/images/pets/epic/센티피드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_92",
+      "name": "소금",
+      "image": "/images/pets/epic/소금.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_93",
+      "name": "솜사탕",
+      "image": "/images/pets/epic/솜사탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_94",
+      "name": "쇼콜라봉봉",
+      "image": "/images/pets/epic/쇼콜라봉봉.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_95",
+      "name": "수국",
+      "image": "/images/pets/epic/수국.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_96",
+      "name": "슈가글라스",
+      "image": "/images/pets/epic/슈가글라스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_97",
+      "name": "슈니발렌",
+      "image": "/images/pets/epic/슈니발렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_98",
+      "name": "슈크림",
+      "image": "/images/pets/epic/슈크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_99",
+      "name": "슈톨렌",
+      "image": "/images/pets/epic/슈톨렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_100",
+      "name": "스네이크후르츠",
+      "image": "/images/pets/epic/스네이크후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_101",
+      "name": "스모어",
+      "image": "/images/pets/epic/스모어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_102",
+      "name": "스타후르츠",
+      "image": "/images/pets/epic/스타후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_103",
+      "name": "스테이바 노바",
+      "image": "/images/pets/epic/스테이바 노바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_104",
+      "name": "스테이크",
+      "image": "/images/pets/epic/스테이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_105",
+      "name": "스트링젤리",
+      "image": "/images/pets/epic/스트링젤리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_106",
+      "name": "스파클링",
+      "image": "/images/pets/epic/스파클링.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_107",
+      "name": "시금치",
+      "image": "/images/pets/epic/시금치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_108",
+      "name": "시나몬",
+      "image": "/images/pets/epic/시나몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_109",
+      "name": "심해군주",
+      "image": "/images/pets/epic/심해군주.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_110",
+      "name": "아몬드",
+      "image": "/images/pets/epic/아몬드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_111",
+      "name": "아보카도",
+      "image": "/images/pets/epic/아보카도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_112",
+      "name": "아이스캔디",
+      "image": "/images/pets/epic/아이스캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_113",
+      "name": "알로에",
+      "image": "/images/pets/epic/알로에.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_114",
+      "name": "앰버슈가",
+      "image": "/images/pets/epic/앰버슈가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_115",
+      "name": "앵두",
+      "image": "/images/pets/epic/앵두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_116",
+      "name": "양파",
+      "image": "/images/pets/epic/양파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_117",
+      "name": "얼그레이",
+      "image": "/images/pets/epic/얼그레이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_118",
+      "name": "에그노그",
+      "image": "/images/pets/epic/에그노그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_119",
+      "name": "에스카르고",
+      "image": "/images/pets/epic/에스카르고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_120",
+      "name": "에스트로넛",
+      "image": "/images/pets/epic/에스트로넛.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_121",
+      "name": "에일리언 도넛",
+      "image": "/images/pets/epic/에일리언 도넛.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_122",
+      "name": "엘더베리",
+      "image": "/images/pets/epic/엘더베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_123",
+      "name": "예언자",
+      "image": "/images/pets/epic/예언자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_124",
+      "name": "오렌지",
+      "image": "/images/pets/epic/오렌지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_125",
+      "name": "오징어먹물",
+      "image": "/images/pets/epic/오징어먹물.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_126",
+      "name": "옥춘",
+      "image": "/images/pets/epic/옥춘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_127",
+      "name": "요가",
+      "image": "/images/pets/epic/요가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_128",
+      "name": "요거트크림",
+      "image": "/images/pets/epic/요거트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_129",
+      "name": "요정",
+      "image": "/images/pets/epic/요정.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_130",
+      "name": "용과 드래곤",
+      "image": "/images/pets/epic/용과 드래곤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_131",
+      "name": "용안 드래곤",
+      "image": "/images/pets/epic/용안 드래곤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_132",
+      "name": "우유",
+      "image": "/images/pets/epic/우유.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_133",
+      "name": "우주비행사",
+      "image": "/images/pets/epic/우주비행사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_134",
+      "name": "웨어울프",
+      "image": "/images/pets/epic/웨어울프.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_135",
+      "name": "유과",
+      "image": "/images/pets/epic/유과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_136",
+      "name": "음유시인",
+      "image": "/images/pets/epic/음유시인.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_137",
+      "name": "의적",
+      "image": "/images/pets/epic/의적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_138",
+      "name": "이온맛 쿠키로봇",
+      "image": "/images/pets/epic/이온맛 쿠키로봇.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_139",
+      "name": "인삼",
+      "image": "/images/pets/epic/인삼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_140",
+      "name": "자두",
+      "image": "/images/pets/epic/자두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_141",
+      "name": "자몽",
+      "image": "/images/pets/epic/자몽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_142",
+      "name": "자색고구마",
+      "image": "/images/pets/epic/자색고구마.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_143",
+      "name": "자일리톨 노바",
+      "image": "/images/pets/epic/자일리톨 노바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_144",
+      "name": "장미",
+      "image": "/images/pets/epic/장미.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_145",
+      "name": "전갈",
+      "image": "/images/pets/epic/전갈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_146",
+      "name": "전기장어",
+      "image": "/images/pets/epic/전기장어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_147",
+      "name": "정글전사",
+      "image": "/images/pets/epic/정글전사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_148",
+      "name": "지초",
+      "image": "/images/pets/epic/지초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_149",
+      "name": "체리콜라",
+      "image": "/images/pets/epic/체리콜라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_150",
+      "name": "체스초코",
+      "image": "/images/pets/epic/체스초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_151",
+      "name": "초코바",
+      "image": "/images/pets/epic/초코바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_152",
+      "name": "초코볼",
+      "image": "/images/pets/epic/초코볼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_153",
+      "name": "츄러스",
+      "image": "/images/pets/epic/츄러스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_154",
+      "name": "칠리",
+      "image": "/images/pets/epic/칠리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_155",
+      "name": "카놀리",
+      "image": "/images/pets/epic/카놀리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_156",
+      "name": "카푸치노",
+      "image": "/images/pets/epic/카푸치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_157",
+      "name": "캔디콘",
+      "image": "/images/pets/epic/캔디콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_158",
+      "name": "캡틴 아이스",
+      "image": "/images/pets/epic/캡틴 아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_159",
+      "name": "커런트크림",
+      "image": "/images/pets/epic/커런트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_160",
+      "name": "커피캔디",
+      "image": "/images/pets/epic/커피캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_161",
+      "name": "코코아",
+      "image": "/images/pets/epic/코코아.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_162",
+      "name": "콜리플라워",
+      "image": "/images/pets/epic/콜리플라워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_163",
+      "name": "쿠키멀즈",
+      "image": "/images/pets/epic/쿠키멀즈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_164",
+      "name": "크로우베리",
+      "image": "/images/pets/epic/크로우베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_165",
+      "name": "크루아상",
+      "image": "/images/pets/epic/크루아상.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_166",
+      "name": "크림 유니콘",
+      "image": "/images/pets/epic/크림 유니콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_167",
+      "name": "크림소다",
+      "image": "/images/pets/epic/크림소다.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_168",
+      "name": "키위",
+      "image": "/images/pets/epic/키위.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_169",
+      "name": "키친싱크파이",
+      "image": "/images/pets/epic/키친싱크파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_170",
+      "name": "탐험가",
+      "image": "/images/pets/epic/탐험가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_171",
+      "name": "트러플",
+      "image": "/images/pets/epic/트러플.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_172",
+      "name": "티라미수",
+      "image": "/images/pets/epic/티라미수.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_173",
+      "name": "파스텔머랭",
+      "image": "/images/pets/epic/파스텔머랭.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_174",
+      "name": "파인 드래곤",
+      "image": "/images/pets/epic/파인 드래곤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_175",
+      "name": "파프리카",
+      "image": "/images/pets/epic/파프리카.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_176",
+      "name": "판다만두",
+      "image": "/images/pets/epic/판다만두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_177",
+      "name": "팝콘",
+      "image": "/images/pets/epic/팝콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_178",
+      "name": "팝핑 캔디",
+      "image": "/images/pets/epic/팝핑 캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_179",
+      "name": "팬케이크",
+      "image": "/images/pets/epic/팬케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_180",
+      "name": "페퍼누스",
+      "image": "/images/pets/epic/페퍼누스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_181",
+      "name": "페페론치노",
+      "image": "/images/pets/epic/페페론치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_182",
+      "name": "포두부",
+      "image": "/images/pets/epic/포두부.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_183",
+      "name": "폭죽",
+      "image": "/images/pets/epic/폭죽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_184",
+      "name": "푸딩",
+      "image": "/images/pets/epic/푸딩.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_185",
+      "name": "풋사과",
+      "image": "/images/pets/epic/풋사과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_186",
+      "name": "피겨여왕",
+      "image": "/images/pets/epic/피겨여왕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_187",
+      "name": "피자",
+      "image": "/images/pets/epic/피자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_188",
+      "name": "핑크초코",
+      "image": "/images/pets/epic/핑크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_189",
+      "name": "하바네로",
+      "image": "/images/pets/epic/하바네로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_190",
+      "name": "해적",
+      "image": "/images/pets/epic/해적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_191",
+      "name": "허브",
+      "image": "/images/pets/epic/허브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_192",
+      "name": "호두",
+      "image": "/images/pets/epic/호두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_193",
+      "name": "홍고추",
+      "image": "/images/pets/epic/홍고추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_194",
+      "name": "화이트고스트",
+      "image": "/images/pets/epic/화이트고스트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_195",
+      "name": "화이트초코",
+      "image": "/images/pets/epic/화이트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_196",
+      "name": "황소자리",
+      "image": "/images/pets/epic/황소자리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_197",
+      "name": "휘핑크림",
+      "image": "/images/pets/epic/휘핑크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_198",
+      "name": "흑마교주",
+      "image": "/images/pets/epic/흑마교주.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_199",
+      "name": "흑마늘",
+      "image": "/images/pets/epic/흑마늘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_200",
+      "name": "히어로",
+      "image": "/images/pets/epic/히어로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_rare_1",
+      "name": "공주",
+      "image": "/images/pets/rare/공주.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_2",
+      "name": "근육",
+      "image": "/images/pets/rare/근육.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_3",
+      "name": "닌자",
+      "image": "/images/pets/rare/닌자.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_4",
+      "name": "락스타",
+      "image": "/images/pets/rare/락스타.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_5",
+      "name": "뱀파이어",
+      "image": "/images/pets/rare/뱀파이어.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_6",
+      "name": "버블껌",
+      "image": "/images/pets/rare/버블껌.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_7",
+      "name": "소다",
+      "image": "/images/pets/rare/소다.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_8",
+      "name": "악마",
+      "image": "/images/pets/rare/악마.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_9",
+      "name": "연금술사",
+      "image": "/images/pets/rare/연금술사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_10",
+      "name": "용사",
+      "image": "/images/pets/rare/용사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_11",
+      "name": "좀비",
+      "image": "/images/pets/rare/좀비.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_12",
+      "name": "천사",
+      "image": "/images/pets/rare/천사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_13",
+      "name": "체리",
+      "image": "/images/pets/rare/체리.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_14",
+      "name": "치어리더",
+      "image": "/images/pets/rare/치어리더.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_16",
+      "name": "치즈케이크",
+      "image": "/images/pets/rare/치즈케이크.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_15",
+      "name": "치즈케이크 (2)",
+      "image": "/images/pets/rare/치즈케이크 (2).png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_17",
+      "name": "파일럿",
+      "image": "/images/pets/rare/파일럿.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_rare_18",
+      "name": "피스타치오",
+      "image": "/images/pets/rare/피스타치오.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "pets_common_1",
+      "name": "딸기",
+      "image": "/images/pets/common/딸기.png",
+      "rarity": "common"
+    },
+    {
+      "id": "pets_common_2",
+      "name": "명랑한 쿠키",
+      "image": "/images/pets/common/명랑한 쿠키.png",
+      "rarity": "common"
+    },
+    {
+      "id": "pets_common_3",
+      "name": "보더",
+      "image": "/images/pets/common/보더.png",
+      "rarity": "common"
+    },
+    {
+      "id": "pets_common_4",
+      "name": "용감한 쿠키",
+      "image": "/images/pets/common/용감한 쿠키.png",
+      "rarity": "common"
+    }
   ],
   "treasures": [
-    { "id": "treasure001", "name": "보물1", "image": "/images/treasures/1_보물1.png" },
-    { "id": "treasure002", "name": "보물2", "image": "/images/treasures/1_보물2.png" },
-    { "id": "treasure003", "name": "보물3", "image": "/images/treasures/1_보물3.png" },
-    { "id": "treasure004", "name": "대체조합 보물1", "image": "/images/treasures/1_대체조합 보물1.png" },
-    { "id": "treasure005", "name": "대체조합 보물2", "image": "/images/treasures/1_대체조합 보물2.png" },
-    { "id": "treasure006", "name": "대체조합 보물3", "image": "/images/treasures/1_대체조합 보물3.png" }
+    {
+      "id": "treasures_legendary_1",
+      "name": "끝없는 소원의 유성우",
+      "image": "/images/treasures/legendary/끝없는 소원의 유성우.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_2",
+      "name": "반짝이는 금빛 꿈구슬",
+      "image": "/images/treasures/legendary/반짝이는 금빛 꿈구슬.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_3",
+      "name": "불꽃의 정수",
+      "image": "/images/treasures/legendary/불꽃의 정수.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_4",
+      "name": "빛과 어둠의 모래시계",
+      "image": "/images/treasures/legendary/빛과 어둠의 모래시계.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_5",
+      "name": "생명의 정수",
+      "image": "/images/treasures/legendary/생명의 정수.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_6",
+      "name": "영원한 꿈의 램프",
+      "image": "/images/treasures/legendary/영원한 꿈의 램프.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_7",
+      "name": "위대한 결전의 창",
+      "image": "/images/treasures/legendary/위대한 결전의 창.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_legendary_8",
+      "name": "초대형 미확인 비행도넛",
+      "image": "/images/treasures/legendary/초대형 미확인 비행도넛.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "treasures_epic_1",
+      "name": "거룩한 태양의 검",
+      "image": "/images/treasures/epic/거룩한 태양의 검.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_2",
+      "name": "검은바람 화살통",
+      "image": "/images/treasures/epic/검은바람 화살통.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_3",
+      "name": "골드베리방울",
+      "image": "/images/treasures/epic/골드베리방울.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_4",
+      "name": "곰젤리 부메랑",
+      "image": "/images/treasures/epic/곰젤리 부메랑.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_5",
+      "name": "곰젤리 칭찬 도장",
+      "image": "/images/treasures/epic/곰젤리 칭찬 도장.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_6",
+      "name": "곰젤리 탕후루",
+      "image": "/images/treasures/epic/곰젤리 탕후루.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_7",
+      "name": "금지된 마법서 조각",
+      "image": "/images/treasures/epic/금지된 마법서 조각.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_8",
+      "name": "기적의 초록 나무영양제",
+      "image": "/images/treasures/epic/기적의 초록 나무영양제.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_9",
+      "name": "꿈꾸는 곰젤리 메달",
+      "image": "/images/treasures/epic/꿈꾸는 곰젤리 메달.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_10",
+      "name": "꿈나라 여행용 베개",
+      "image": "/images/treasures/epic/꿈나라 여행용 베개.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_11",
+      "name": "낙원 나침반",
+      "image": "/images/treasures/epic/낙원 나침반.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_12",
+      "name": "냠냠믹스팝콘",
+      "image": "/images/treasures/epic/냠냠믹스팝콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_13",
+      "name": "눈꽃소복 얼음곰",
+      "image": "/images/treasures/epic/눈꽃소복 얼음곰.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_14",
+      "name": "다이너마이트 보물상자",
+      "image": "/images/treasures/epic/다이너마이트 보물상자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_15",
+      "name": "단짝나비 브로치",
+      "image": "/images/treasures/epic/단짝나비 브로치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_16",
+      "name": "당근푸딩 트램폴린",
+      "image": "/images/treasures/epic/당근푸딩 트램폴린.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_17",
+      "name": "대왕 대법전",
+      "image": "/images/treasures/epic/대왕 대법전.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_18",
+      "name": "동글연두 완두콩총",
+      "image": "/images/treasures/epic/동글연두 완두콩총.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_19",
+      "name": "딸랑딸랑 루돌프 리스",
+      "image": "/images/treasures/epic/딸랑딸랑 루돌프 리스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_20",
+      "name": "람독수리 사냥장갑",
+      "image": "/images/treasures/epic/람독수리 사냥장갑.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_21",
+      "name": "럭셔리 레드카펫",
+      "image": "/images/treasures/epic/럭셔리 레드카펫.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_22",
+      "name": "마그마 펜듈럼",
+      "image": "/images/treasures/epic/마그마 펜듈럼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_23",
+      "name": "마이크로 이온 칩",
+      "image": "/images/treasures/epic/마이크로 이온 칩.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_24",
+      "name": "만능 찰칵 카메라",
+      "image": "/images/treasures/epic/만능 찰칵 카메라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_25",
+      "name": "만병통치약 절구",
+      "image": "/images/treasures/epic/만병통치약 절구.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_26",
+      "name": "명예로운 기사의 검",
+      "image": "/images/treasures/epic/명예로운 기사의 검.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_27",
+      "name": "무지개곰젤리 롤케이크",
+      "image": "/images/treasures/epic/무지개곰젤리 롤케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_28",
+      "name": "무지개젤리 물감",
+      "image": "/images/treasures/epic/무지개젤리 물감.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_29",
+      "name": "밤나들이 청사초롱",
+      "image": "/images/treasures/epic/밤나들이 청사초롱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_30",
+      "name": "배부른 젤리퐁퐁 점핑 젤리말",
+      "image": "/images/treasures/epic/배부른 젤리퐁퐁 점핑 젤리말.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_31",
+      "name": "백발백중 람부탄 활",
+      "image": "/images/treasures/epic/백발백중 람부탄 활.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_32",
+      "name": "버블버블 노란 잠수함",
+      "image": "/images/treasures/epic/버블버블 노란 잠수함.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_33",
+      "name": "별 나와라 지팡이",
+      "image": "/images/treasures/epic/별 나와라 지팡이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_34",
+      "name": "별나라 비행기",
+      "image": "/images/treasures/epic/별나라 비행기.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_35",
+      "name": "별사탕 우주시계",
+      "image": "/images/treasures/epic/별사탕 우주시계.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_36",
+      "name": "보글보글 해마물총",
+      "image": "/images/treasures/epic/보글보글 해마물총.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_37",
+      "name": "보들보들 털실공",
+      "image": "/images/treasures/epic/보들보들 털실공.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_38",
+      "name": "보라광선 수정구슬",
+      "image": "/images/treasures/epic/보라광선 수정구슬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_39",
+      "name": "볼통통 곰젤리 저금통",
+      "image": "/images/treasures/epic/볼통통 곰젤리 저금통.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_40",
+      "name": "불꽃 고리 반지",
+      "image": "/images/treasures/epic/불꽃 고리 반지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_41",
+      "name": "불끈 파워 에너지드링크",
+      "image": "/images/treasures/epic/불끈 파워 에너지드링크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_42",
+      "name": "불타는 불고구마",
+      "image": "/images/treasures/epic/불타는 불고구마.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_43",
+      "name": "붉은뿔가면",
+      "image": "/images/treasures/epic/붉은뿔가면.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_44",
+      "name": "사과사탕 풍선",
+      "image": "/images/treasures/epic/사과사탕 풍선.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_45",
+      "name": "삼색 말랑몰랑떡",
+      "image": "/images/treasures/epic/삼색 말랑몰랑떡.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_46",
+      "name": "상냥한 유령 곰인형",
+      "image": "/images/treasures/epic/상냥한 유령 곰인형.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_47",
+      "name": "색색 종이비행기",
+      "image": "/images/treasures/epic/색색 종이비행기.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_48",
+      "name": "생생 생과일주스",
+      "image": "/images/treasures/epic/생생 생과일주스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_49",
+      "name": "성스러운 수호방패",
+      "image": "/images/treasures/epic/성스러운 수호방패.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_50",
+      "name": "수련의 두루마리",
+      "image": "/images/treasures/epic/수련의 두루마리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_51",
+      "name": "슈퍼 자이언트 강낭콩",
+      "image": "/images/treasures/epic/슈퍼 자이언트 강낭콩.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_52",
+      "name": "시간 수습 가위",
+      "image": "/images/treasures/epic/시간 수습 가위.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_53",
+      "name": "시간 혼돈 가위",
+      "image": "/images/treasures/epic/시간 혼돈 가위.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_54",
+      "name": "신비의 마법 양탄자",
+      "image": "/images/treasures/epic/신비의 마법 양탄자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_55",
+      "name": "신선 복숭아씨앗",
+      "image": "/images/treasures/epic/신선 복숭아씨앗.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_56",
+      "name": "신성한 오로라 영액",
+      "image": "/images/treasures/epic/신성한 오로라 영액.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_57",
+      "name": "쑥쑥 꽃뿌리개",
+      "image": "/images/treasures/epic/쑥쑥 꽃뿌리개.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_58",
+      "name": "알록달록 무지개 헤드셋",
+      "image": "/images/treasures/epic/알록달록 무지개 헤드셋.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_59",
+      "name": "알사탕 피에로 슈즈",
+      "image": "/images/treasures/epic/알사탕 피에로 슈즈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_60",
+      "name": "어린 용의 발톱",
+      "image": "/images/treasures/epic/어린 용의 발톱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_61",
+      "name": "얼음 꽁꽁 초코케이크",
+      "image": "/images/treasures/epic/얼음 꽁꽁 초코케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_62",
+      "name": "영롱한 진주조개",
+      "image": "/images/treasures/epic/영롱한 진주조개.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_63",
+      "name": "영웅의 작은 나무말",
+      "image": "/images/treasures/epic/영웅의 작은 나무말.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_64",
+      "name": "오로라 설탕 깃털",
+      "image": "/images/treasures/epic/오로라 설탕 깃털.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_65",
+      "name": "온실 속 희망의 꽃",
+      "image": "/images/treasures/epic/온실 속 희망의 꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_66",
+      "name": "와플 헤드셋",
+      "image": "/images/treasures/epic/와플 헤드셋.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_67",
+      "name": "완벽한 보물지도",
+      "image": "/images/treasures/epic/완벽한 보물지도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_68",
+      "name": "왕곰젤리 보석반지",
+      "image": "/images/treasures/epic/왕곰젤리 보석반지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_69",
+      "name": "우아한 마법빗자루",
+      "image": "/images/treasures/epic/우아한 마법빗자루.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_70",
+      "name": "우유속에 초코샌드",
+      "image": "/images/treasures/epic/우유속에 초코샌드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_71",
+      "name": "원혼이 잠든 마법거울",
+      "image": "/images/treasures/epic/원혼이 잠든 마법거울.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_72",
+      "name": "유령퇴치 부적 스티커",
+      "image": "/images/treasures/epic/유령퇴치 부적 스티커.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_73",
+      "name": "유리사탕 플라네타륨",
+      "image": "/images/treasures/epic/유리사탕 플라네타륨.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_74",
+      "name": "이글이글 별똥별 캔디",
+      "image": "/images/treasures/epic/이글이글 별똥별 캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_75",
+      "name": "일렉트릭쇼크 큐브",
+      "image": "/images/treasures/epic/일렉트릭쇼크 큐브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_76",
+      "name": "자동출력 타자기",
+      "image": "/images/treasures/epic/자동출력 타자기.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_77",
+      "name": "작은 별 무드등",
+      "image": "/images/treasures/epic/작은 별 무드등.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_78",
+      "name": "잘 익은 멜론 다이너마이트",
+      "image": "/images/treasures/epic/잘 익은 멜론 다이너마이트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_79",
+      "name": "잠자는 숲속의 아기공룡",
+      "image": "/images/treasures/epic/잠자는 숲속의 아기공룡.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_80",
+      "name": "저주받은 영웅의 성배",
+      "image": "/images/treasures/epic/저주받은 영웅의 성배.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_81",
+      "name": "전설의 거울눈",
+      "image": "/images/treasures/epic/전설의 거울눈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_82",
+      "name": "젤리디너 코스요리",
+      "image": "/images/treasures/epic/젤리디너 코스요리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_83",
+      "name": "젤리크림 거품기",
+      "image": "/images/treasures/epic/젤리크림 거품기.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_84",
+      "name": "젤리팝 물로켓",
+      "image": "/images/treasures/epic/젤리팝 물로켓.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_85",
+      "name": "짝짝짝 응원수술",
+      "image": "/images/treasures/epic/짝짝짝 응원수술.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_86",
+      "name": "찹쌀과자 꾸러미",
+      "image": "/images/treasures/epic/찹쌀과자 꾸러미.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_87",
+      "name": "최신형 파프북",
+      "image": "/images/treasures/epic/최신형 파프북.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_88",
+      "name": "타오르는 흑요석",
+      "image": "/images/treasures/epic/타오르는 흑요석.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_89",
+      "name": "태고의 천둥북",
+      "image": "/images/treasures/epic/태고의 천둥북.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_90",
+      "name": "테이프껌 스프링 슈즈",
+      "image": "/images/treasures/epic/테이프껌 스프링 슈즈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_91",
+      "name": "토네이도 당근로켓",
+      "image": "/images/treasures/epic/토네이도 당근로켓.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_92",
+      "name": "튼튼 종합영양젤리",
+      "image": "/images/treasures/epic/튼튼 종합영양젤리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_93",
+      "name": "파도방울 소라껍데기",
+      "image": "/images/treasures/epic/파도방울 소라껍데기.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_94",
+      "name": "판타스틱 매직 트럼프 카드",
+      "image": "/images/treasures/epic/판타스틱 매직 트럼프 카드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_95",
+      "name": "팝팝 포토카드",
+      "image": "/images/treasures/epic/팝팝 포토카드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_96",
+      "name": "패셔니스타 스포트라이트",
+      "image": "/images/treasures/epic/패셔니스타 스포트라이트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_97",
+      "name": "퍼펙트 스위트 기타",
+      "image": "/images/treasures/epic/퍼펙트 스위트 기타.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_98",
+      "name": "평화의 비둘기 만쥬",
+      "image": "/images/treasures/epic/평화의 비둘기 만쥬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_99",
+      "name": "퐁당 무화과 에이드",
+      "image": "/images/treasures/epic/퐁당 무화과 에이드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_100",
+      "name": "푸르른 미래의 씨앗",
+      "image": "/images/treasures/epic/푸르른 미래의 씨앗.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_101",
+      "name": "풍년 허수아비",
+      "image": "/images/treasures/epic/풍년 허수아비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_102",
+      "name": "핫핫 스파이시 터보엔진",
+      "image": "/images/treasures/epic/핫핫 스파이시 터보엔진.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_103",
+      "name": "해피해피 잭오랜턴",
+      "image": "/images/treasures/epic/해피해피 잭오랜턴.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_104",
+      "name": "행운의 클로버 귀걸이",
+      "image": "/images/treasures/epic/행운의 클로버 귀걸이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_105",
+      "name": "호두까기 망치",
+      "image": "/images/treasures/epic/호두까기 망치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_106",
+      "name": "호숫가의 설탕장미",
+      "image": "/images/treasures/epic/호숫가의 설탕장미.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_107",
+      "name": "황금치즈 곡괭이",
+      "image": "/images/treasures/epic/황금치즈 곡괭이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_108",
+      "name": "황금코인 폭죽상자",
+      "image": "/images/treasures/epic/황금코인 폭죽상자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_109",
+      "name": "훌쩍 코코야자나무",
+      "image": "/images/treasures/epic/훌쩍 코코야자나무.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_110",
+      "name": "흑마공 비급서",
+      "image": "/images/treasures/epic/흑마공 비급서.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_rare_1",
+      "name": "곰젤리 아이스크림",
+      "image": "/images/treasures/rare/곰젤리 아이스크림.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_2",
+      "name": "롤리팝 스케이트",
+      "image": "/images/treasures/rare/롤리팝 스케이트.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_3",
+      "name": "미니 자석 로봇",
+      "image": "/images/treasures/rare/미니 자석 로봇.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_4",
+      "name": "방어막 버블건",
+      "image": "/images/treasures/rare/방어막 버블건.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_5",
+      "name": "부활의 날개 젤리",
+      "image": "/images/treasures/rare/부활의 날개 젤리.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_6",
+      "name": "부활의 붉은 알",
+      "image": "/images/treasures/rare/부활의 붉은 알.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_7",
+      "name": "아몬드 초코칩 망치",
+      "image": "/images/treasures/rare/아몬드 초코칩 망치.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_8",
+      "name": "얼음 진주 산호초",
+      "image": "/images/treasures/rare/얼음 진주 산호초.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_9",
+      "name": "완벽한 착지 교본",
+      "image": "/images/treasures/rare/완벽한 착지 교본.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_10",
+      "name": "은화꽃 코인 브로치",
+      "image": "/images/treasures/rare/은화꽃 코인 브로치.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_11",
+      "name": "이어둠의 캔디케인 마법 지팡이",
+      "image": "/images/treasures/rare/이어둠의 캔디케인 마법 지팡이.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_12",
+      "name": "젤리 씨앗 항아리",
+      "image": "/images/treasures/rare/젤리 씨앗 항아리.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_13",
+      "name": "젤리 토핑 컵케이크",
+      "image": "/images/treasures/rare/젤리 토핑 컵케이크.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_14",
+      "name": "캔디 다이너마이트",
+      "image": "/images/treasures/rare/캔디 다이너마이트.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_15",
+      "name": "코인 장식 은왕관",
+      "image": "/images/treasures/rare/코인 장식 은왕관.png",
+      "rarity": "rare"
+    }
   ],
   "dishes": [
-    { "id": "dish001", "name": "시즌요리", "image": "/images/dishes/1_시즌요리.png" }
+    {
+      "id": "dishes_default_1",
+      "name": "1_시즌요리",
+      "image": "/images/dishes/1_시즌요리.png"
+    }
   ],
   "ingredients": [
-    { "id": "ingredient001", "name": "재료1", "image": "/images/ingredients/1_재료1.png" },
-    { "id": "ingredient002", "name": "재료2", "image": "/images/ingredients/1_재료2.png" },
-    { "id": "ingredient003", "name": "재료3", "image": "/images/ingredients/1_재료3.png" }
+    {
+      "id": "ingredients_default_1",
+      "name": "1_재료1",
+      "image": "/images/ingredients/1_재료1.png"
+    },
+    {
+      "id": "ingredients_default_2",
+      "name": "1_재료2",
+      "image": "/images/ingredients/1_재료2.png"
+    },
+    {
+      "id": "ingredients_default_3",
+      "name": "1_재료3",
+      "image": "/images/ingredients/1_재료3.png"
+    }
   ],
   "magicCandies": [
-    { "id": "candy001", "name": "마법사탕1", "image": "/images/magic_candies/1_마법사탕1.png" },
-    { "id": "candy002", "name": "마법사탕2", "image": "/images/magic_candies/1_마법사탕2.png" }
+    {
+      "id": "magicCandies_legendary_1",
+      "name": "꿈길잡이",
+      "image": "/images/magic_candies/legendary/꿈길잡이.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_2",
+      "name": "달빛술사",
+      "image": "/images/magic_candies/legendary/달빛술사.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_3",
+      "name": "리치 드래곤",
+      "image": "/images/magic_candies/legendary/리치 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_4",
+      "name": "바다요정",
+      "image": "/images/magic_candies/legendary/바다요정.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_5",
+      "name": "바람궁수",
+      "image": "/images/magic_candies/legendary/바람궁수.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_6",
+      "name": "백련 드래곤",
+      "image": "/images/magic_candies/legendary/백련 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_7",
+      "name": "불꽃정령",
+      "image": "/images/magic_candies/legendary/불꽃정령.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_8",
+      "name": "설탕백조",
+      "image": "/images/magic_candies/legendary/설탕백조.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_9",
+      "name": "설탕흑조",
+      "image": "/images/magic_candies/legendary/설탕흑조.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_10",
+      "name": "스테비아 노바",
+      "image": "/images/magic_candies/legendary/스테비아 노바.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_11",
+      "name": "시간지기",
+      "image": "/images/magic_candies/legendary/시간지기.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_12",
+      "name": "심해군주",
+      "image": "/images/magic_candies/legendary/심해군주.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_13",
+      "name": "어둠마녀",
+      "image": "/images/magic_candies/legendary/어둠마녀.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_14",
+      "name": "용과 드래곤",
+      "image": "/images/magic_candies/legendary/용과 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_15",
+      "name": "용안 드래곤",
+      "image": "/images/magic_candies/legendary/용안 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_16",
+      "name": "자일리톨 노바",
+      "image": "/images/magic_candies/legendary/자일리톨 노바.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_17",
+      "name": "천년나무",
+      "image": "/images/magic_candies/legendary/천년나무.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_18",
+      "name": "파인 드래곤",
+      "image": "/images/magic_candies/legendary/파인 드래곤.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_19",
+      "name": "흑마교주",
+      "image": "/images/magic_candies/legendary/흑마교주.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_epic_1",
+      "name": "감귤탕후루",
+      "image": "/images/magic_candies/epic/감귤탕후루.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_2",
+      "name": "감자",
+      "image": "/images/magic_candies/epic/감자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_3",
+      "name": "감초",
+      "image": "/images/magic_candies/epic/감초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_4",
+      "name": "고블린",
+      "image": "/images/magic_candies/epic/고블린.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_5",
+      "name": "괴도",
+      "image": "/images/magic_candies/epic/괴도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_6",
+      "name": "구미호",
+      "image": "/images/magic_candies/epic/구미호.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_7",
+      "name": "구슬아이스",
+      "image": "/images/magic_candies/epic/구슬아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_8",
+      "name": "구운달걀",
+      "image": "/images/magic_candies/epic/구운달걀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_9",
+      "name": "김",
+      "image": "/images/magic_candies/epic/김.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_10",
+      "name": "난초",
+      "image": "/images/magic_candies/epic/난초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_11",
+      "name": "눈설탕",
+      "image": "/images/magic_candies/epic/눈설탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_12",
+      "name": "다이노사워",
+      "image": "/images/magic_candies/epic/다이노사워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_13",
+      "name": "다크초코",
+      "image": "/images/magic_candies/epic/다크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_14",
+      "name": "닥터 뼈다귀",
+      "image": "/images/magic_candies/epic/닥터 뼈다귀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_15",
+      "name": "닥터 와사비",
+      "image": "/images/magic_candies/epic/닥터 와사비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_16",
+      "name": "단팥",
+      "image": "/images/magic_candies/epic/단팥.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_17",
+      "name": "달토끼",
+      "image": "/images/magic_candies/epic/달토끼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_18",
+      "name": "당근",
+      "image": "/images/magic_candies/epic/당근.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_19",
+      "name": "대왕고래",
+      "image": "/images/magic_candies/epic/대왕고래.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_20",
+      "name": "대추",
+      "image": "/images/magic_candies/epic/대추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_21",
+      "name": "대파",
+      "image": "/images/magic_candies/epic/대파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_22",
+      "name": "더덕꽃",
+      "image": "/images/magic_candies/epic/더덕꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_23",
+      "name": "독버섯",
+      "image": "/images/magic_candies/epic/독버섯.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_24",
+      "name": "드래곤 아이",
+      "image": "/images/magic_candies/epic/드래곤 아이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_25",
+      "name": "디제이",
+      "image": "/images/magic_candies/epic/디제이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_26",
+      "name": "딸기생크림",
+      "image": "/images/magic_candies/epic/딸기생크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_27",
+      "name": "딸기초코스틱",
+      "image": "/images/magic_candies/epic/딸기초코스틱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_28",
+      "name": "딸기크레페",
+      "image": "/images/magic_candies/epic/딸기크레페.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_29",
+      "name": "라일락",
+      "image": "/images/magic_candies/epic/라일락.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_30",
+      "name": "라임",
+      "image": "/images/magic_candies/epic/라임.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_31",
+      "name": "라즈베리 무스",
+      "image": "/images/magic_candies/epic/라즈베리 무스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_32",
+      "name": "람부탄",
+      "image": "/images/magic_candies/epic/람부탄.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_33",
+      "name": "랍스터",
+      "image": "/images/magic_candies/epic/랍스터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_34",
+      "name": "랑그드샤",
+      "image": "/images/magic_candies/epic/랑그드샤.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_35",
+      "name": "레드판나코타",
+      "image": "/images/magic_candies/epic/레드판나코타.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_36",
+      "name": "레몬",
+      "image": "/images/magic_candies/epic/레몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_37",
+      "name": "롤리팝",
+      "image": "/images/magic_candies/epic/롤리팝.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_38",
+      "name": "롤케이크",
+      "image": "/images/magic_candies/epic/롤케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_39",
+      "name": "마라",
+      "image": "/images/magic_candies/epic/마라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_40",
+      "name": "마법사",
+      "image": "/images/magic_candies/epic/마법사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_41",
+      "name": "마블식빵",
+      "image": "/images/magic_candies/epic/마블식빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_42",
+      "name": "마시멜로",
+      "image": "/images/magic_candies/epic/마시멜로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_43",
+      "name": "마카롱",
+      "image": "/images/magic_candies/epic/마카롱.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_44",
+      "name": "말차",
+      "image": "/images/magic_candies/epic/말차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_45",
+      "name": "망고",
+      "image": "/images/magic_candies/epic/망고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_46",
+      "name": "매작과",
+      "image": "/images/magic_candies/epic/매작과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_47",
+      "name": "머스타드",
+      "image": "/images/magic_candies/epic/머스타드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_48",
+      "name": "메론빵",
+      "image": "/images/magic_candies/epic/메론빵.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_49",
+      "name": "모카가오리",
+      "image": "/images/magic_candies/epic/모카가오리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_50",
+      "name": "무화과",
+      "image": "/images/magic_candies/epic/무화과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_51",
+      "name": "물망초 다이노",
+      "image": "/images/magic_candies/epic/물망초 다이노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_52",
+      "name": "민트웨이퍼",
+      "image": "/images/magic_candies/epic/민트웨이퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_53",
+      "name": "민트초코",
+      "image": "/images/magic_candies/epic/민트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_54",
+      "name": "밀랍",
+      "image": "/images/magic_candies/epic/밀랍.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_55",
+      "name": "밀키웨이",
+      "image": "/images/magic_candies/epic/밀키웨이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_56",
+      "name": "바게트",
+      "image": "/images/magic_candies/epic/바게트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_57",
+      "name": "바나나",
+      "image": "/images/magic_candies/epic/바나나.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_58",
+      "name": "바크초코",
+      "image": "/images/magic_candies/epic/바크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_59",
+      "name": "박하사탕",
+      "image": "/images/magic_candies/epic/박하사탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_60",
+      "name": "밤톨",
+      "image": "/images/magic_candies/epic/밤톨.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_61",
+      "name": "방울엿",
+      "image": "/images/magic_candies/epic/방울엿.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_62",
+      "name": "백도",
+      "image": "/images/magic_candies/epic/백도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_63",
+      "name": "버터베어",
+      "image": "/images/magic_candies/epic/버터베어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_64",
+      "name": "버터오징어",
+      "image": "/images/magic_candies/epic/버터오징어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_65",
+      "name": "버터프레첼",
+      "image": "/images/magic_candies/epic/버터프레첼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_66",
+      "name": "벚꽃",
+      "image": "/images/magic_candies/epic/벚꽃.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_67",
+      "name": "복숭아",
+      "image": "/images/magic_candies/epic/복숭아.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_68",
+      "name": "분모자",
+      "image": "/images/magic_candies/epic/분모자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_69",
+      "name": "블랙누들",
+      "image": "/images/magic_candies/epic/블랙누들.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_70",
+      "name": "블랙베리",
+      "image": "/images/magic_candies/epic/블랙베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_71",
+      "name": "블랙올리브",
+      "image": "/images/magic_candies/epic/블랙올리브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_72",
+      "name": "블랙페퍼",
+      "image": "/images/magic_candies/epic/블랙페퍼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_73",
+      "name": "블루슬러시",
+      "image": "/images/magic_candies/epic/블루슬러시.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_74",
+      "name": "블루파이",
+      "image": "/images/magic_candies/epic/블루파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_75",
+      "name": "비트",
+      "image": "/images/magic_candies/epic/비트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_76",
+      "name": "사워벨트",
+      "image": "/images/magic_candies/epic/사워벨트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_77",
+      "name": "사이보그",
+      "image": "/images/magic_candies/epic/사이보그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_78",
+      "name": "샌드위치",
+      "image": "/images/magic_candies/epic/샌드위치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_79",
+      "name": "생일케이크",
+      "image": "/images/magic_candies/epic/생일케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_80",
+      "name": "생크림담비",
+      "image": "/images/magic_candies/epic/생크림담비.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_81",
+      "name": "생토노레",
+      "image": "/images/magic_candies/epic/생토노레.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_82",
+      "name": "샤벳상어",
+      "image": "/images/magic_candies/epic/샤벳상어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_83",
+      "name": "샤이닝글리터",
+      "image": "/images/magic_candies/epic/샤이닝글리터.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_84",
+      "name": "샤인머스캣",
+      "image": "/images/magic_candies/epic/샤인머스캣.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_85",
+      "name": "석류",
+      "image": "/images/magic_candies/epic/석류.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_86",
+      "name": "센티피드",
+      "image": "/images/magic_candies/epic/센티피드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_87",
+      "name": "소금",
+      "image": "/images/magic_candies/epic/소금.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_88",
+      "name": "솜사탕",
+      "image": "/images/magic_candies/epic/솜사탕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_89",
+      "name": "쇼콜라봉봉",
+      "image": "/images/magic_candies/epic/쇼콜라봉봉.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_90",
+      "name": "수국",
+      "image": "/images/magic_candies/epic/수국.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_91",
+      "name": "슈가글라스",
+      "image": "/images/magic_candies/epic/슈가글라스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_92",
+      "name": "슈니발렌",
+      "image": "/images/magic_candies/epic/슈니발렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_93",
+      "name": "슈크림",
+      "image": "/images/magic_candies/epic/슈크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_94",
+      "name": "슈톨렌",
+      "image": "/images/magic_candies/epic/슈톨렌.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_95",
+      "name": "스네이크후르츠",
+      "image": "/images/magic_candies/epic/스네이크후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_96",
+      "name": "스모어",
+      "image": "/images/magic_candies/epic/스모어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_97",
+      "name": "스타후르츠",
+      "image": "/images/magic_candies/epic/스타후르츠.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_98",
+      "name": "스테이크",
+      "image": "/images/magic_candies/epic/스테이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_99",
+      "name": "스트링젤리",
+      "image": "/images/magic_candies/epic/스트링젤리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_100",
+      "name": "스파클링",
+      "image": "/images/magic_candies/epic/스파클링.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_101",
+      "name": "시금치",
+      "image": "/images/magic_candies/epic/시금치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_102",
+      "name": "시나몬",
+      "image": "/images/magic_candies/epic/시나몬.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_103",
+      "name": "아몬드",
+      "image": "/images/magic_candies/epic/아몬드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_104",
+      "name": "아보카도",
+      "image": "/images/magic_candies/epic/아보카도.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_105",
+      "name": "아이스캔디",
+      "image": "/images/magic_candies/epic/아이스캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_106",
+      "name": "알로에",
+      "image": "/images/magic_candies/epic/알로에.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_107",
+      "name": "앰버슈가",
+      "image": "/images/magic_candies/epic/앰버슈가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_108",
+      "name": "앵두",
+      "image": "/images/magic_candies/epic/앵두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_109",
+      "name": "양파",
+      "image": "/images/magic_candies/epic/양파.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_110",
+      "name": "얼그레이",
+      "image": "/images/magic_candies/epic/얼그레이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_111",
+      "name": "에그노그",
+      "image": "/images/magic_candies/epic/에그노그.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_112",
+      "name": "에스카르고",
+      "image": "/images/magic_candies/epic/에스카르고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_113",
+      "name": "에스트로넛",
+      "image": "/images/magic_candies/epic/에스트로넛.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_114",
+      "name": "에일리언",
+      "image": "/images/magic_candies/epic/에일리언.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_115",
+      "name": "엘더베리",
+      "image": "/images/magic_candies/epic/엘더베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_116",
+      "name": "예언자",
+      "image": "/images/magic_candies/epic/예언자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_117",
+      "name": "오렌지",
+      "image": "/images/magic_candies/epic/오렌지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_118",
+      "name": "오징어먹물",
+      "image": "/images/magic_candies/epic/오징어먹물.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_119",
+      "name": "옥춘",
+      "image": "/images/magic_candies/epic/옥춘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_120",
+      "name": "요가",
+      "image": "/images/magic_candies/epic/요가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_121",
+      "name": "요거트크림",
+      "image": "/images/magic_candies/epic/요거트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_122",
+      "name": "요정",
+      "image": "/images/magic_candies/epic/요정.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_123",
+      "name": "우유",
+      "image": "/images/magic_candies/epic/우유.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_124",
+      "name": "우주비행사",
+      "image": "/images/magic_candies/epic/우주비행사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_125",
+      "name": "웨어울프",
+      "image": "/images/magic_candies/epic/웨어울프.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_126",
+      "name": "유과",
+      "image": "/images/magic_candies/epic/유과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_127",
+      "name": "음유시인",
+      "image": "/images/magic_candies/epic/음유시인.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_128",
+      "name": "의적",
+      "image": "/images/magic_candies/epic/의적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_129",
+      "name": "이온",
+      "image": "/images/magic_candies/epic/이온.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_130",
+      "name": "인삼",
+      "image": "/images/magic_candies/epic/인삼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_131",
+      "name": "자두",
+      "image": "/images/magic_candies/epic/자두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_132",
+      "name": "자몽",
+      "image": "/images/magic_candies/epic/자몽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_133",
+      "name": "자색고구마",
+      "image": "/images/magic_candies/epic/자색고구마.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_134",
+      "name": "장미",
+      "image": "/images/magic_candies/epic/장미.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_135",
+      "name": "전갈",
+      "image": "/images/magic_candies/epic/전갈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_136",
+      "name": "전기장어",
+      "image": "/images/magic_candies/epic/전기장어.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_137",
+      "name": "정글전사",
+      "image": "/images/magic_candies/epic/정글전사.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_138",
+      "name": "지초",
+      "image": "/images/magic_candies/epic/지초.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_139",
+      "name": "체리콜라",
+      "image": "/images/magic_candies/epic/체리콜라.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_140",
+      "name": "체스초코",
+      "image": "/images/magic_candies/epic/체스초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_141",
+      "name": "초코바",
+      "image": "/images/magic_candies/epic/초코바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_142",
+      "name": "초코볼",
+      "image": "/images/magic_candies/epic/초코볼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_143",
+      "name": "츄러스",
+      "image": "/images/magic_candies/epic/츄러스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_144",
+      "name": "칠리",
+      "image": "/images/magic_candies/epic/칠리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_145",
+      "name": "카놀리",
+      "image": "/images/magic_candies/epic/카놀리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_146",
+      "name": "카푸치노",
+      "image": "/images/magic_candies/epic/카푸치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_147",
+      "name": "캔디콘",
+      "image": "/images/magic_candies/epic/캔디콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_148",
+      "name": "캡틴 아이스",
+      "image": "/images/magic_candies/epic/캡틴 아이스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_149",
+      "name": "커런트크림",
+      "image": "/images/magic_candies/epic/커런트크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_150",
+      "name": "커피캔디",
+      "image": "/images/magic_candies/epic/커피캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_151",
+      "name": "코코아",
+      "image": "/images/magic_candies/epic/코코아.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_152",
+      "name": "콜리플라워",
+      "image": "/images/magic_candies/epic/콜리플라워.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_153",
+      "name": "쿠키멀즈",
+      "image": "/images/magic_candies/epic/쿠키멀즈.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_154",
+      "name": "크로우베리",
+      "image": "/images/magic_candies/epic/크로우베리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_155",
+      "name": "크루아상",
+      "image": "/images/magic_candies/epic/크루아상.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_156",
+      "name": "크림 유니콘",
+      "image": "/images/magic_candies/epic/크림 유니콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_157",
+      "name": "크림소다",
+      "image": "/images/magic_candies/epic/크림소다.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_158",
+      "name": "키위",
+      "image": "/images/magic_candies/epic/키위.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_159",
+      "name": "키친싱크파이",
+      "image": "/images/magic_candies/epic/키친싱크파이.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_160",
+      "name": "탐험가",
+      "image": "/images/magic_candies/epic/탐험가.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_161",
+      "name": "트러플",
+      "image": "/images/magic_candies/epic/트러플.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_162",
+      "name": "티라미수",
+      "image": "/images/magic_candies/epic/티라미수.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_163",
+      "name": "파스텔머랭",
+      "image": "/images/magic_candies/epic/파스텔머랭.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_164",
+      "name": "파프리카",
+      "image": "/images/magic_candies/epic/파프리카.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_165",
+      "name": "팝콘",
+      "image": "/images/magic_candies/epic/팝콘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_166",
+      "name": "팝핑 캔디",
+      "image": "/images/magic_candies/epic/팝핑 캔디.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_167",
+      "name": "팬케이크",
+      "image": "/images/magic_candies/epic/팬케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_168",
+      "name": "페퍼누스",
+      "image": "/images/magic_candies/epic/페퍼누스.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_169",
+      "name": "페페론치노",
+      "image": "/images/magic_candies/epic/페페론치노.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_170",
+      "name": "포두부",
+      "image": "/images/magic_candies/epic/포두부.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_171",
+      "name": "폭죽",
+      "image": "/images/magic_candies/epic/폭죽.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_172",
+      "name": "푸딩",
+      "image": "/images/magic_candies/epic/푸딩.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_173",
+      "name": "풋사과",
+      "image": "/images/magic_candies/epic/풋사과.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_174",
+      "name": "피겨여왕",
+      "image": "/images/magic_candies/epic/피겨여왕.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_175",
+      "name": "피자",
+      "image": "/images/magic_candies/epic/피자.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_176",
+      "name": "핑크초코",
+      "image": "/images/magic_candies/epic/핑크초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_177",
+      "name": "하바네로",
+      "image": "/images/magic_candies/epic/하바네로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_178",
+      "name": "해적",
+      "image": "/images/magic_candies/epic/해적.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_179",
+      "name": "허브",
+      "image": "/images/magic_candies/epic/허브.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_180",
+      "name": "호두",
+      "image": "/images/magic_candies/epic/호두.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_181",
+      "name": "홍고추",
+      "image": "/images/magic_candies/epic/홍고추.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_182",
+      "name": "화이트고스트",
+      "image": "/images/magic_candies/epic/화이트고스트.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_183",
+      "name": "화이트초코",
+      "image": "/images/magic_candies/epic/화이트초코.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_184",
+      "name": "황소자리",
+      "image": "/images/magic_candies/epic/황소자리.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_185",
+      "name": "휘핑크림",
+      "image": "/images/magic_candies/epic/휘핑크림.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_186",
+      "name": "흑마늘",
+      "image": "/images/magic_candies/epic/흑마늘.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_187",
+      "name": "히어로",
+      "image": "/images/magic_candies/epic/히어로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_rare_1",
+      "name": "근육",
+      "image": "/images/magic_candies/rare/근육.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_2",
+      "name": "닌자",
+      "image": "/images/magic_candies/rare/닌자.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_3",
+      "name": "락스타",
+      "image": "/images/magic_candies/rare/락스타.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_4",
+      "name": "뱀파이어",
+      "image": "/images/magic_candies/rare/뱀파이어.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_5",
+      "name": "소다",
+      "image": "/images/magic_candies/rare/소다.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_6",
+      "name": "악마",
+      "image": "/images/magic_candies/rare/악마.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_7",
+      "name": "연금술사",
+      "image": "/images/magic_candies/rare/연금술사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_8",
+      "name": "용사",
+      "image": "/images/magic_candies/rare/용사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_9",
+      "name": "좀비",
+      "image": "/images/magic_candies/rare/좀비.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_10",
+      "name": "천사",
+      "image": "/images/magic_candies/rare/천사.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_11",
+      "name": "체리",
+      "image": "/images/magic_candies/rare/체리.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_12",
+      "name": "치어리더",
+      "image": "/images/magic_candies/rare/치어리더.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_13",
+      "name": "치즈케이크",
+      "image": "/images/magic_candies/rare/치즈케이크.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_rare_14",
+      "name": "파일럿",
+      "image": "/images/magic_candies/rare/파일럿.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "magicCandies_common_1",
+      "name": "용감한 쿠키",
+      "image": "/images/magic_candies/common/용감한 쿠키.png",
+      "rarity": "common"
+    }
   ],
   "blessings": [
-    { 
-      "id": "bless001", 
-      "name": "무지개젤리", 
-      "image": "/images/blessings/무지개젤리.png", 
-      "description": "무지개 곰 젤리 점수 10,000점 증가" 
+    {
+      "id": "blessings_default_1",
+      "name": "무지개젤리",
+      "image": "/images/blessings/무지개젤리.png"
     },
-    { 
-      "id": "bless002", 
-      "name": "장애물주의", 
-      "image": "/images/blessings/장애물주의인가.png", 
-      "description": "장애물 파괴 점수 5,000점 증가" 
+    {
+      "id": "blessings_default_2",
+      "name": "장애물주의인가",
+      "image": "/images/blessings/장애물주의인가.png"
     }
   ]
 }
