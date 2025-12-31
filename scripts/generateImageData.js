@@ -146,23 +146,19 @@ function main() {
   
   const allImages = scanAllImages();
   
-  // 결과를 JSON 파일로 저장
-  const outputPath = path.join(__dirname, '..', 'public', 'data', 'gameData.json');
-  const outputDir = path.dirname(outputPath);
+    // Vercel 환경 대응: 경로 및 폴더 생성 보완
+    const outputPath = path.join(process.cwd(), 'public', 'data', 'gameData.json');
+    const outputDir = path.dirname(outputPath);
   
-  // data 폴더가 없으면 생성
-  if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
-  }
+    fs.writeFileSync(outputPath, JSON.stringify(allImages, null, 2));
   
-  fs.writeFileSync(outputPath, JSON.stringify(allImages, null, 2));
-  
-  console.log(`\n✓ Image data generated successfully!`);
-  console.log(`  Output: ${outputPath}`);
-  console.log(`\nSummary:`);
-  Object.entries(allImages).forEach(([category, items]) => {
-    console.log(`  ${category}: ${items.length} items`);
-  });
+    console.log(`\n✓ Image data generated successfully!`);
+    console.log(`  Output: ${outputPath}`);
+    console.log(`\nSummary:`);
+    Object.entries(allImages).forEach(([category, items]) => {
+      console.log(`  ${category}: ${items.length} items`);
+    });
 }
 
 main();

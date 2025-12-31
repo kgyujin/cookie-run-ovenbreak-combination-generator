@@ -35,7 +35,7 @@ const createEmptyArena = (): ArenaData => ({
   subCookieRatio: 56, // 대체 조합 선달 쿠키 비율 (기본 56%, 이달 44%)
 });
 
-interface AppStore extends AppState {
+export interface AppStore extends AppState {
   modalOpen: boolean;
   modalArenaIndex: number | null;
   modalType: string | null;
