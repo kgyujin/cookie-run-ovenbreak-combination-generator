@@ -36,6 +36,7 @@ const createEmptyArena = (): ArenaData => ({
 });
 
 export interface AppStore extends AppState {
+  ingredients?: string[];
   modalOpen: boolean;
   modalArenaIndex: number | null;
   modalType: string | null;

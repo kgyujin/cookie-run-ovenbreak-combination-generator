@@ -9,7 +9,6 @@ export default function ActionButtons() {
     const compressed = compressToEncodedURIComponent(JSON.stringify({
       arenas: state.arenas,
       seasonName: state.seasonName,
-      ingredients: state.ingredients,
       background: state.background,
       displaySettings: state.displaySettings,
       fontSettings: state.fontSettings,

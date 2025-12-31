@@ -125,7 +125,7 @@ export default function ActionButtons() {
         setIsExporting(false);
       }
     }
-  }, [isExporting, setIsExporting, appState.background]);
+  }, [isExporting, setIsExporting, setExportProgress, appState.background]);
 
   const handleShare = () => {
     try {
