@@ -39,6 +39,10 @@ interface AppStore extends AppState {
   modalOpen: boolean;
   modalArenaIndex: number | null;
   modalType: string | null;
+  isExporting: boolean;
+  exportProgress: number;
+  setIsExporting: (value: boolean) => void;
+  setExportProgress: (value: number) => void;
   setModalOpen: (open: boolean, arenaIndex?: number, type?: string) => void;
   updateArenaItem: (arenaIndex: number, field: string, value: any) => void;
   setBackground: (background: BackgroundData) => void;
@@ -92,6 +96,10 @@ export const useAppStore = create<AppStore>((set) => ({
   modalOpen: false,
   modalArenaIndex: null,
   modalType: null,
+  isExporting: false,
+  exportProgress: 0,
+  setIsExporting: (value) => set({ isExporting: value }),
+  setExportProgress: (value) => set({ exportProgress: value }),
 
   setModalOpen: (open, arenaIndex, type) => 
     set({ modalOpen: open, modalArenaIndex: arenaIndex ?? null, modalType: type ?? null }),
