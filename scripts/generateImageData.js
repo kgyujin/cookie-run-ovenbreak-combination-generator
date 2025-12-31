@@ -35,6 +35,7 @@ function scanDirectory(dirPath, category, rarity) {
   
   try {
     if (!fs.existsSync(dirPath)) {
+      console.warn(`[WARN] 폴더 없음: ${dirPath}`);
       return images;
     }
 
@@ -43,7 +44,13 @@ function scanDirectory(dirPath, category, rarity) {
 
     files.forEach((file) => {
       const filePath = path.join(dirPath, file);
-      const stat = fs.statSync(filePath);
+      let stat;
+      try {
+        stat = fs.statSync(filePath);
+      } catch (fileErr) {
+        console.error(`[ERROR] 파일 접근 실패: ${filePath}`, fileErr);
+        return;
+      }
 
       // 파일만 처리 (하위 디렉토리 제외)
       if (stat.isFile() && /\.(png|jpg|jpeg|webp)$/i.test(file)) {
@@ -66,7 +73,7 @@ function scanDirectory(dirPath, category, rarity) {
       }
     });
   } catch (error) {
-    console.error(`Error scanning directory ${dirPath}:`, error);
+    console.error(`[ERROR] 디렉토리 접근 실패: ${dirPath}`, error);
   }
 
   return images;
@@ -81,16 +88,28 @@ function scanCategoryWithRarity(category, baseDir) {
 
   try {
     if (!fs.existsSync(categoryPath)) {
-      console.warn(`Category folder not found: ${categoryPath}`);
+      console.warn(`[WARN] 카테고리 폴더 없음: ${categoryPath}`);
       return images;
     }
 
-    const items = fs.readdirSync(categoryPath);
-    
+    let items;
+    try {
+      items = fs.readdirSync(categoryPath);
+    } catch (readErr) {
+      console.error(`[ERROR] 카테고리 폴더 읽기 실패: ${categoryPath}`, readErr);
+      return images;
+    }
     // 등급 폴더 확인
     const rarityFolders = items.filter((item) => {
       const itemPath = path.join(categoryPath, item);
-      return fs.statSync(itemPath).isDirectory();
+      let stat;
+      try {
+        stat = fs.statSync(itemPath);
+      } catch (statErr) {
+        console.error(`[ERROR] 등급 폴더 stat 실패: ${itemPath}`, statErr);
+        return false;
+      }
+      return stat.isDirectory();
     });
 
     if (rarityFolders.length > 0) {
@@ -115,7 +134,7 @@ function scanCategoryWithRarity(category, baseDir) {
       images.push(...scanDirectory(categoryPath, category));
     }
   } catch (error) {
-    console.error(`Error scanning category ${category}:`, error);
+    console.error(`[ERROR] 카테고리 접근 실패: ${category} (${categoryPath})`, error);
   }
 
   return images;
