@@ -4,13 +4,14 @@ import { useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { useAppStore } from '@/store/useAppStore';
+import type { AppStore } from '@/store/useAppStore';
 
 export default function ActionButtons() {
-  const appState = useAppStore();
-  const isExporting = useAppStore((state) => state.isExporting);
-  const exportProgress = useAppStore((state) => state.exportProgress);
-  const setIsExporting = useAppStore((state) => state.setIsExporting);
-  const setExportProgress = useAppStore((state) => state.setExportProgress);
+  const appState = useAppStore() as AppStore;
+  const isExporting = useAppStore((state: AppStore) => state.isExporting);
+  const exportProgress = useAppStore((state: AppStore) => state.exportProgress);
+  const setIsExporting = useAppStore((state: AppStore) => state.setIsExporting);
+  const setExportProgress = useAppStore((state: AppStore) => state.setExportProgress);
 
   // 저장 버튼 클릭 시: isExporting을 true로 설정
   const handleSaveImage = () => {
