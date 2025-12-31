@@ -28,7 +28,11 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [textAlign, setTextAlign] = useState(fontSettings.textAlign);
   const [customFontUrl, setCustomFontUrl] = useState(fontSettings.customFontUrl || '');
   const [customFontName, setCustomFontName] = useState(fontSettings.customFontName || '');
-  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#1f2937');
+  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#111827');
+  const [borderColor, setBorderColor] = useState(fontSettings.borderColor || '#ffffff');
+  const [imageBackgroundColor, setImageBackgroundColor] = useState(fontSettings.imageBackgroundColor || '#ffffff');
+  const [scoreColor, setScoreColor] = useState(fontSettings.scoreColor || '#111827');
+  const [scoreFontSize, setScoreFontSize] = useState(fontSettings.scoreFontSize || 14);
 
   // Display states
   const [scoreDisplayType, setScoreDisplayType] = useState(displaySettings.scoreDisplayType);
@@ -62,6 +66,10 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
       customFontUrl,
       customFontName,
       fontColor,
+      borderColor,
+      imageBackgroundColor,
+      scoreColor,
+      scoreFontSize,
     });
 
     // Save display settings
@@ -116,13 +124,24 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     setTextAlign('center');
     setCustomFontUrl('');
     setCustomFontName('');
-    setFontColor('#ffffff');
+    setFontColor('#111827');
+    setBorderColor('#ffffff');
+    setImageBackgroundColor('#ffffff');
+    setScoreColor('#111827');
+    setScoreFontSize(14);
     setScoreDisplayType('comma');
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 modal-backdrop" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-      <div className="macos-card-high rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col modal-content">
+    <div 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 modal-backdrop" 
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
+      onClick={onClose}
+    >
+      <div 
+        className="macos-card-high rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="p-5 border-b border-gray-200 flex items-center justify-between bg-white/95 backdrop-blur-xl shrink-0">
           <h2 className="text-gray-800 text-xl font-bold">설정</h2>
@@ -471,6 +490,58 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                   onChange={(e) => setFontColor(e.target.value)}
                   className="w-full h-12 rounded-lg cursor-pointer"
                 />
+              </div>
+
+              {/* Border Color */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">테두리 색상</label>
+                <input
+                  type="color"
+                  value={borderColor}
+                  onChange={(e) => setBorderColor(e.target.value)}
+                  className="w-full h-12 rounded-lg cursor-pointer"
+                />
+              </div>
+
+              {/* Image Background Color */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">이미지 배경 색상</label>
+                <input
+                  type="color"
+                  value={imageBackgroundColor}
+                  onChange={(e) => setImageBackgroundColor(e.target.value)}
+                  className="w-full h-12 rounded-lg cursor-pointer"
+                />
+              </div>
+
+              {/* Score Color */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 텍스트 색상</label>
+                <input
+                  type="color"
+                  value={scoreColor}
+                  onChange={(e) => setScoreColor(e.target.value)}
+                  className="w-full h-12 rounded-lg cursor-pointer"
+                />
+              </div>
+
+              {/* Score Font Size */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">
+                  점수 폰트 크기: {scoreFontSize}px
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="24"
+                  value={scoreFontSize}
+                  onChange={(e) => setScoreFontSize(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-gray-500 text-xs mt-1">
+                  <span>10px</span>
+                  <span>24px</span>
+                </div>
               </div>
 
               {/* Preview */}

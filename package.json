@@ -19,7 +19,6 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
-    "@types/lz-string": "^1.5.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

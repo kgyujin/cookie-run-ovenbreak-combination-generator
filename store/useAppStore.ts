@@ -36,13 +36,9 @@ const createEmptyArena = (): ArenaData => ({
 });
 
 interface AppStore extends AppState {
-  isExporting: boolean;
-  exportProgress: number;
   modalOpen: boolean;
   modalArenaIndex: number | null;
   modalType: string | null;
-  setIsExporting: (isExporting: boolean) => void;
-  setExportProgress: (progress: number) => void;
   setModalOpen: (open: boolean, arenaIndex?: number, type?: string) => void;
   updateArenaItem: (arenaIndex: number, field: string, value: any) => void;
   setBackground: (background: BackgroundData) => void;
@@ -81,6 +77,10 @@ const initialState: AppState = {
     fontFamily: 'Pretendard',
     textAlign: 'center',
     fontColor: '#111827',
+    borderColor: '#ffffff',
+    imageBackgroundColor: '#ffffff',
+    scoreColor: '#111827',
+    scoreFontSize: 14,
   },
   displaySettings: {
     scoreDisplayType: 'comma',
@@ -89,15 +89,9 @@ const initialState: AppState = {
 
 export const useAppStore = create<AppStore>((set) => ({
   ...initialState,
-  isExporting: false,
-  exportProgress: 0,
   modalOpen: false,
   modalArenaIndex: null,
   modalType: null,
-
-  setIsExporting: (isExporting) => set({ isExporting }),
-
-  setExportProgress: (progress) => set({ exportProgress: progress }),
 
   setModalOpen: (open, arenaIndex, type) => 
     set({ modalOpen: open, modalArenaIndex: arenaIndex ?? null, modalType: type ?? null }),

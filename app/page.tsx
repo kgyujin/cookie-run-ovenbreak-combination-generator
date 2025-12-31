@@ -5,15 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/store/useAppStore';
 import Header from '@/components/Header';
 import ComboBlock from '@/components/ComboBlock';
-import ActionButtons from '@/components/ActionButtons';
 import ImageSelectModal from '@/components/ImageSelectModal';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 
 function PageContent() {
   const { 
     background, 
-    isExporting,
-    exportProgress,
     arenas, 
     modalOpen,
     modalArenaIndex,
@@ -69,20 +66,10 @@ function PageContent() {
       {/* 메인 컨테이너 - 전체 화면 활용 반응형 */}
       <main 
         id="capture-area" 
-        className={`
-          w-full min-h-screen
-          ${!isExporting ? 'p-6 md:p-8 lg:p-10' : 'p-6'}
-        `}
-        style={{
-          background: isExporting ? 'transparent' : undefined,
-        }}
+        className="w-full min-h-screen p-6 md:p-8 lg:p-10"
       >
         {/* 콘텐츠 래퍼 - 최대 너비 제한 */}
-        <div className={`max-w-[1600px] mx-auto ${!isExporting ? 'p-6' : ''}`}
-          style={{
-            boxShadow: isExporting ? 'none' : undefined,
-          }}
-        >
+        <div className="max-w-[1600px] mx-auto p-6">
           {/* Header */}
           <Header />
 
@@ -92,34 +79,11 @@ function PageContent() {
               <ComboBlock key={index} arenaIndex={index} />
             ))}
           </div>
-
-          {/* Action Buttons - 하단 배치 */}
-          <div className="mt-8 mb-4" style={{ visibility: isExporting ? 'hidden' : 'visible' }}>
-            <ActionButtons />
-          </div>
         </div>
       </main>
 
-      {/* Export Progress Overlay and Interaction Blocker - outside capture-area */}
-      {isExporting && (
-        <>
-          {/* 전체 화면 차단 오버레이 */}
-          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" />
-          {/* 프로그레스 표시 */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="w-full max-w-md macos-card-high p-6 pointer-events-auto">
-              <div className="text-gray-800 font-bold mb-3 text-lg">이미지 저장 중...</div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div className="h-3 bg-blue-500 transition-all rounded-full" style={{ width: `${exportProgress}%` }} />
-              </div>
-              <div className="text-gray-600 text-sm mt-2 text-right font-medium">{exportProgress}%</div>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* Image Select Modal */}
-      {modalOpen && modalArenaIndex !== null && modalType && !isExporting && (
+      {modalOpen && modalArenaIndex !== null && modalType && (
         <ImageSelectModal
           category={getModalCategory(modalType)}
           onClose={() => setModalOpen(false)}

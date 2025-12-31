@@ -69,6 +69,10 @@ export interface FontSettings {
   customFontUrl?: string;
   customFontName?: string;
   fontColor?: string;
+  borderColor?: string;
+  imageBackgroundColor?: string;
+  scoreColor?: string;
+  scoreFontSize?: number;
 }
 
 export interface DisplaySettings {

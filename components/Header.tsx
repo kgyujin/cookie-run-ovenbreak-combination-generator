@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import clsx from 'clsx';
+import { compressToEncodedURIComponent } from 'lz-string';
 import { useAppStore } from '@/store/useAppStore';
 import SettingsModal from './SettingsModal';
 import ImageSelectModal from './ImageSelectModal';
 
 export default function Header() {
-  const { seasonName, setSeasonName, seasonDish, seasonIngredients, isExporting, fontSettings } = useAppStore();
+  const { seasonName, setSeasonName, seasonDish, seasonIngredients, fontSettings } = useAppStore();
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectingType, setSelectingType] = useState<'dish' | 'ingredient' | null>(null);
@@ -23,31 +24,58 @@ export default function Header() {
   }, [seasonName, fontSettings.fontSize]);
 
   const openDishModal = () => {
-    if (isExporting) return; // 저장 중에는 이미지 변경 불가
     setSelectingType('dish');
     setShowImageModal(true);
   };
 
   const openIngredientModal = (index: number) => {
-    if (isExporting) return; // 저장 중에는 이미지 변경 불가
     setSelectingType('ingredient');
     setSelectingIndex(index);
     setShowImageModal(true);
   };
 
   // macOS 스타일
-  const macosStyle = isExporting 
-    ? 'bg-transparent border-none backdrop-filter-none shadow-none' 
-    : 'macos-card-elevated';
+  const macosStyle = 'macos-card-elevated';
+
+  const handleShare = () => {
+    const state = useAppStore.getState();
+    const compressed = compressToEncodedURIComponent(JSON.stringify({
+      arenas: state.arenas,
+      seasonName: state.seasonName,
+      ingredients: state.ingredients,
+      background: state.background,
+      displaySettings: state.displaySettings,
+      fontSettings: state.fontSettings,
+    }));
+    const params = new URLSearchParams({ data: compressed });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+    navigator.clipboard.writeText(url).then(() => {
+      alert('공유 링크가 복사되었습니다!');
+    }).catch(() => {
+      // fallback for browsers without clipboard permission
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('공유 링크가 복사되었습니다!');
+      } catch (e) {
+        alert('링크 복사에 실패했습니다. 수동으로 복사해 주세요.');
+      }
+    });
+  };
 
   return (
     <>
       <div className="relative mb-4" style={{ height: '400px' }}>
-        {/* Settings Button - Floating */}
-        {!isExporting && (
+        {/* Settings and Share Buttons - Floating */}
+        <div className="absolute -top-1 -left-1 flex gap-2 z-30">
           <button
             onClick={() => setShowSettingsModal(true)}
-            className="absolute -top-1 -left-1 macos-button p-1.5 text-gray-700 hover:text-gray-900 z-30"
+            className="macos-button p-1.5 text-gray-700 hover:text-gray-900"
             title="설정"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,14 +83,23 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-        )}
+          <button
+            onClick={handleShare}
+            className="macos-button p-1.5 text-gray-700 hover:text-gray-900"
+            title="공유"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
+        </div>
 
         {/* Header Layout - 고정 높이로 제한 */}
         <div className="flex gap-1.5 h-full">
           {/* Left: Season Name (80%) */}
           <div className={clsx(
             "w-[80%] h-full px-2 flex items-center justify-center",
-            seasonName && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
+            seasonName ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
           )}>
             <textarea
               ref={textareaRef}
@@ -82,7 +119,7 @@ export default function Header() {
                   e.preventDefault();
                 }
               }}
-              disabled={isExporting}
+              disabled={false}
               placeholder="시즌명"
               className="w-full bg-transparent border-none text-gray-800 font-bold placeholder-gray-400 focus:outline-none resize-none scrollbar-hide disabled:cursor-not-allowed"
               style={{
@@ -104,22 +141,22 @@ export default function Header() {
             {/* Season Dish */}
             <div className={clsx(
               "p-0.5 h-[55%]",
-              seasonDish && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
+              seasonDish ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
             )}>
               <div
                 onClick={openDishModal}
                 className={clsx(
                   "w-full h-full rounded-lg cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                   {
-                    "bg-gray-100 hover:bg-gray-200": !isExporting && !seasonDish,
-                    "bg-transparent": isExporting || seasonDish
+                    "bg-gray-100 hover:bg-gray-200": !seasonDish,
+                    "bg-transparent": seasonDish
                   }
                 )}
               >
                 {seasonDish ? (
                   <img crossOrigin="anonymous" src={seasonDish} alt="시즌 요리" className="w-full h-full object-contain" />
                 ) : (
-                  !isExporting && <span className="text-gray-500 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
+                  <span className="text-gray-500 text-sm font-semibold absolute inset-0 flex items-center justify-center">시즌 요리</span>
                 )}
               </div>
             </div>
@@ -127,7 +164,7 @@ export default function Header() {
             {/* Ingredients (3 columns) */}
             <div className={clsx(
               "grid grid-cols-3 gap-0.5 p-0.5 h-[40%]",
-              seasonIngredients.some(ing => ing) && !isExporting ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
+              seasonIngredients.some(ing => ing) ? 'bg-transparent border-none backdrop-filter-none shadow-none' : macosStyle
             )}>
               {[0, 1, 2].map((index) => (
                 <div key={index} className="flex flex-col items-center h-full">
@@ -136,15 +173,15 @@ export default function Header() {
                     className={clsx(
                       "w-full h-full rounded-md cursor-pointer transition-all flex items-center justify-center overflow-hidden relative",
                       {
-                        "bg-gray-100 hover:bg-gray-200": !isExporting && !seasonIngredients[index],
-                        "bg-transparent": isExporting || seasonIngredients[index]
+                        "bg-gray-100 hover:bg-gray-200": !seasonIngredients[index],
+                        "bg-transparent": seasonIngredients[index]
                       }
                     )}
                   >
                     {seasonIngredients[index] ? (
                       <img crossOrigin="anonymous" src={seasonIngredients[index]} alt={`재료${index+1}`} className="max-w-full max-h-full object-contain" />
                     ) : (
-                      !isExporting && <span className="text-gray-500 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
+                      <span className="text-gray-500 text-xs font-semibold absolute inset-0 flex items-center justify-center">재료 {index + 1}</span>
                     )}
                   </div>
                 </div>
