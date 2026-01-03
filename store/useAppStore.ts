@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppState, ArenaData, BackgroundData } from '@/types';
+import { AppState, ArenaData, BackgroundData, FontSettings } from '@/types';
 
 const createEmptyArena = (): ArenaData => ({
   youtubeUrl: null,
@@ -63,7 +63,7 @@ export interface AppStore extends AppState {
   setGameData: (data: any) => void;
   loadStateFromUrl: (state: Partial<AppState>) => void;
   reset: () => void;
-  setFontSettings: (settings: Partial<{ fontSize: number; fontFamily: 'Pretendard' | 'CookieRun' | 'Custom'; textAlign: 'left' | 'center' | 'right'; customFontUrl?: string; customFontName?: string; fontColor?: string }>) => void;
+  setFontSettings: (settings: Partial<FontSettings>) => void;
   setDisplaySettings: (settings: Partial<{ scoreDisplayType: 'abbreviated' | 'comma' | 'korean' }>) => void;
 }
 
