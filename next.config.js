@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'export', // Vercel SSR 배포를 위해 제거
+  output: 'export',
   images: {
     unoptimized: true,
   },
