@@ -259,15 +259,28 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         disabled={isExporting}
         placeholder={isExporting ? '' : '최고점 (숫자만 입력)'}
         className={clsx(
-          'absolute px-2 py-1 text-xs text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all text-gray-800',
-          `${macosBase} ${unifiedShadow}`
+          'absolute px-2 py-1 text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all',
+          // 기존 text-gray-800 제거 (style에서 제어하기 위함)
+          // text-xs 클래스도 style의 fontSize가 덮어씌우므로 있어도 무관하지만 명시적으로 style 우선
+          arena.score.value && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
         )}
         style={{ 
           zIndex: 20, 
           width: '35%', 
           height: '10%', 
           top: '9%', 
-          right: '3%'
+          right: '3%',
+          // [추가된 부분] 설정된 폰트 색상과 크기 적용
+          color: fontSettings.scoreColor,
+          fontSize: `${fontSettings.scoreFontSize}px`,
+          fontFamily: fontSettings.fontFamily === 'Custom' ? 'CustomFont' : fontSettings.fontFamily, // (선택사항) 폰트 종류까지 맞추려면 추가
+          // ▼ [추가] 외곽선 스타일 적용
+          WebkitTextStroke: fontSettings.scoreStrokeWidth && fontSettings.scoreStrokeWidth > 0
+            ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}`
+            : 'unset',
+            
+          // (선택) 외곽선이 글자 안쪽을 먹지 않도록 바깥으로 그리기
+          paintOrder: 'stroke fill'
         }}
       />
 
@@ -406,14 +419,26 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           disabled={isExporting}
           placeholder={isExporting ? '' : '대체 최고점 (숫자만 입력)'}
           className={clsx(
-            'absolute px-2 py-1 text-xs text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all text-gray-800',
-            `${macosBase} ${unifiedShadow}`
+            'absolute px-2 py-1 text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all',
+             // 기존 text-gray-800 제거
+            arena.subScore.value && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
           )}
           style={{ 
             top: '2%',
             left: 'calc(2% + 50px)',
             right: '2%',
-            height: '40px'
+            height: '40px',
+            // [추가된 부분] 설정된 폰트 색상과 크기 적용
+            color: fontSettings.scoreColor,
+            fontSize: `${fontSettings.scoreFontSize}px`,
+            fontFamily: fontSettings.fontFamily === 'Custom' ? 'CustomFont' : fontSettings.fontFamily, // (선택사항)
+            // ▼ [추가] 외곽선 스타일 적용
+          WebkitTextStroke: fontSettings.scoreStrokeWidth && fontSettings.scoreStrokeWidth > 0
+            ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}`
+            : 'unset',
+            
+          // (선택) 외곽선이 글자 안쪽을 먹지 않도록 바깥으로 그리기
+          paintOrder: 'stroke fill'
           }}
         />
 

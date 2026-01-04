@@ -73,6 +73,8 @@ export interface FontSettings {
   imageBackgroundColor?: string;
   scoreColor?: string;
   scoreFontSize?: number;
+  scoreStrokeColor?: string;
+  scoreStrokeWidth?: number;
 }
 
 export interface DisplaySettings {

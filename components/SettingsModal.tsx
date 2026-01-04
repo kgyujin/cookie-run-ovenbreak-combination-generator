@@ -33,6 +33,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
   const [imageBackgroundColor, setImageBackgroundColor] = useState(fontSettings.imageBackgroundColor || '#ffffff');
   const [scoreColor, setScoreColor] = useState(fontSettings.scoreColor || '#111827');
   const [scoreFontSize, setScoreFontSize] = useState(fontSettings.scoreFontSize || 14);
+  const [scoreStrokeColor, setScoreStrokeColor] = useState(fontSettings.scoreStrokeColor || '#ffffff');
+  const [scoreStrokeWidth, setScoreStrokeWidth] = useState(fontSettings.scoreStrokeWidth || 0);
 
   // Display states
   const [scoreDisplayType, setScoreDisplayType] = useState(displaySettings.scoreDisplayType);
@@ -70,6 +72,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
       imageBackgroundColor,
       scoreColor,
       scoreFontSize,
+      scoreStrokeColor,
+      scoreStrokeWidth,
     });
 
     // Save display settings
@@ -129,6 +133,8 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
     setImageBackgroundColor('#ffffff');
     setScoreColor('#111827');
     setScoreFontSize(14);
+    setScoreStrokeColor('#ffffff');
+    setScoreStrokeWidth(0);
     setScoreDisplayType('comma');
   };
 
@@ -533,14 +539,45 @@ export default function SettingsModal({ onClose }: { onClose: () => void }) {
                 <input
                   type="range"
                   min="10"
-                  max="24"
+                  max="48"
                   value={scoreFontSize}
                   onChange={(e) => setScoreFontSize(Number(e.target.value))}
                   className="w-full"
                 />
                 <div className="flex justify-between text-gray-500 text-xs mt-1">
                   <span>10px</span>
-                  <span>24px</span>
+                  <span>48px</span> {/* 라벨도 48px로 변경 */}
+                </div>
+              </div>
+
+              {/* Score Stroke Color (점수 외곽선 색상) */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 외곽선 색상</label>
+                <input
+                  type="color"
+                  value={scoreStrokeColor}
+                  onChange={(e) => setScoreStrokeColor(e.target.value)}
+                  className="w-full h-12 rounded-lg cursor-pointer"
+                />
+              </div>
+
+              {/* Score Stroke Width (점수 외곽선 두께) */}
+              <div>
+                <label className="block text-gray-800 text-sm font-semibold mb-2">
+                  점수 외곽선 두께: {scoreStrokeWidth}px
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="5"
+                  step="0.5" 
+                  value={scoreStrokeWidth}
+                  onChange={(e) => setScoreStrokeWidth(Number(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-gray-500 text-xs mt-1">
+                  <span>없음 (0px)</span>
+                  <span>두껍게 (5px)</span>
                 </div>
               </div>
 

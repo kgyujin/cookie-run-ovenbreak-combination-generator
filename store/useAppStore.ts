@@ -86,6 +86,8 @@ const initialState: AppState = {
     imageBackgroundColor: '#ffffff',
     scoreColor: '#111827',
     scoreFontSize: 14,
+    scoreStrokeColor: '#ffffff',
+    scoreStrokeWidth: 0,
   },
   displaySettings: {
     scoreDisplayType: 'comma',
