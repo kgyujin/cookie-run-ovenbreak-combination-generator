@@ -5077,13 +5077,88 @@
   "blessings": [
     {
       "id": "blessings_default_1",
-      "name": "무지개젤리",
-      "image": "/images/blessings/무지개젤리.png"
+      "name": "10초마다 점수 증가",
+      "image": "/images/blessings/10초마다 점수 증가.png"
     },
     {
       "id": "blessings_default_2",
-      "name": "장애물주의인가",
-      "image": "/images/blessings/장애물주의인가.png"
+      "name": "일반 젤리 점수 증가",
+      "image": "/images/blessings/일반 젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_3",
+      "name": "노란곰젤리 점수 증가",
+      "image": "/images/blessings/노란곰젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_4",
+      "name": "분홍곰젤리 점수 증가",
+      "image": "/images/blessings/분홍곰젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_5",
+      "name": "얼음곰젤리 점수 증가",
+      "image": "/images/blessings/얼음곰젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_6",
+      "name": "모든 곰젤리 점수 증가",
+      "image": "/images/blessings/모든 곰젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_7",
+      "name": "모든 젤리 점수 증가",
+      "image": "/images/blessings/모든 젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_8",
+      "name": "장애물 파괴 점수 증가",
+      "image": "/images/blessings/장애물 파괴 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_9",
+      "name": "보호막",
+      "image": "/images/blessings/보호막.png"
+    },
+    {
+      "id": "blessings_default_10",
+      "name": "구멍구출",
+      "image": "/images/blessings/구멍구출.png"
+    },
+    {
+      "id": "blessings_default_11",
+      "name": "점프 추가",
+      "image": "/images/blessings/점프 추가.png"
+    },
+    {
+      "id": "blessings_default_12",
+      "name": "모든 코인 점수 증가",
+      "image": "/images/blessings/모든 코인 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_13",
+      "name": "광속질수시 모든 젤리 점수 증가",
+      "image": "/images/blessings/광속질주시 모든 젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_14",
+      "name": "장애물 통과 점수 증가",
+      "image": "/images/blessings/장애물 통과 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_15",
+      "name": "거대화시 모든 젤리 점수 증가",
+      "image": "/images/blessings/거대화시 모든 젤리 점수 증가.png"
+    },
+    {
+      "id": "blessings_default_16",
+      "name": "거대화시 장애물 파괴점수 증가",
+      "image": "/images/blessings/거대화시 장애물 파괴점수 증가.png"
+    },
+    {
+      "id": "blessings_default_17",
+      "name": "쿠키전용 축복",
+      "image": "/images/blessings/쿠키전용 축복.png"
     }
   ]
 }
