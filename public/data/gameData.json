@@ -3677,6 +3677,11 @@
       "id": "dishes_default_12",
       "name": "특급 스파이시 전골",
       "image": "/images/dishes/특급 스파이시 전골.png"
+    },
+    {
+      "id": "dishes_default_13",
+      "name": "알록달록 스노우맨 샐러드",
+      "image": "/images/dishes/알록달록 스노우맨 샐러드.png"
     }
   ],
   "ingredients": [
