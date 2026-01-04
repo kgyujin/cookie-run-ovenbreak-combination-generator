@@ -115,6 +115,12 @@
       "rarity": "legendary"
     },
     {
+      "id": "cookies_legendary_20",
+      "name": "죽림영검",
+      "image": "/images/cookies/legendary/죽림영검.png",
+      "rarity": "legendary"
+    },
+    {
       "id": "cookies_epic_1",
       "name": "감귤탕후루",
       "image": "/images/cookies/epic/감귤탕후루.png",
@@ -2679,6 +2685,12 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_202",
+      "name": "죽림영검",
+      "image": "/images/pets/epic/죽림영검.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
@@ -3524,6 +3536,12 @@
       "id": "treasures_epic_111",
       "name": "흑마공 비급서",
       "image": "/images/treasures/epic/흑마공 비급서.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_112",
+      "name": "운명의 쌍가락지",
+      "image": "/images/treasures/epic/운명의 쌍가락지.png",
       "rarity": "epic"
     },
     {
@@ -4957,6 +4975,12 @@
       "id": "magicCandies_epic_188",
       "name": "히어로",
       "image": "/images/magic_candies/epic/히어로.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_189",
+      "name": "죽림영검",
+      "image": "/images/magic_candies/epic/죽림영검.png",
       "rarity": "epic"
     },
     {

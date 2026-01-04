@@ -1,0 +1,32 @@
+name: 🚀 Auto Merge & Deploy Bypass
+
+# 'dev' 브랜치에 코드가 올라오면 작동합니다
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  bypass-vercel-limit:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 코드 가져오기
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # 병합을 위해 전체 히스토리 가져오기
+          token: ${{ secrets.MY_GITHUB_TOKEN }} # 주인의 권한으로 가져옴
+
+      # 2. 깃허브 로봇에게 주인의 신분 부여 (중요!)
+      - name: Setup Git User as Owner
+        run: |
+          # 아래 두 줄을 본인의 깃허브 이메일과 아이디로 수정해주세요!
+          git config --global user.email "k_gyujin@daum.net"
+          git config --global user.name "kgyujin"
+
+      # 3. main 브랜치로 이동해서 dev 내용을 합치고 푸시
+      - name: Merge dev to main
+        run: |
+          git checkout main
+          git merge origin/dev --allow-unrelated-histories -m "🔀 Auto-merge for Vercel Deploy"
+          git push origin main
