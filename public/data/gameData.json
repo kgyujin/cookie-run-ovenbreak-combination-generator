@@ -3914,6 +3914,12 @@
       "rarity": "legendary"
     },
     {
+      "id": "magicCandies_legendary_20",
+      "name": "죽림영검",
+      "image": "/images/magic_candies/legendary/죽림영검.png",
+      "rarity": "legendary"
+    },
+    {
       "id": "magicCandies_epic_1",
       "name": "감귤탕후루",
       "image": "/images/magic_candies/epic/감귤탕후루.png",
@@ -5043,30 +5049,24 @@
     },
     {
       "id": "magicCandies_epic_189",
-      "name": "죽림영검",
-      "image": "/images/magic_candies/epic/죽림영검.png",
-      "rarity": "epic"
-    },
-    {
-      "id": "magicCandies_epic_190",
       "name": "희당",
       "image": "/images/magic_candies/epic/희당.png",
       "rarity": "epic"
     },
     {
-      "id": "magicCandies_epic_191",
+      "id": "magicCandies_epic_190",
       "name": "다크퐁듀",
       "image": "/images/magic_candies/epic/다크퐁듀.png",
       "rarity": "epic"
     },
     {
-      "id": "magicCandies_epic_192",
+      "id": "magicCandies_epic_191",
       "name": "깜빠뉴",
       "image": "/images/magic_candies/epic/깜빠뉴.png",
       "rarity": "epic"
     },
     {
-      "id": "magicCandies_epic_193",
+      "id": "magicCandies_epic_192",
       "name": "엔젤시폰",
       "image": "/images/magic_candies/epic/엔젤시폰.png",
       "rarity": "epic"
