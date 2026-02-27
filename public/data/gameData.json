@@ -1249,6 +1249,30 @@
       "rarity": "epic"
     },
     {
+      "id": "cookies_epic_189",
+      "name": "희당",
+      "image": "/images/cookies/epic/희당.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_190",
+      "name": "다크퐁듀",
+      "image": "/images/cookies/epic/다크퐁듀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_191",
+      "name": "깜빠뉴",
+      "image": "/images/cookies/epic/깜빠뉴.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_192",
+      "name": "엔젤시폰",
+      "image": "/images/cookies/epic/엔젤시폰.png",
+      "rarity": "epic"
+    },
+    {
       "id": "cookies_rare_1",
       "name": "공주",
       "image": "/images/cookies/rare/공주.png",
@@ -2691,6 +2715,30 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_203",
+      "name": "희당",
+      "image": "/images/pets/epic/희당.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_204",
+      "name": "다크퐁듀",
+      "image": "/images/pets/epic/다크퐁듀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_205",
+      "name": "깜빠뉴",
+      "image": "/images/pets/epic/깜빠뉴.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_206",
+      "name": "엔젤시폰",
+      "image": "/images/pets/epic/엔젤시폰.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
@@ -3542,6 +3590,17 @@
       "id": "treasures_epic_112",
       "name": "운명의 쌍가락지",
       "image": "/images/treasures/epic/운명의 쌍가락지.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_113",
+      "name": "말랑반죽 밀대",
+      "image": "/images/treasures/epic/말랑반죽 밀대.png",
+      "rarity": "epic"
+    },{
+      "id": "treasures_epic_114",
+      "name": "빙글빙글 회전시계",
+      "image": "/images/treasures/epic/빙글빙글 회전시계.png",
       "rarity": "epic"
     },
     {
@@ -4986,6 +5045,30 @@
       "id": "magicCandies_epic_189",
       "name": "죽림영검",
       "image": "/images/magic_candies/epic/죽림영검.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_190",
+      "name": "희당",
+      "image": "/images/magic_candies/epic/희당.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_191",
+      "name": "다크퐁듀",
+      "image": "/images/magic_candies/epic/다크퐁듀.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_192",
+      "name": "깜빠뉴",
+      "image": "/images/magic_candies/epic/깜빠뉴.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_193",
+      "name": "엔젤시폰",
+      "image": "/images/magic_candies/epic/엔젤시폰.png",
       "rarity": "epic"
     },
     {
