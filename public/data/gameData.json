@@ -3700,6 +3700,11 @@
       "id": "dishes_default_13",
       "name": "알록달록 스노우맨 샐러드",
       "image": "/images/dishes/알록달록 스노우맨 샐러드.png"
+    },
+    {
+      "id": "dishes_default14",
+      "name": "매콤달콤 무지개 케이크",
+      "image": "/images/dishes/매콤달콤 무지개 케이크.png"
     }
   ],
   "ingredients": [
