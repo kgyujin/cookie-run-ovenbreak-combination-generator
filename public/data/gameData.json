@@ -1273,6 +1273,22 @@
       "rarity": "epic"
     },
     {
+      "id": "cookies_epic_193",
+      "name": "앙트르메",
+      "image": "/images/cookies/epic/앙트르메.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_194",
+      "name": "우무",
+      "image": "/images/cookies/epic/우무.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_195",
+      "name": "벨벳케이크",
+      "image": "/images/cookies/epic/벨벳케이크.png",
+      "rarity": "epic"
+    },
+    {
       "id": "cookies_rare_1",
       "name": "공주",
       "image": "/images/cookies/rare/공주.png",
