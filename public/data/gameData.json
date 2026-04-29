@@ -2937,6 +2937,12 @@
       "rarity": "legendary"
     },
     {
+      "id": "treasures_legendary_9",
+      "name": "잔혹한 어둠의 손아귀",
+      "image": "/images/treasures/legendary/잔혹한 어둠의 손아귀.png",
+      "rarity": "legendary"
+    },
+    {
       "id": "treasures_epic_1",
       "name": "거룩한 태양의 검",
       "image": "/images/treasures/epic/거룩한 태양의 검.png",
