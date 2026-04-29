@@ -5112,6 +5112,24 @@
       "rarity": "epic"
     },
     {
+      "id": "magicCandies_epic_193",
+      "name": "앙트르메",
+      "image": "/images/magic_candies/epic/앙트르메.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_194",
+      "name": "우무",
+      "image": "/images/magic_candies/epic/우무.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_195",
+      "name": "벨벳케이크",
+      "image": "/images/magic_candies/epic/벨벳케이크.png",
+      "rarity": "epic"
+    },
+    {
       "id": "magicCandies_rare_1",
       "name": "근육",
       "image": "/images/magic_candies/rare/근육.png",
