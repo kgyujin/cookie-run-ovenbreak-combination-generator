@@ -2755,6 +2755,24 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_207",
+      "name": "앙트르메",
+      "image": "/images/pets/epic/앙트르메.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_208",
+      "name": "우무",
+      "image": "/images/pets/epic/우무.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_209",
+      "name": "벨벳케이크",
+      "image": "/images/pets/epic/벨벳케이크.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
