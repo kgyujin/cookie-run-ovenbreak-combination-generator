@@ -5342,10 +5342,16 @@
       "id": "blessings_default_17",
       "name": "쿠키전용 축복",
       "image": "/images/blessings/쿠키전용 축복.png"
-    },{
+    },
+    {
       "id": "blessings_default_18",
       "name": "lv1",
       "image": "/images/blessings/lv1.png"
+    },
+    {
+      "id": "blessings_default_19",
+      "name": "lv3",
+      "image": "/images/blessings/lv3.png"
     }
   ]
 }
