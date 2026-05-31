@@ -1293,6 +1293,16 @@
       "name": "벨벳케이크",
       "image": "/images/cookies/epic/벨벳케이크.png",
       "rarity": "epic"
+    },{
+      "id": "cookies_epic_196",
+      "name": "운편고",
+      "image": "/images/cookies/epic/운편고.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_197",
+      "name": "용정녹차",
+      "image": "/images/cookies/epic/용정녹차.png",
+      "rarity": "epic"
     },
     {
       "id": "cookies_rare_1",
@@ -2791,6 +2801,17 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_211",
+      "name": "운편고",
+      "image": "/images/pets/epic/운편고.png",
+      "rarity": "epic"
+    },{
+      "id": "pets_epic_212",
+      "name": "용정녹차",
+      "image": "/images/pets/epic/용정녹차.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
@@ -3666,6 +3687,12 @@
       "id": "treasures_epic_115",
       "name": "해탈의 경지 곰젤리 법등",
       "image": "/images/treasures/epic/해탈의 경지 곰젤리 법등.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "treasures_epic_116",
+      "name": "푸릇푸릇 찻잎 바구니",
+      "image": "/images/treasures/epic/푸릇푸릇 찻잎 바구니.png",
       "rarity": "epic"
     },
     {
@@ -5164,6 +5191,18 @@
       "id": "magicCandies_epic_195",
       "name": "벨벳케이크",
       "image": "/images/magic_candies/epic/벨벳케이크.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_196",
+      "name": "운편고",
+      "image": "/images/magic_candies/epic/운편고.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_197",
+      "name": "용정녹차",
+      "image": "/images/magic_candies/epic/용정녹차.png",
       "rarity": "epic"
     },
     {
