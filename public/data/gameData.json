@@ -1298,10 +1298,17 @@
       "name": "운편고",
       "image": "/images/cookies/epic/운편고.png",
       "rarity": "epic"
-    },{
+    },
+    {
       "id": "cookies_epic_197",
       "name": "용정녹차",
       "image": "/images/cookies/epic/용정녹차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_198",
+      "name": "소롱포",
+      "image": "/images/cookies/epic/소롱포.png",
       "rarity": "epic"
     },
     {
@@ -2805,10 +2812,17 @@
       "name": "운편고",
       "image": "/images/pets/epic/운편고.png",
       "rarity": "epic"
-    },{
+    },
+    {
       "id": "pets_epic_212",
       "name": "용정녹차",
       "image": "/images/pets/epic/용정녹차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_213",
+      "name": "소롱포",
+      "image": "/images/pets/epic/소롱포.png",
       "rarity": "epic"
     },
     {
@@ -5203,6 +5217,12 @@
       "id": "magicCandies_epic_197",
       "name": "용정녹차",
       "image": "/images/magic_candies/epic/용정녹차.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_198",
+      "name": "소롱포",
+      "image": "/images/magic_candies/epic/소롱포.png",
       "rarity": "epic"
     },
     {
