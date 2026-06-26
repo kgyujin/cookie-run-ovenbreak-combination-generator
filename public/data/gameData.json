@@ -3710,6 +3710,12 @@
       "rarity": "epic"
     },
     {
+      "id": "treasures_epic_117",
+      "name": "여름소다 아이스바",
+      "image": "/images/treasures/epic/여름소다 아이스바.png",
+      "rarity": "epic"
+    },
+    {
       "id": "treasures_rare_1",
       "name": "곰젤리 아이스크림",
       "image": "/images/treasures/rare/곰젤리 아이스크림.png",
