@@ -3875,6 +3875,11 @@
       "id": "dishes_default15",
       "name": "달콤고소 쫀득 떡케이크",
       "image": "/images/dishes/달콤고소 쫀득 떡케이크.png"
+    },
+    {
+      "id": "dishes_default16",
+      "name": "보글바글 레인보우 매지컬 파핑 버블티",
+      "image": "/images/dishes/보글바글 레인보우 매지컬 파핑 버블티.png"
     }
 
   ],
