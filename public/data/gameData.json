@@ -1312,6 +1312,12 @@
       "rarity": "epic"
     },
     {
+      "id": "cookies_epic_199",
+      "name": "메론소다",
+      "image": "/images/cookies/epic/메론소다.png",
+      "rarity": "epic"
+    },
+    {
       "id": "cookies_rare_1",
       "name": "공주",
       "image": "/images/cookies/rare/공주.png",
@@ -2823,6 +2829,12 @@
       "id": "pets_epic_213",
       "name": "소롱포",
       "image": "/images/pets/epic/소롱포.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_214",
+      "name": "메론소다",
+      "image": "/images/pets/epic/메론소다.png",
       "rarity": "epic"
     },
     {
@@ -5234,6 +5246,12 @@
       "id": "magicCandies_epic_198",
       "name": "소롱포",
       "image": "/images/magic_candies/epic/소롱포.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_199",
+      "name": "메론소다",
+      "image": "/images/magic_candies/epic/메론소다.png",
       "rarity": "epic"
     },
     {
