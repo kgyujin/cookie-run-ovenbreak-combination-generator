@@ -1442,6 +1442,18 @@
       "name": "용감한 쿠키",
       "image": "/images/cookies/common/용감한 쿠키.png",
       "rarity": "common"
+    },
+    {
+      "id": "cookies_common_5",
+      "name": "빈배경",
+      "image": "/images/cookies/common/빈배경.png",
+      "rarity": "common"
+    },
+    {
+      "id": "cookies_common_6",
+      "name": "공사중",
+      "image": "/images/cookies/common/공사중.png",
+      "rarity": "common"
     }
   ],
   "pets": [
@@ -2968,6 +2980,12 @@
       "name": "용감한 쿠키",
       "image": "/images/pets/common/용감한 쿠키.png",
       "rarity": "common"
+    },
+    {
+      "id": "pets_common_5",
+      "name": "빈배경",
+      "image": "/images/pets/common/빈배경.png",
+      "rarity": "common"
     }
   ],
   "treasures": [
@@ -3816,6 +3834,12 @@
       "name": "코인 장식 은왕관",
       "image": "/images/treasures/rare/코인 장식 은왕관.png",
       "rarity": "rare"
+    },
+    {
+      "id": "treasures_rare_16",
+      "name": "빈배경",
+      "image": "/images/treasures/rare/빈배경.png",
+      "rarity": "rare"
     }
   ],
   "dishes": [
@@ -3898,6 +3922,11 @@
       "id": "dishes_default16",
       "name": "보글바글 레인보우 매지컬 파핑 버블티",
       "image": "/images/dishes/보글바글 레인보우 매지컬 파핑 버블티.png"
+    },
+    {
+      "id": "dishes_default17",
+      "name": "빈배경",
+      "image": "/images/dishes/빈배경.png"
     }
 
   ],
@@ -5343,6 +5372,12 @@
       "name": "용감한 쿠키",
       "image": "/images/magic_candies/common/용감한 쿠키.png",
       "rarity": "common"
+    },
+    {
+      "id": "magicCandies_common_1",
+      "name": "빈배경",
+      "image": "/images/magic_candies/common/빈배경.png",
+      "rarity": "common"
     }
   ],
   "blessings": [
@@ -5440,6 +5475,11 @@
       "id": "blessings_default_19",
       "name": "lv3",
       "image": "/images/blessings/lv3.png"
+    },
+    {
+      "id": "blessings_default_20",
+      "name": "빈배경",
+      "image": "/images/blessings/빈배경.png"
     }
   ]
 }
