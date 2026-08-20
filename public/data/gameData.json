@@ -127,6 +127,12 @@
       "rarity": "legendary"
     },
     {
+      "id": "cookies_legendary_22",
+      "name": "알룰로스 노바",
+      "image": "/images/cookies/legendary/알룰로스 노바.png",
+      "rarity": "legendary"
+    },
+    {
       "id": "cookies_epic_1",
       "name": "감귤탕후루",
       "image": "/images/cookies/epic/감귤탕후루.png",
@@ -1315,6 +1321,18 @@
       "id": "cookies_epic_199",
       "name": "메론소다",
       "image": "/images/cookies/epic/메론소다.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_200",
+      "name": "라떼",
+      "image": "/images/cookies/epic/라떼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "cookies_epic_201",
+      "name": "헬리오허니",
+      "image": "/images/cookies/epic/헬리오허니.png",
       "rarity": "epic"
     },
     {
@@ -2850,6 +2868,24 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_215",
+      "name": "라떼",
+      "image": "/images/pets/epic/라떼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_216",
+      "name": "알룰로스 노바",
+      "image": "/images/pets/epic/알룰로스 노바.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_217",
+      "name": "헬리오허니",
+      "image": "/images/pets/epic/헬리오허니.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
@@ -3746,6 +3782,12 @@
       "rarity": "epic"
     },
     {
+      "id": "treasures_epic_118",
+      "name": "알룰로스 꿀뜨개",
+      "image": "/images/treasures/epic/알룰로스 꿀뜨개.png",
+      "rarity": "epic"
+    },
+    {
       "id": "treasures_rare_1",
       "name": "곰젤리 아이스크림",
       "image": "/images/treasures/rare/곰젤리 아이스크림.png",
@@ -4087,6 +4129,12 @@
       "id": "magicCandies_legendary_21",
       "name": "암염권갑",
       "image": "/images/magic_candies/legendary/암염권갑.png",
+      "rarity": "legendary"
+    },
+     {
+      "id": "magicCandies_legendary_22",
+      "name": "알룰로스 노바",
+      "image": "/images/magic_candies/legendary/알룰로스 노바.png",
       "rarity": "legendary"
     },
     {
@@ -5281,6 +5329,18 @@
       "id": "magicCandies_epic_199",
       "name": "메론소다",
       "image": "/images/magic_candies/epic/메론소다.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_200",
+      "name": "라떼",
+      "image": "/images/magic_candies/epic/라떼.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_201",
+      "name": "헬리오허니",
+      "image": "/images/magic_candies/epic/헬리오허니.png",
       "rarity": "epic"
     },
     {
