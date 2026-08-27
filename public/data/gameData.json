@@ -3788,6 +3788,12 @@
       "rarity": "epic"
     },
     {
+      "id": "treasures_epic_119",
+      "name": "화끈화끈 고춧가루 단지",
+      "image": "/images/treasures/epic/화끈화끈 고춧가루 단지.png",
+      "rarity": "epic"
+    },
+    {
       "id": "treasures_rare_1",
       "name": "곰젤리 아이스크림",
       "image": "/images/treasures/rare/곰젤리 아이스크림.png",
@@ -3967,6 +3973,11 @@
     },
     {
       "id": "dishes_default17",
+      "name": "백 년 손맛을 담은 김치",
+      "image": "/images/dishes/백 년 손맛을 담은 김치.png"
+    },
+    {
+      "id": "dishes_default18",
       "name": "빈배경",
       "image": "/images/dishes/빈배경.png"
     }
