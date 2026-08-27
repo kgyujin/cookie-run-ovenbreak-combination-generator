@@ -1336,6 +1336,12 @@
       "rarity": "epic"
     },
     {
+      "id": "cookies_epic_202",
+      "name": "파김치",
+      "image": "/images/cookies/epic/파김치.png",
+      "rarity": "epic"
+    },
+    {
       "id": "cookies_rare_1",
       "name": "공주",
       "image": "/images/cookies/rare/공주.png",
@@ -2883,6 +2889,12 @@
       "id": "pets_epic_217",
       "name": "헬리오허니",
       "image": "/images/pets/epic/헬리오허니.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_218",
+      "name": "파김치",
+      "image": "/images/pets/epic/파김치.png",
       "rarity": "epic"
     },
     {
@@ -5352,6 +5364,12 @@
       "id": "magicCandies_epic_201",
       "name": "헬리오허니",
       "image": "/images/magic_candies/epic/헬리오허니.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "magicCandies_epic_202",
+      "name": "파김치",
+      "image": "/images/magic_candies/epic/파김치.png",
       "rarity": "epic"
     },
     {
