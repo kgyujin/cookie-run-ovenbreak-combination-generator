@@ -133,6 +133,12 @@
       "rarity": "legendary"
     },
     {
+      "id": "cookies_legendary_23",
+      "name": "브레이브 로드",
+      "image": "/images/cookies/legendary/브레이브 로드.png",
+      "rarity": "legendary"
+    },
+    {
       "id": "cookies_epic_1",
       "name": "감귤탕후루",
       "image": "/images/cookies/epic/감귤탕후루.png",
@@ -1339,6 +1345,21 @@
       "id": "cookies_epic_202",
       "name": "파김치",
       "image": "/images/cookies/epic/파김치.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_203",
+      "name": "백김치",
+      "image": "/images/cookies/epic/백김치.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_204",
+      "name": "점프",
+      "image": "/images/cookies/epic/점프.png",
+      "rarity": "epic"
+    },{
+      "id": "cookies_epic_205",
+      "name": "슬라이드",
+      "image": "/images/cookies/epic/슬라이드.png",
       "rarity": "epic"
     },
     {
@@ -2898,6 +2919,30 @@
       "rarity": "epic"
     },
     {
+      "id": "pets_epic_219",
+      "name": "백김치",
+      "image": "/images/pets/epic/백김치.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_220",
+      "name": "점프",
+      "image": "/images/pets/epic/점프.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_221",
+      "name": "브레이브 로드",
+      "image": "/images/pets/epic/브레이브 로드.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "pets_epic_222",
+      "name": "슬라이드",
+      "image": "/images/pets/epic/슬라이드.png",
+      "rarity": "epic"
+    },
+    {
       "id": "pets_rare_1",
       "name": "공주",
       "image": "/images/pets/rare/공주.png",
@@ -3804,6 +3849,16 @@
       "name": "화끈화끈 고춧가루 단지",
       "image": "/images/treasures/epic/화끈화끈 고춧가루 단지.png",
       "rarity": "epic"
+    },{
+      "id": "treasures_epic_120",
+      "name": "와글와글 스티커 다이어리",
+      "image": "/images/treasures/epic/와글와글 스티커 다이어리.png",
+      "rarity": "epic"
+    },{
+      "id": "treasures_epic_121",
+      "name": "세계 제작용 콘솔창",
+      "image": "/images/treasures/epic/세계 제작용 콘솔창.png",
+      "rarity": "epic"
     },
     {
       "id": "treasures_rare_1",
@@ -3992,6 +4047,11 @@
       "id": "dishes_default18",
       "name": "빈배경",
       "image": "/images/dishes/빈배경.png"
+    },
+    {
+      "id": "dishes_default19",
+      "name": "모두 함께 완성한 10주년 케이크",
+      "image": "/images/dishes/모두 함께 완성한 10주년 케이크.png"
     }
 
   ],
@@ -4158,6 +4218,12 @@
       "id": "magicCandies_legendary_22",
       "name": "알룰로스 노바",
       "image": "/images/magic_candies/legendary/알룰로스 노바.png",
+      "rarity": "legendary"
+    },
+    {
+      "id": "magicCandies_legendary_23",
+      "name": "브레이브 로드",
+      "image": "/images/magic_candies/legendary/브레이브 로드.png",
       "rarity": "legendary"
     },
     {
@@ -5370,6 +5436,21 @@
       "id": "magicCandies_epic_202",
       "name": "파김치",
       "image": "/images/magic_candies/epic/파김치.png",
+      "rarity": "epic"
+    },{
+      "id": "magicCandies_epic_203",
+      "name": "백김치",
+      "image": "/images/magic_candies/epic/백김치.png",
+      "rarity": "epic"
+    },{
+      "id": "magicCandies_epic_204",
+      "name": "점프",
+      "image": "/images/magic_candies/epic/점프.png",
+      "rarity": "epic"
+    },{
+      "id": "magicCandies_epic_205",
+      "name": "슬라이드",
+      "image": "/images/magic_candies/epic/슬라이드.png",
       "rarity": "epic"
     },
     {
