@@ -42,6 +42,7 @@ export default function Modal({
       ref={ref}
       aria-labelledby={titleId}
       onCancel={(e) => {
+        if (e.target !== e.currentTarget) return; // 안쪽 파일 선택 창을 닫을 때 올라오는 cancel은 무시
         e.preventDefault();
         onClose();
       }}
