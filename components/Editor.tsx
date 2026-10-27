@@ -19,6 +19,7 @@ export default function Editor({ shareId }: { shareId?: string }) {
   const picker = useAppStore((s) => s.picker);
   const closePicker = useAppStore((s) => s.closePicker);
   const settingsOpen = useAppStore((s) => s.settingsOpen);
+  const gap = useAppStore((s) => s.boardStyle.gap);
 
   // 게임 데이터 (빌드 때 생성된 JSON)
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function Editor({ shareId }: { shareId?: string }) {
     <>
       <Toolbar />
       <main id="capture-area" className={'board-wrap px-3 py-4 sm:px-8 sm:py-8 lg:p-16' + (settingsOpen ? ' panel-open' : '')}>
-        <div className="board">
+        <div className="board" style={{ ['--gap' as string]: gap }}>
           <Header />
           <div className="board-grid">
             {Array.from({ length: arenaCount }, (_, i) => (

@@ -1,6 +1,6 @@
 import html2canvas from 'html2canvas';
 import { BackgroundData } from '@/types';
-import { backgroundCss, EXPORT_WIDTH } from './board';
+import { backgroundCss, BOARD_WIDTH } from './board';
 
 // iOS Safari 캔버스 최대 픽셀 수(약 16.7M)를 넘지 않게 배율을 정한다
 const MAX_CANVAS_PIXELS = 16_000_000;
@@ -48,10 +48,12 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
  * 조합표를 PNG로 저장한다. 화면 크기와 관계없이 항상 같은 폭(2열 배치)으로 만든다.
  * 저장하는 동안 .is-exporting 클래스로 빈 칸 표시·편집용 요소를 숨긴다.
  */
-export async function exportBoardImage(captureArea: HTMLElement, background: BackgroundData) {
+export async function exportBoardImage(captureArea: HTMLElement, background: BackgroundData, padding: number) {
   const originalStyle = captureArea.getAttribute('style') ?? '';
+  const width = BOARD_WIDTH + padding * 2;
   captureArea.classList.add('is-exporting');
-  captureArea.style.width = `${EXPORT_WIDTH}px`;
+  captureArea.style.setProperty('--export-pad', `${padding}px`);
+  captureArea.style.width = `${width}px`;
   captureArea.style.background = backgroundCss(background);
 
   try {
@@ -65,7 +67,7 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       scale: Math.min(2, Math.sqrt(MAX_CANVAS_PIXELS / (w * h))),
       useCORS: true,
       logging: false,
-      windowWidth: EXPORT_WIDTH,
+      windowWidth: width,
       onclone: (doc) => {
         doc.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => (el.placeholder = ''));
         const clonedArea = doc.getElementById(captureArea.id);

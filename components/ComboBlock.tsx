@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { CSSProperties, KeyboardEvent, PointerEvent, useState } from 'react';
 import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
-import { fontFamilyOf, textGlow, u } from '@/lib/board';
+import { cardStyle, fontFamilyOf, textGlow, u, withOpacity } from '@/lib/board';
 import { Category, MagicCandyData } from '@/types';
 import Slot from './Slot';
 import YoutubeDialog from './YoutubeDialog';
@@ -19,6 +19,7 @@ const MAX_RATIO = 70;
 export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const arena = useAppStore((s) => s.arenas[arenaIndex]);
   const fontSettings = useAppStore((s) => s.fontSettings);
+  const boardStyle = useAppStore((s) => s.boardStyle);
   const openPicker = useAppStore((s) => s.openPicker);
   const setArenaCombo = useAppStore((s) => s.setArenaCombo);
   const setArenaMagicCandy = useAppStore((s) => s.setArenaMagicCandy);
@@ -58,13 +59,18 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
     color: fontSettings.scoreColor,
     fontSize: u(fontSettings.scoreFontSize ?? 14),
     fontWeight: fontSettings.scoreFontWeight ?? 400,
+    textAlign: fontSettings.scoreAlign ?? 'center',
     fontFamily: fontFamilyOf(fontSettings.fontFamily),
     WebkitTextStroke: fontSettings.scoreStrokeWidth ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}` : undefined,
     paintOrder: 'stroke fill',
   };
 
   return (
-    <section aria-label={`${n}번 아레나`} className="relative w-full" style={{ height: u(425) }}>
+    <section
+      aria-label={`${n}번 아레나`}
+      className="relative w-full"
+      style={{ height: u(425), ...(boardStyle.card ? cardStyle(boardStyle) : {}) }}
+    >
       {/* ===== BASE LAYER ===== */}
       <Slot
         {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
@@ -184,7 +190,11 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         className="slot absolute flex items-center justify-center font-bold"
         style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18) }}
       >
-        <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
+        {boardStyle.numberBg ? (
+          <span className="absolute inset-0 rounded-[8px]" style={{ backgroundColor: boardStyle.numberBgColor }} aria-hidden="true" />
+        ) : (
+          <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
+        )}
         <span
           className="relative"
           style={{
@@ -228,6 +238,7 @@ function ScoreInput({
 }) {
   const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
   const displayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
+  const boardStyle = useAppStore((s) => s.boardStyle);
   const setArenaScore = useAppStore((s) => s.setArenaScore);
   const [editing, setEditing] = useState(false);
 
@@ -241,8 +252,12 @@ function ScoreInput({
       onBlur={() => setEditing(false)}
       onChange={(e) => setArenaScore(arenaIndex, field, e.target.value)}
       placeholder={placeholder}
-      className={clsx('slot absolute min-w-0 bg-transparent px-2 py-1 text-center placeholder:text-ink-subtle', !value && 'slot-empty')}
-      style={style}
+      className={clsx('slot absolute min-w-0 bg-transparent px-2 py-1 placeholder:text-ink-subtle', !value && 'slot-empty')}
+      style={
+        value && boardStyle.scoreBg
+          ? { ...style, backgroundColor: withOpacity(boardStyle.scoreBgColor, boardStyle.scoreBgOpacity), borderRadius: u(boardStyle.scoreBgRadius) }
+          : style
+      }
     />
   );
 }

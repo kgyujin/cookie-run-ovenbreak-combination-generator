@@ -1,30 +1,29 @@
-import updates from '@/data/updates.json';
-
 export interface UpdateNote {
   date: string;
   title: string;
   items: string[];
 }
 
-/** 최신순 업데이트 기록 (data/updates.json) */
-export const UPDATES: UpdateNote[] = updates;
-
 const SEEN_KEY = 'seen-update';
 const keyOf = (note: UpdateNote) => `${note.date}|${note.title}`;
 
-/** 마지막으로 확인한 업데이트보다 새로운 항목 수 */
-export function unseenCount() {
+/**
+ * 마지막으로 확인한 업데이트보다 새로운 항목 수. -1: 확인 기록 없음
+ * (업데이트 목록은 빌드 때 data/updates.json + 새 아이템 기록으로 만들어져 gameData.updates에 들어 있음)
+ */
+export function unseenCount(updates: UpdateNote[]) {
   try {
     const seen = localStorage.getItem(SEEN_KEY);
-    const index = UPDATES.findIndex((n) => keyOf(n) === seen);
-    return index === -1 ? (seen ? UPDATES.length : -1) : index; // -1: 확인 기록 없음
+    if (!seen) return -1;
+    const index = updates.findIndex((n) => keyOf(n) === seen);
+    return index === -1 ? updates.length : index;
   } catch {
     return 0;
   }
 }
 
-export function markUpdatesSeen() {
+export function markUpdatesSeen(updates: UpdateNote[]) {
   try {
-    if (UPDATES[0]) localStorage.setItem(SEEN_KEY, keyOf(UPDATES[0]));
+    if (updates[0]) localStorage.setItem(SEEN_KEY, keyOf(updates[0]));
   } catch {}
 }

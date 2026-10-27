@@ -20,7 +20,7 @@ export default function Toast() {
     <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-[max(24px,env(safe-area-inset-bottom))] z-[60] flex justify-center px-4">
       {visible && toast && (
         <p key={toast.id} className="toast flex items-center gap-2 rounded-full bg-ink py-3 pl-3 pr-5 text-label-md text-white shadow-e3">
-          <span className={'grid h-6 w-6 place-items-center rounded-full text-white ' + (toast.tone === 'error' ? 'bg-danger' : 'bg-primary')} aria-hidden="true">
+          <span className={'grid h-6 w-6 place-items-center rounded-full ' + (toast.tone === 'error' ? 'bg-danger text-white' : 'bg-primary text-on-primary')} aria-hidden="true">
             {toast.tone === 'error' ? <span className="text-sm font-bold">!</span> : <CheckIcon />}
           </span>
           {toast.message}

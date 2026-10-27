@@ -36,7 +36,7 @@
 
 @layer components {
   .field {
-    @apply h-touch w-full rounded-md border border-line bg-surface px-3 text-body-md text-ink transition-[border-color,box-shadow] placeholder:text-ink-subtle hover:border-ink-subtle/50 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15;
+    @apply h-touch w-full rounded-md border border-line bg-surface px-3 text-body-md text-ink transition-[border-color,box-shadow] placeholder:text-ink-subtle hover:border-ink-subtle/50 focus:border-primary-ink focus:outline-none focus:ring-4 focus:ring-primary-ink/15;
   }
   .btn-link {
     @apply inline-flex h-touch items-center justify-center gap-2 rounded-md border border-line bg-surface px-4 text-label-md text-ink transition-colors hover:bg-surface-sunken active:scale-[.97];
@@ -60,12 +60,13 @@ body {
   overflow-x: hidden;
 }
 
-body:has(dialog[open]) {
+/* 화면을 막는 창(모달)일 때만 뒤 스크롤을 잠근다. 설정 패널은 열린 채로 스크롤 가능 */
+body:has(dialog:modal) {
   overflow: hidden;
 }
 
 :focus-visible {
-  outline: 3px solid #c2410c;
+  outline: 3px solid #8a5300;
   outline-offset: 2px;
 }
 
@@ -87,7 +88,7 @@ body:has(dialog[open]) {
 .board-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: calc(24 * var(--u));
+  gap: calc(var(--gap, 24) * var(--u));
 }
 
 @container (min-width: 1000px) {
@@ -115,7 +116,7 @@ body:has(dialog[open]) {
 
 .slot:focus-visible {
   z-index: 50 !important;
-  outline: 3px solid #c2410c;
+  outline: 3px solid #8a5300;
   outline-offset: -3px;
   box-shadow: inset 0 0 0 5px #fff;
 }
@@ -143,7 +144,7 @@ input.slot:focus,
 
 .slot-empty:hover,
 .slot-empty:has(> .slot:hover) {
-  border-color: #c2410c;
+  border-color: #8a5300;
   background: #fff;
 }
 
@@ -154,7 +155,7 @@ input.slot:focus,
 }
 
 .slot-soft:hover {
-  border-color: #c2410c;
+  border-color: #8a5300;
   background: #fff;
 }
 
@@ -193,8 +194,8 @@ input.slot:focus,
 .ratio-handle:focus-visible {
   opacity: 1;
   color: #fff;
-  background: #c2410c;
-  border-color: #9a3412;
+  background: #8a5300;
+  border-color: #6b4000;
 }
 
 @media (hover: none) {
@@ -205,7 +206,7 @@ input.slot:focus,
 
 /* 이미지 저장 중: 편집용 표시를 모두 숨긴다 (lib/exportImage.ts) */
 .is-exporting {
-  padding: 64px !important;
+  padding: var(--export-pad, 64px) !important;
 }
 
 .is-exporting [data-edit-only] {

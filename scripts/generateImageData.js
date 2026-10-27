@@ -9,6 +9,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const IMAGES_DIR = path.join(ROOT, 'public', 'images');
@@ -17,6 +18,9 @@ const UPDATES_PATH = path.join(ROOT, 'data', 'updates.json');
 const OUTPUT_PATH = path.join(ROOT, 'public', 'data', 'gameData.json');
 const THUMBS_DIR = path.join(ROOT, 'public', 'thumbs'); // 선택 창용 작은 이미지 (빌드 때 생성, 커밋 안 함)
 const THUMB_SIZE = 160;
+// 한 날짜에 이보다 많이 추가된 건 첫 데이터 등록 같은 일괄 작업으로 보고 업데이트 소식에서 뺀다
+const BULK_LIMIT = 40;
+const CATEGORY_NAMES = { cookies: '쿠키', pets: '펫', treasures: '보물', dishes: '요리', ingredients: '재료', magicCandies: '마법사탕', blessings: '축복' };
 
 // 카테고리 → 폴더
 const CATEGORY_FOLDERS = {
@@ -98,6 +102,61 @@ function scanCategory(category) {
   return items;
 }
 
+/**
+ * Git 기록에서 이미지가 처음 추가된 날짜를 찾는다. ('public/images/...' → 'YYYY-MM-DD')
+ * 얕은 클론이면 잘린 지점 커밋은 '전부 새로 추가'로 보이므로 제외한다.
+ * 아직 커밋하지 않은 새 이미지는 오늘 날짜로 본다.
+ */
+function gitAddedDates() {
+  const dates = new Map();
+  const git = (cmd) => execSync(`git -c core.quotepath=off ${cmd}`, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+  try {
+    const shallowFile = path.join(ROOT, '.git', 'shallow');
+    const boundary = new Set(fs.existsSync(shallowFile) ? fs.readFileSync(shallowFile, 'utf8').split('\n').filter(Boolean) : []);
+    if (boundary.size) warnings.push('Git 기록 일부만 받아 와서(얕은 클론) 오래된 업데이트 소식이 빠질 수 있습니다. Vercel은 환경변수 VERCEL_DEEP_CLONE=true 로 해결');
+    let date = null;
+    for (const line of git('log -M --diff-filter=A --format=@%H%x20%cs --name-only -- public/images').split('\n')) {
+      if (line.startsWith('@')) {
+        const [hash, d] = line.slice(1).split(' ');
+        date = boundary.has(hash) ? null : d;
+      } else if (line && date && !dates.has(line)) dates.set(line, date);
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    for (const line of git('ls-files --others --exclude-standard -- public/images').split('\n')) if (line) dates.set(line, today);
+  } catch {
+    // Git이 없는 환경: 날짜 없이 진행 (item-meta.json의 added만 사용)
+  }
+  return dates;
+}
+
+/** 새로 추가된 아이템을 날짜별 업데이트 소식으로 만든다 (쿠키와 같은 이름의 펫·마법사탕은 쿠키에 포함) */
+function autoUpdates(data) {
+  const byDate = new Map();
+  for (const category of Object.keys(CATEGORY_NAMES)) {
+    for (const item of data[category]) {
+      const date = item.addedAt;
+      if (!date || item.pinned) continue;
+      if (!byDate.has(date)) byDate.set(date, []);
+      byDate.get(date).push({ category, item });
+    }
+  }
+  const notes = [];
+  for (const [date, list] of byDate) {
+    const cookieNames = new Set(list.filter((x) => x.category === 'cookies').map((x) => x.item.name));
+    const groups = new Map();
+    for (const { category, item } of list) {
+      if ((category === 'pets' || category === 'magicCandies') && cookieNames.has(item.name)) continue;
+      if (!groups.has(category)) groups.set(category, new Set());
+      groups.get(category).add(item.name);
+    }
+    const items = Object.keys(CATEGORY_NAMES)
+      .filter((c) => groups.has(c))
+      .map((c) => `${CATEGORY_NAMES[c]} ${[...groups.get(c)].join(', ')} 추가`);
+    notes.push({ date, title: '새 아이템', items });
+  }
+  return notes;
+}
+
 function build() {
   const meta = loadMeta();
   const data = {};
@@ -107,6 +166,18 @@ function build() {
   const checkNames = (names, field) => {
     for (const n of names) if (!allNames.has(n)) warnings.push(`data/item-meta.json "${field}": "${n}" 이름의 이미지가 없습니다 (오타 확인)`);
   };
+
+  // 추가 날짜: Git 기록에서 자동으로, item-meta.json의 added가 있으면 그쪽 우선
+  const gitDates = gitAddedDates();
+  const added = new Map(); // 이미지 경로 → 추가 날짜
+  for (const item of Object.values(data).flat()) {
+    const d = gitDates.get(`public${item.image}`);
+    if (d) added.set(item.image, d);
+  }
+  // 일괄 등록 날짜는 '신규'로 보지 않는다
+  const countByDate = {};
+  for (const d of added.values()) countByDate[d] = (countByDate[d] ?? 0) + 1;
+  for (const [image, d] of added) if (countByDate[d] > BULK_LIMIT) added.delete(image);
 
   // 메타데이터 적용
   const addedAt = {};
@@ -130,7 +201,7 @@ function build() {
         return {
           ...item,
           ...(meta.pinned.includes(item.name) && { pinned: true }),
-          ...(addedAt[item.name] && { addedAt: addedAt[item.name] }),
+          ...((addedAt[item.name] || added.get(item.image)) && { addedAt: addedAt[item.name] || added.get(item.image) }),
           ...(meta.descriptions[item.name] && { description: meta.descriptions[item.name] }),
           ...(meta.aliases[item.name] && { aliases: meta.aliases[item.name] }),
         };
@@ -154,24 +225,30 @@ function build() {
   }
 
   data.renamed = meta.renamed;
+  data.updates = [...loadManualUpdates(), ...autoUpdates(data)].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   return data;
 }
 
-/** data/updates.json: [{ date: 'YYYY-MM-DD', title, items: [...] }] 최신순 */
-function checkUpdates() {
+/** data/updates.json: 직접 쓰는 업데이트 소식 [{ date: 'YYYY-MM-DD', title, items: [...] }]. 새 아이템 소식은 자동으로 만들어진다 */
+function loadManualUpdates() {
   let notes;
   try {
     notes = JSON.parse(fs.readFileSync(UPDATES_PATH, 'utf8'));
   } catch (e) {
-    return errors.push(`data/updates.json: JSON 형식이 잘못됐습니다 — ${e.message}`);
+    errors.push(`data/updates.json: JSON 형식이 잘못됐습니다 (${e.message})`);
+    return [];
   }
-  if (!Array.isArray(notes)) return errors.push('data/updates.json: 배열([ ... ])이어야 합니다');
-  notes.forEach((n, i) => {
+  if (!Array.isArray(notes)) {
+    errors.push('data/updates.json: 배열([ ... ])이어야 합니다');
+    return [];
+  }
+  return notes.filter((n, i) => {
     const where = `data/updates.json ${i + 1}번째 항목`;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(n?.date)) errors.push(`${where}: date는 YYYY-MM-DD 형식이어야 합니다`);
-    if (typeof n?.title !== 'string' || !n.title) errors.push(`${where}: title이 없습니다`);
-    if (!Array.isArray(n?.items) || n.items.some((t) => typeof t !== 'string')) errors.push(`${where}: items는 글자 목록이어야 합니다`);
-    if (i > 0 && n?.date > notes[i - 1]?.date) errors.push(`${where}: 최신 항목이 맨 위에 오도록 날짜순으로 정렬해 주세요`);
+    const ok =
+      /^\d{4}-\d{2}-\d{2}$/.test(n?.date) && typeof n?.title === 'string' && n.title && Array.isArray(n?.items) && n.items.every((t) => typeof t === 'string');
+    if (!ok) errors.push(`${where}: { "date": "YYYY-MM-DD", "title": "제목", "items": ["내용"] } 형식이어야 합니다`);
+    else if ([n.title, ...n.items].some((t) => /[·•ㅡ—–]/.test(t))) warnings.push(`${where}: '·', 'ㅡ' 같은 기호 대신 쉼표나 문장으로 써 주세요`);
+    return ok;
   });
 }
 
@@ -184,9 +261,7 @@ async function makeThumbnails(data) {
     warnings.push('sharp가 없어 선택 창용 작은 이미지를 만들지 못했습니다 (원본 이미지로 표시)');
     return;
   }
-  const items = Object.entries(data)
-    .filter(([k]) => k !== 'renamed')
-    .flatMap(([, list]) => list);
+  const items = Object.keys(CATEGORY_NAMES).flatMap((c) => data[c]);
   let made = 0;
   for (let i = 0; i < items.length; i += 16) {
     await Promise.all(
@@ -214,10 +289,9 @@ async function main() {
   const checkOnly = process.argv.includes('--check');
   const data = build();
   if (!checkOnly && errors.length === 0) await makeThumbnails(data);
-  checkUpdates();
 
   const counts = Object.entries(data)
-    .filter(([k]) => k !== 'renamed')
+    .filter(([k]) => !['renamed', 'updates'].includes(k))
     .map(([k, v]) => `${k} ${v.length}`)
     .join(', ');
   console.log(`[아이템] ${counts}`);

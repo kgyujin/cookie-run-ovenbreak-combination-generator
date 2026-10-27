@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ArenaData, BackgroundData, BoardState, Category, ComboData, DisplaySettings, FontSettings, GameData, MagicCandyData } from '@/types';
+import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, MagicCandyData } from '@/types';
 import { resolveBoardItems } from '@/lib/items';
 import { DEFAULT_BACKGROUND } from '@/lib/backgrounds';
 
@@ -27,6 +27,11 @@ export const initialBoard = (): BoardState => ({
     fontSize: 24,
     fontFamily: 'Pretendard',
     textAlign: 'center',
+    verticalAlign: 'middle',
+    offsetX: 0,
+    offsetY: 0,
+    lineHeight: 1.2,
+    letterSpacing: 0,
     fontColor: '#111827',
     fontWeight: 700,
     seasonStrokeColor: '#ffffff',
@@ -34,11 +39,30 @@ export const initialBoard = (): BoardState => ({
     scoreColor: '#111827',
     scoreFontSize: 14,
     scoreFontWeight: 400,
+    scoreAlign: 'center',
     scoreStrokeColor: '#ffffff',
     scoreStrokeWidth: 0,
     numberSize: 18,
   },
   displaySettings: { scoreDisplayType: 'comma' },
+  boardStyle: {
+    card: false,
+    cardColor: '#ffffff',
+    cardOpacity: 60,
+    cardRadius: 24,
+    cardBorderWidth: 0,
+    cardBorderColor: '#ffffff',
+    cardShadow: false,
+    headerCard: false,
+    scoreBg: false,
+    scoreBgColor: '#ffffff',
+    scoreBgOpacity: 80,
+    scoreBgRadius: 12,
+    numberBg: false,
+    numberBgColor: '#ffffff',
+    gap: 24,
+    exportPadding: 64,
+  },
 });
 
 // ----- 저장·공유된 데이터 검증 (공유 링크는 누구나 만들 수 있으므로 알려진 필드·형식만 받는다) -----
@@ -117,6 +141,11 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       fontSize: clamp(f.fontSize, 12, 52, d.fontSize),
       fontFamily: oneOf(f.fontFamily, ['Pretendard', 'CookieRun', 'Custom'] as const, d.fontFamily),
       textAlign: oneOf(f.textAlign, ['left', 'center', 'right'] as const, d.textAlign),
+      verticalAlign: oneOf(f.verticalAlign, ['top', 'middle', 'bottom'] as const, 'middle'),
+      offsetX: clamp(f.offsetX, -200, 200, 0),
+      offsetY: clamp(f.offsetY, -150, 150, 0),
+      lineHeight: clamp(f.lineHeight, 0.8, 2, 1.2),
+      letterSpacing: clamp(f.letterSpacing, -5, 20, 0),
       customFontUrl: safeUrl(f.customFontUrl, 'data:font/'),
       customFontName: str(f.customFontName),
       fontColor: color(f.fontColor, d.fontColor),
@@ -126,10 +155,34 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       scoreColor: color(f.scoreColor, d.scoreColor),
       scoreFontSize: clamp(f.scoreFontSize, 10, 48, d.scoreFontSize!),
       scoreFontWeight: weight(f.scoreFontWeight, 400),
+      scoreAlign: oneOf(f.scoreAlign, ['left', 'center', 'right'] as const, 'center'),
       scoreStrokeColor: color(f.scoreStrokeColor, d.scoreStrokeColor),
       scoreStrokeWidth: clamp(f.scoreStrokeWidth, 0, 5, d.scoreStrokeWidth!),
       numberColor: color(f.numberColor),
       numberSize: clamp(f.numberSize, 12, 32, 18),
+    };
+  }
+  if (raw.boardStyle && typeof raw.boardStyle === 'object') {
+    const b = raw.boardStyle;
+    const d = base.boardStyle;
+    const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
+    out.boardStyle = {
+      card: bool(b.card, d.card),
+      cardColor: color(b.cardColor, d.cardColor)!,
+      cardOpacity: clamp(b.cardOpacity, 0, 100, d.cardOpacity),
+      cardRadius: clamp(b.cardRadius, 0, 60, d.cardRadius),
+      cardBorderWidth: clamp(b.cardBorderWidth, 0, 8, d.cardBorderWidth),
+      cardBorderColor: color(b.cardBorderColor, d.cardBorderColor)!,
+      cardShadow: bool(b.cardShadow, d.cardShadow),
+      headerCard: bool(b.headerCard, d.headerCard),
+      scoreBg: bool(b.scoreBg, d.scoreBg),
+      scoreBgColor: color(b.scoreBgColor, d.scoreBgColor)!,
+      scoreBgOpacity: clamp(b.scoreBgOpacity, 0, 100, d.scoreBgOpacity),
+      scoreBgRadius: clamp(b.scoreBgRadius, 0, 30, d.scoreBgRadius),
+      numberBg: bool(b.numberBg, d.numberBg),
+      numberBgColor: color(b.numberBgColor, d.numberBgColor)!,
+      gap: clamp(b.gap, 0, 80, d.gap),
+      exportPadding: clamp(b.exportPadding, 0, 160, d.exportPadding),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {
@@ -141,8 +194,8 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
 }
 
 export function pickBoard(state: BoardState): BoardState {
-  const { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings } = state;
-  return { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings };
+  const { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings, boardStyle } = state;
+  return { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings, boardStyle };
 }
 
 export type ComboField = 'pet' | 'cookie1' | 'cookie2' | 'treasure0' | 'treasure1' | 'treasure2';
@@ -179,6 +232,7 @@ export interface AppStore extends BoardState {
   reset: () => void;
   setFontSettings: (settings: Partial<FontSettings>) => void;
   setDisplaySettings: (settings: Partial<DisplaySettings>) => void;
+  setBoardStyle: (style: Partial<BoardStyle>) => void;
 }
 
 export const useAppStore = create<AppStore>((set) => {
@@ -243,6 +297,7 @@ export const useAppStore = create<AppStore>((set) => {
 
     setFontSettings: (settings) => set((state) => ({ fontSettings: { ...state.fontSettings, ...settings } })),
     setDisplaySettings: (settings) => set((state) => ({ displaySettings: { ...state.displaySettings, ...settings } })),
+    setBoardStyle: (style) => set((state) => ({ boardStyle: { ...state.boardStyle, ...style } })),
   };
 });
 

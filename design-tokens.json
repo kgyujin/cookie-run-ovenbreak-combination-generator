@@ -2,10 +2,11 @@
   "theme": {
     "extend": {
       "colors": {
-        "primary": "#c2410c",
-        "primary-hover": "#9a3412",
-        "primary-soft": "#ffedd5",
-        "on-primary": "#ffffff",
+        "primary": "#ffd59e",
+        "primary-hover": "#ffc46b",
+        "primary-soft": "#fff3d6",
+        "primary-ink": "#8a5300",
+        "on-primary": "#1c1917",
         "ink": "#1c1917",
         "ink-muted": "#57534e",
         "ink-subtle": "#78716c",
@@ -15,7 +16,7 @@
         "line": "#e7e0d6",
         "danger": "#b91c1c",
         "on-danger": "#ffffff",
-        "focus": "#c2410c"
+        "focus": "#8a5300"
       },
       "fontFamily": {
         "title-md": [

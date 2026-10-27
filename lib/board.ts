@@ -1,4 +1,5 @@
-import { BackgroundData, FontSettings } from '@/types';
+import { CSSProperties } from 'react';
+import { BackgroundData, BoardStyle, FontSettings } from '@/types';
 
 /**
  * 조합표 크기 단위. 보드는 기준 폭(2열 1552px, 1열 764px)으로 디자인돼 있고
@@ -7,8 +8,8 @@ import { BackgroundData, FontSettings } from '@/types';
  */
 export const u = (px: number) => `calc(${px} * var(--u))`;
 
-/** 이미지 저장 시 고정 폭 (보드 1552px + 좌우 여백 64px) */
-export const EXPORT_WIDTH = 1680;
+/** 조합표 기준 폭 (2열) */
+export const BOARD_WIDTH = 1552;
 
 export const fontFamilyOf = (family: FontSettings['fontFamily']) =>
   `${{ Pretendard: "'Pretendard Variable', Pretendard", CookieRun: 'CookieRun', Custom: 'CustomFont' }[family]}, 'Pretendard Variable', Pretendard, sans-serif`;
@@ -39,4 +40,21 @@ export function textGlow(color = '#111827') {
   const light = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
   const c = light ? 'rgb(0 0 0 / .65)' : 'white';
   return `0 0 3px ${c}, 0 0 5px ${c}, 0 0 8px ${c}, 1px 1px 2px ${c}, -1px -1px 2px ${c}, 1px -1px 2px ${c}, -1px 1px 2px ${c}`;
+}
+
+/** #rrggbb + 0~100 투명도 → rgb() */
+export function withOpacity(hex: string, opacity: number) {
+  const h = hex.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  return `rgb(${r} ${g} ${b} / ${opacity / 100})`;
+}
+
+/** 아레나·시즌 영역 카드 모양 */
+export function cardStyle(style: BoardStyle): CSSProperties {
+  return {
+    backgroundColor: withOpacity(style.cardColor, style.cardOpacity),
+    borderRadius: u(style.cardRadius),
+    border: style.cardBorderWidth ? `${u(style.cardBorderWidth)} solid ${style.cardBorderColor}` : undefined,
+    boxShadow: style.cardShadow ? '0 8px 24px rgb(0 0 0 / 0.15)' : undefined,
+  };
 }

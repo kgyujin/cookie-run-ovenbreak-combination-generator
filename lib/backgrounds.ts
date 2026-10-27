@@ -17,8 +17,8 @@ const gradient = (name: string, from: string, to: string, ink = DARK_INK): Backg
 });
 
 export const BACKGROUND_PRESETS: BackgroundPreset[] = [
-  gradient('오븐 노을', '#ffc48c', '#f0845c'),
   gradient('버터 쿠키', '#fff3d6', '#ffd59e'),
+  gradient('오븐 노을', '#ffc48c', '#f0845c'),
   gradient('딸기 우유', '#ffe0e8', '#ff9eb5'),
   gradient('민트 초코', '#c9f5ea', '#5bbfa9'),
   gradient('블루베리', '#c7d2fe', '#818cf8'),

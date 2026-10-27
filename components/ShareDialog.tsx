@@ -79,7 +79,7 @@ export default function ShareDialog({ onClose }: { onClose: () => void }) {
                   variant={copied ? 'secondary' : 'primary'}
                   onClick={() => copy(state.url)}
                   aria-label={copied ? '복사됨, 다시 복사' : '링크 복사'}
-                  className={clsx('w-[92px]', copied && 'border-primary text-primary')}
+                  className={clsx('w-[92px]', copied && 'border-primary-ink text-primary-ink')}
                 >
                   {copied ? <CheckIcon /> : <CopyIcon />}
                   {copied ? '복사됨' : '복사'}
@@ -87,7 +87,7 @@ export default function ShareDialog({ onClose }: { onClose: () => void }) {
               </div>
               <span role="status" className="sr-only">{copied ? '복사했어요' : ''}</span>
               {state.fallback && (
-                <p className="mt-3 rounded-md border border-primary/20 bg-primary-soft p-3 text-caption text-ink">
+                <p className="mt-3 rounded-md border border-primary-ink/20 bg-primary-soft p-3 text-caption text-ink">
                   짧은 링크를 만들지 못해 긴 링크로 대신했어요. 직접 올린 이미지·글꼴은 빠져요.
                 </p>
               )}

@@ -40,6 +40,7 @@ const SECTIONS = [
   ['season', '시즌명'],
   ['score', '점수'],
   ['number', '번호'],
+  ['style', '카드와 여백'],
   ['reset', '초기화'],
 ] as const;
 
@@ -48,13 +49,17 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   const background = useAppStore((s) => s.background);
   const font = useAppStore((s) => s.fontSettings);
   const scoreDisplayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
-  const { setBackground, setFontSettings: setF, setDisplaySettings, reset, showToast } = useAppStore.getState();
+  const style = useAppStore((s) => s.boardStyle);
+  const { setBackground, setFontSettings: setF, setDisplaySettings, setBoardStyle: setS, reset, showToast } = useAppStore.getState();
   const [snapshot] = useState(() => {
     const s = useAppStore.getState();
-    return { background: s.background, fontSettings: s.fontSettings, displaySettings: s.displaySettings };
+    return { background: s.background, fontSettings: s.fontSettings, displaySettings: s.displaySettings, boardStyle: s.boardStyle };
   });
   const changed =
-    background !== snapshot.background || font !== snapshot.fontSettings || scoreDisplayType !== snapshot.displaySettings.scoreDisplayType;
+    background !== snapshot.background ||
+    font !== snapshot.fontSettings ||
+    style !== snapshot.boardStyle ||
+    scoreDisplayType !== snapshot.displaySettings.scoreDisplayType;
   const [confirm, setConfirm] = useState<'style' | 'all' | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -62,6 +67,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
     setBackground(snapshot.background);
     setF(snapshot.fontSettings);
     setDisplaySettings(snapshot.displaySettings);
+    setS(snapshot.boardStyle);
   };
   const setBg = (patch: Partial<BackgroundData>) => setBackground({ ...background, ...patch });
   const [active, setActive] = useState<string>('bg');
@@ -90,10 +96,11 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const resetStyle = () => {
-    const { background: bg, fontSettings, displaySettings } = initialBoard();
+    const { background: bg, fontSettings, displaySettings, boardStyle } = initialBoard();
     setBackground(bg);
     setF(fontSettings);
     setDisplaySettings(displaySettings);
+    setS(boardStyle);
   };
 
   return (
@@ -149,7 +156,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                     }}
                     className={clsx(
                       'grid aspect-square place-items-center rounded-md border transition-transform hover:-translate-y-0.5 active:scale-95',
-                      selected ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-line'
+                      selected ? 'border-primary-ink ring-2 ring-primary-ink ring-offset-2' : 'border-line'
                     )}
                     style={{ background: backgroundCss(preset.background) }}
                   >
@@ -243,7 +250,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
           <Section id="font" title="글꼴">
             <Segmented
-              label="시즌명·점수 글꼴"
+              label="시즌명과 점수 글꼴"
               value={font.fontFamily}
               options={[
                 ['Pretendard', 'Pretendard'],
@@ -269,17 +276,25 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <Section id="season" title="시즌명">
             <Range label="크기" value={font.fontSize} min={12} max={52} onChange={(fontSize) => setF({ fontSize })} />
             <Segmented label="굵기" value={String(font.fontWeight ?? 700)} options={WEIGHTS} onChange={(w) => setF({ fontWeight: Number(w) })} />
-            <Segmented
-              label="정렬"
-              value={font.textAlign}
-              onChange={(textAlign) => setF({ textAlign })}
-              options={[
-                ['left', '왼쪽'],
-                ['center', '가운데'],
-                ['right', '오른쪽'],
-              ]}
-            />
             <ColorField label="색" value={font.fontColor ?? '#111827'} onChange={(fontColor) => setF({ fontColor })} />
+            <div className="grid grid-cols-[auto_1fr] items-start gap-4">
+              <AlignGrid
+                horizontal={font.textAlign}
+                vertical={font.verticalAlign ?? 'middle'}
+                onChange={(textAlign, verticalAlign) => setF({ textAlign, verticalAlign })}
+              />
+              <div className="space-y-1">
+                <Range label="가로 이동" value={font.offsetX ?? 0} min={-200} max={200} onChange={(offsetX) => setF({ offsetX })} />
+                <Range label="세로 이동" value={font.offsetY ?? 0} min={-150} max={150} onChange={(offsetY) => setF({ offsetY })} />
+                {(!!font.offsetX || !!font.offsetY) && (
+                  <button type="button" onClick={() => setF({ offsetX: 0, offsetY: 0 })} className="text-caption font-semibold text-primary-ink hover:underline">
+                    이동 초기화
+                  </button>
+                )}
+              </div>
+            </div>
+            <Range label="줄 간격" unit="배" value={font.lineHeight ?? 1.2} min={0.8} max={2} step={0.05} onChange={(lineHeight) => setF({ lineHeight })} />
+            <Range label="자간" value={font.letterSpacing ?? 0} min={-5} max={20} step={0.5} onChange={(letterSpacing) => setF({ letterSpacing })} />
             <Stroke
               width={font.seasonStrokeWidth ?? 0}
               color={font.seasonStrokeColor ?? '#ffffff'}
@@ -296,6 +311,16 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               options={(['abbreviated', 'comma', 'korean'] as ScoreDisplayType[]).map((v) => [v, formatScore('331000000', v)])}
             />
             <Range label="크기" value={font.scoreFontSize ?? 14} min={10} max={48} onChange={(scoreFontSize) => setF({ scoreFontSize })} />
+            <Segmented
+              label="정렬"
+              value={font.scoreAlign ?? 'center'}
+              onChange={(scoreAlign) => setF({ scoreAlign })}
+              options={[
+                ['left', '왼쪽'],
+                ['center', '가운데'],
+                ['right', '오른쪽'],
+              ]}
+            />
             <Segmented label="굵기" value={String(font.scoreFontWeight ?? 400)} options={WEIGHTS} onChange={(w) => setF({ scoreFontWeight: Number(w) })} />
             <ColorField label="색" value={font.scoreColor ?? '#111827'} onChange={(scoreColor) => setF({ scoreColor })} />
             <Stroke
@@ -309,6 +334,35 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <Section id="number" title="아레나 번호">
             <Range label="크기" value={font.numberSize ?? 18} min={12} max={32} onChange={(numberSize) => setF({ numberSize })} />
             <ColorField label="색" value={font.numberColor ?? font.fontColor ?? '#111827'} onChange={(numberColor) => setF({ numberColor })} />
+          </Section>
+
+          <Section id="style" title="카드와 여백">
+            <Toggle label="아레나 카드" checked={style.card} onChange={(card) => setS({ card })} />
+            {style.card && (
+              <div className="space-y-4 rounded-lg bg-surface-cream p-3">
+                <ColorField label="카드 색" value={style.cardColor} onChange={(cardColor) => setS({ cardColor })} />
+                <Range label="불투명도" unit="%" value={style.cardOpacity} min={0} max={100} step={5} onChange={(cardOpacity) => setS({ cardOpacity })} />
+                <Range label="모서리" value={style.cardRadius} min={0} max={60} onChange={(cardRadius) => setS({ cardRadius })} />
+                <Range label="테두리" value={style.cardBorderWidth} min={0} max={8} step={0.5} onChange={(cardBorderWidth) => setS({ cardBorderWidth })} />
+                {style.cardBorderWidth > 0 && (
+                  <ColorField label="테두리 색" value={style.cardBorderColor} onChange={(cardBorderColor) => setS({ cardBorderColor })} />
+                )}
+                <Toggle label="그림자" checked={style.cardShadow} onChange={(cardShadow) => setS({ cardShadow })} />
+                <Toggle label="시즌 영역에도 적용" checked={style.headerCard} onChange={(headerCard) => setS({ headerCard })} />
+              </div>
+            )}
+            <Toggle label="점수 바탕" checked={style.scoreBg} onChange={(scoreBg) => setS({ scoreBg })} />
+            {style.scoreBg && (
+              <div className="space-y-4 rounded-lg bg-surface-cream p-3">
+                <ColorField label="바탕 색" value={style.scoreBgColor} onChange={(scoreBgColor) => setS({ scoreBgColor })} />
+                <Range label="불투명도" unit="%" value={style.scoreBgOpacity} min={0} max={100} step={5} onChange={(scoreBgOpacity) => setS({ scoreBgOpacity })} />
+                <Range label="모서리" value={style.scoreBgRadius} min={0} max={30} onChange={(scoreBgRadius) => setS({ scoreBgRadius })} />
+              </div>
+            )}
+            <Toggle label="아레나 번호 바탕" checked={style.numberBg} onChange={(numberBg) => setS({ numberBg })} />
+            {style.numberBg && <ColorField label="바탕 색" value={style.numberBgColor} onChange={(numberBgColor) => setS({ numberBgColor })} />}
+            <Range label="아레나 사이 간격" value={style.gap} min={0} max={80} onChange={(gap) => setS({ gap })} />
+            <Range label="저장 이미지 바깥 여백" value={style.exportPadding} min={0} max={160} step={4} onChange={(exportPadding) => setS({ exportPadding })} />
           </Section>
 
           <Section id="reset" title="초기화">
@@ -348,11 +402,84 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           }
         >
           <p className="p-5 text-body-md text-ink">
-            {confirm === 'all' ? '모든 조합과 설정을 지울까요? 되돌릴 수 없어요.' : '배경·글꼴·점수 표기를 처음 상태로 되돌릴까요?'}
+            {confirm === 'all' ? '모든 조합과 설정을 지울까요? 되돌릴 수 없어요.' : '조합은 그대로 두고 꾸미기 설정만 처음 상태로 되돌릴까요?'}
           </p>
         </Modal>
       )}
     </>
+  );
+}
+
+/** 9칸 위치 고르기 (가로 정렬 × 세로 위치) */
+function AlignGrid({
+  horizontal,
+  vertical,
+  onChange,
+}: {
+  horizontal: FontSettings['textAlign'];
+  vertical: NonNullable<FontSettings['verticalAlign']>;
+  onChange: (h: FontSettings['textAlign'], v: NonNullable<FontSettings['verticalAlign']>) => void;
+}) {
+  const rows = [
+    ['top', '위'],
+    ['middle', '가운데'],
+    ['bottom', '아래'],
+  ] as const;
+  const cols = [
+    ['left', '왼쪽'],
+    ['center', '가운데'],
+    ['right', '오른쪽'],
+  ] as const;
+  return (
+    <div>
+      <p className="mb-1.5 text-caption font-semibold text-ink-muted" id="align-grid-label">
+        위치
+      </p>
+      <div role="radiogroup" aria-labelledby="align-grid-label" className="grid w-[108px] grid-cols-3 gap-1 rounded-md bg-surface-sunken p-1">
+        {rows.flatMap(([v, vLabel]) =>
+          cols.map(([h, hLabel]) => {
+            const on = horizontal === h && vertical === v;
+            return (
+              <button
+                key={`${v}-${h}`}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                aria-label={`${vLabel} ${hLabel}`}
+                onClick={() => onChange(h, v)}
+                className={clsx(
+                  'grid h-8 place-items-center rounded-sm transition-colors',
+                  on ? 'bg-primary shadow-e1' : 'hover:bg-surface'
+                )}
+              >
+                <span className={clsx('h-1.5 rounded-full', on ? 'w-4 bg-ink' : 'w-2.5 bg-ink-subtle/60')} aria-hidden="true" />
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3">
+      <span className="text-caption font-semibold text-ink-muted">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={clsx('relative h-7 w-12 shrink-0 rounded-full transition-colors', checked ? 'bg-primary-ink' : 'bg-line')}
+      >
+        <span
+          className={clsx('absolute top-1 h-5 w-5 rounded-full bg-white shadow-e1 transition-[left]', checked ? 'left-6' : 'left-1')}
+          aria-hidden="true"
+        />
+      </button>
+    </label>
   );
 }
 
@@ -395,7 +522,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
       <label htmlFor={id} className="mb-1.5 block text-caption font-semibold text-ink-muted">
         {label}
       </label>
-      <div className="flex h-touch items-center gap-2 rounded-md border border-line bg-surface pl-1.5 pr-2 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
+      <div className="flex h-touch items-center gap-2 rounded-md border border-line bg-surface pl-1.5 pr-2 focus-within:border-primary-ink focus-within:ring-4 focus-within:ring-primary-ink/15">
         <input
           type="color"
           value={value}
@@ -454,10 +581,10 @@ function Range({
         <label htmlFor={id} className="text-caption font-semibold text-ink-muted">
           {label}
         </label>
-        <span className="flex items-center rounded-md border border-line bg-surface pr-2 focus-within:border-primary">
+        <span className="flex items-center rounded-md border border-line bg-surface pr-2 focus-within:border-primary-ink">
           <input
             type="number"
-            value={value}
+            value={Math.round(value * 100) / 100}
             min={min}
             max={max}
             step={step}
@@ -476,7 +603,7 @@ function Range({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-9 w-full accent-primary"
+        className="h-9 w-full accent-primary-ink"
       />
     </div>
   );
@@ -502,7 +629,7 @@ function Segmented<T extends string>({
           <label
             key={v}
             className={clsx(
-              'flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-sm px-1 text-caption font-semibold tabular-nums transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-primary',
+              'relative flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-sm px-1 text-caption font-semibold tabular-nums transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-primary-ink',
               value === v ? 'bg-surface text-ink shadow-e1' : 'text-ink-muted hover:text-ink'
             )}
           >
@@ -529,7 +656,7 @@ function FileButton({
   const id = useId();
   const [error, setError] = useState('');
   return (
-    <div>
+    <div className="relative">
       <input
         id={id}
         type="file"
@@ -545,7 +672,7 @@ function FileButton({
       />
       <label
         htmlFor={id}
-        className="flex h-touch cursor-pointer items-center justify-center rounded-md border-[1.5px] border-dashed border-line px-4 text-label-md text-ink-muted transition-colors hover:border-primary hover:text-primary peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-primary"
+        className="flex h-touch cursor-pointer items-center justify-center rounded-md border-[1.5px] border-dashed border-line px-4 text-label-md text-ink-muted transition-colors hover:border-primary-ink hover:text-primary-ink peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-primary-ink"
       >
         {label}
       </label>

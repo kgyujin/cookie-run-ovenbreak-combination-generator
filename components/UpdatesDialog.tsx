@@ -1,12 +1,12 @@
 'use client';
 
 import clsx from 'clsx';
-import { UPDATES } from '@/lib/updates';
+import { UpdateNote } from '@/lib/updates';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 
 /** 업데이트 기록. newCount개의 최신 항목에 NEW 표시 */
-export default function UpdatesDialog({ newCount, onClose }: { newCount: number; onClose: () => void }) {
+export default function UpdatesDialog({ updates, newCount, onClose }: { updates: UpdateNote[]; newCount: number; onClose: () => void }) {
   return (
     <Modal
       title="업데이트"
@@ -18,12 +18,12 @@ export default function UpdatesDialog({ newCount, onClose }: { newCount: number;
       }
     >
       <ol className="space-y-3 p-5">
-        {UPDATES.map((note, i) => {
+        {updates.map((note, i) => {
           const isNew = i < newCount;
           return (
             <li
               key={`${note.date}-${note.title}`}
-              className={clsx('blur-fade rounded-lg border p-4', isNew ? 'border-primary/40 bg-primary-soft/60' : 'border-line')}
+              className={clsx('blur-fade rounded-lg border p-4', isNew ? 'border-primary-ink/40 bg-primary-soft/60' : 'border-line')}
               style={{ ['--i' as string]: i }}
             >
               <div className="flex items-center gap-2">

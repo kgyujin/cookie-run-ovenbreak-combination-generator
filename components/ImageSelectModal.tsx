@@ -10,7 +10,8 @@ import Button from './ui/Button';
 import { CheckIcon, SearchIcon } from './ui/icons';
 
 const RARITY_LABELS = { legendary: '레전더리', epic: '에픽', rare: '레어', common: '커먼' } as const;
-type Filter = 'all' | 'new' | keyof typeof RARITY_LABELS;
+type Rarity = keyof typeof RARITY_LABELS;
+type Filter = 'all' | 'new' | Rarity;
 
 // 등급 색 점 (글자와 함께 쓰므로 색만으로 구분하지 않음)
 const RARITY_DOT: Record<string, string> = {
@@ -25,24 +26,37 @@ const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 export default function ImageSelectModal({ request, onClose }: { request: PickerRequest; onClose: () => void }) {
   const gameData = useAppStore((s) => s.gameData);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  // 등급은 여러 개 함께 고를 수 있고, '신규'는 등급과 함께 걸리는 별도 조건
+  const [selectedRarities, setSelectedRarities] = useState<Rarity[]>([]);
+  const [newOnly, setNewOnly] = useState(false);
+  const noFilter = selectedRarities.length === 0 && !newOnly;
 
   const items = useMemo(() => gameData?.[request.category] ?? [], [gameData, request.category]);
   const now = useMemo(() => Date.now(), []);
   const hasNew = items.some((i) => isNew(i, now));
-  const rarities = (Object.keys(RARITY_LABELS) as (keyof typeof RARITY_LABELS)[]).filter((r) => items.some((i) => i.rarity === r));
+  const rarities = (Object.keys(RARITY_LABELS) as Rarity[]).filter((r) => items.some((i) => i.rarity === r));
 
   const filtered = useMemo(() => {
     const q = normalize(query);
     const matches = (item: GameItem) =>
-      (filter === 'all' || (filter === 'new' ? isNew(item, now) : item.rarity === filter)) &&
+      (selectedRarities.length === 0 || selectedRarities.includes(item.rarity as Rarity)) &&
+      (!newOnly || isNew(item, now)) &&
       (!q || [item.name, ...(item.aliases ?? [])].some((n) => normalize(n).includes(q)));
     const list = items.filter(matches);
     // '전체'에서는 신규 아이템을 앞쪽에 (고정 아이템 다음)
-    return filter === 'all' && !q
+    return noFilter && !q
       ? [...list].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned) || Number(isNew(b, now)) - Number(isNew(a, now)))
       : list;
-  }, [items, query, filter, now]);
+  }, [items, query, selectedRarities, newOnly, noFilter, now]);
+
+  const isOn = (key: Filter) => (key === 'all' ? noFilter : key === 'new' ? newOnly : selectedRarities.includes(key));
+  const toggle = (key: Filter) => {
+    if (key === 'all') {
+      setSelectedRarities([]);
+      setNewOnly(false);
+    } else if (key === 'new') setNewOnly((v) => !v);
+    else setSelectedRarities((list) => (list.includes(key) ? list.filter((r) => r !== key) : [...list, key]));
+  };
 
   const select = (image: string) => {
     request.apply(image);
@@ -85,19 +99,19 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
           />
         </div>
         {filters.length > 1 && (
-          <div role="group" aria-label="등급 필터" className="scrollbar-hide -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+          <div role="group" aria-label="필터 (여러 개 선택 가능)" className="scrollbar-hide -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
             {filters.map(([key, label]) => (
               <button
                 key={key}
                 type="button"
-                aria-pressed={filter === key}
-                onClick={() => setFilter(key)}
+                aria-pressed={isOn(key)}
+                onClick={() => toggle(key)}
                 className={clsx(
                   'flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-label-md transition-[background-color,color,transform] active:scale-95',
-                  filter === key ? 'bg-primary text-on-primary shadow-e1' : 'bg-surface-sunken text-ink-muted hover:text-ink'
+                  isOn(key) ? 'bg-primary text-on-primary shadow-e1' : 'bg-surface-sunken text-ink-muted hover:text-ink'
                 )}
               >
-                {key in RARITY_DOT && <span className={clsx('h-2 w-2 rounded-full', RARITY_DOT[key], filter === key && 'ring-2 ring-white/70')} aria-hidden="true" />}
+                {key in RARITY_DOT && <span className={clsx('h-2 w-2 rounded-full', RARITY_DOT[key], isOn(key) && 'ring-2 ring-white/70')} aria-hidden="true" />}
                 {label}
               </button>
             ))}
@@ -112,7 +126,7 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
           ))}
         </ul>
       ) : (
-        <ul key={filter} className="grid grid-cols-3 gap-2 p-4 sm:grid-cols-4 md:grid-cols-5">
+        <ul key={`${selectedRarities.join()}-${newOnly}`} className="grid grid-cols-3 gap-2 p-4 sm:grid-cols-4 md:grid-cols-5">
           {filtered.map((item, i) => {
             const selected = item.image === request.current;
             return (
@@ -121,10 +135,11 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
                   type="button"
                   onClick={() => select(item.image)}
                   aria-pressed={selected}
+                  aria-label={[item.name, item.rarity && RARITY_LABELS[item.rarity as Rarity], isNew(item, now) && '신규'].filter(Boolean).join(', ')}
                   title={item.description}
                   className={clsx(
                     'group relative flex w-full flex-col items-center gap-1.5 rounded-lg border p-2 text-center transition-[transform,box-shadow,border-color,background-color] duration-150 hover:-translate-y-0.5 hover:shadow-e1 active:translate-y-0 active:scale-[.97]',
-                    selected ? 'border-primary bg-primary-soft ring-1 ring-primary' : 'border-line bg-surface hover:border-ink-subtle/40'
+                    selected ? 'border-primary-ink bg-primary-soft ring-1 ring-primary-ink' : 'border-line bg-surface hover:border-ink-subtle/40'
                   )}
                 >
                   <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-surface-cream">

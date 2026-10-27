@@ -3,6 +3,8 @@ export type Category = 'cookies' | 'pets' | 'treasures' | 'dishes' | 'ingredient
 export type GameData = Record<Category, GameItem[]> & {
   /** 옛 이미지 경로/이름 → 현재 이름 (data/item-meta.json 의 renamed) */
   renamed?: Record<string, string>;
+  /** 업데이트 소식 (최신순) */
+  updates?: { date: string; title: string; items: string[] }[];
 };
 
 export interface GameItem {
@@ -65,6 +67,11 @@ export interface FontSettings {
   fontSize: number;
   fontFamily: 'Pretendard' | 'CookieRun' | 'Custom';
   textAlign: 'left' | 'center' | 'right';
+  verticalAlign?: 'top' | 'middle' | 'bottom'; // 시즌명 세로 위치 (기본 middle)
+  offsetX?: number; // 시즌명 위치 미세 조정 (보드 px)
+  offsetY?: number;
+  lineHeight?: number; // 시즌명 줄 간격 (기본 1.2)
+  letterSpacing?: number; // 시즌명 자간 (보드 px)
   customFontUrl?: string;
   customFontName?: string;
   fontColor?: string;
@@ -74,6 +81,7 @@ export interface FontSettings {
   scoreColor?: string;
   scoreFontSize?: number;
   scoreFontWeight?: number; // 점수 굵기 (기본 400)
+  scoreAlign?: 'left' | 'center' | 'right'; // 점수 정렬 (기본 center)
   scoreStrokeColor?: string;
   scoreStrokeWidth?: number;
   numberColor?: string; // 아레나 번호 색 (없으면 시즌명 색)
@@ -82,6 +90,26 @@ export interface FontSettings {
 
 export interface DisplaySettings {
   scoreDisplayType: ScoreDisplayType;
+}
+
+/** 조합표 꾸미기 (배치는 그대로, 겉모습만) */
+export interface BoardStyle {
+  card: boolean; // 아레나마다 카드 바탕
+  cardColor: string;
+  cardOpacity: number; // 0~100
+  cardRadius: number; // 보드 px
+  cardBorderWidth: number;
+  cardBorderColor: string;
+  cardShadow: boolean;
+  headerCard: boolean; // 시즌 영역에도 카드 적용
+  scoreBg: boolean; // 점수 뒤 바탕
+  scoreBgColor: string;
+  scoreBgOpacity: number;
+  scoreBgRadius: number;
+  numberBg: boolean; // 아레나 번호 뒤 바탕
+  numberBgColor: string;
+  gap: number; // 아레나 사이 간격 (보드 px)
+  exportPadding: number; // 저장 이미지 바깥 여백 (px)
 }
 
 /** 저장·공유되는 조합표 상태 */
@@ -93,4 +121,5 @@ export interface BoardState {
   arenas: ArenaData[];
   fontSettings: FontSettings;
   displaySettings: DisplaySettings;
+  boardStyle: BoardStyle;
 }

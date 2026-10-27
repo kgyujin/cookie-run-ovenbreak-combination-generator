@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { fontFamilyOf, u } from '@/lib/board';
+import { cardStyle, fontFamilyOf, u } from '@/lib/board';
 import Slot from './Slot';
 
 const MAX_LINES = 3;
@@ -14,6 +14,7 @@ export default function Header() {
   const seasonDish = useAppStore((s) => s.seasonDish);
   const seasonIngredients = useAppStore((s) => s.seasonIngredients);
   const fontSettings = useAppStore((s) => s.fontSettings);
+  const boardStyle = useAppStore((s) => s.boardStyle);
   const setSeasonName = useAppStore((s) => s.setSeasonName);
   const setSeasonDish = useAppStore((s) => s.setSeasonDish);
   const setSeasonIngredient = useAppStore((s) => s.setSeasonIngredient);
@@ -32,14 +33,25 @@ export default function Header() {
     const observer = new ResizeObserver(fit);
     observer.observe(el.parentElement!);
     return () => observer.disconnect();
-  }, [seasonName, fontSettings.fontSize, fontSettings.fontFamily]);
+  }, [seasonName, fontSettings.fontSize, fontSettings.fontFamily, fontSettings.lineHeight, fontSettings.letterSpacing]);
 
   const ingredientsEmpty = !seasonIngredients.some(Boolean);
 
   return (
-    <div className="flex" style={{ height: u(400), marginBottom: u(16), gap: u(6) }}>
+    <div
+      className="flex"
+      style={{
+        height: u(400),
+        marginBottom: u(16),
+        gap: u(6),
+        ...(boardStyle.card && boardStyle.headerCard ? { ...cardStyle(boardStyle), padding: u(12) } : {}),
+      }}
+    >
       {/* 시즌명 */}
-      <div className={clsx('flex h-full w-[80%] items-center justify-center px-2', !seasonName && 'card-empty')}>
+      <div
+        className={clsx('flex h-full w-[80%] justify-center px-2', !seasonName && 'card-empty')}
+        style={{ alignItems: { top: 'flex-start', middle: 'center', bottom: 'flex-end' }[fontSettings.verticalAlign ?? 'middle'] }}
+      >
         <textarea
           ref={textareaRef}
           value={seasonName}
@@ -58,8 +70,10 @@ export default function Header() {
             fontWeight: fontSettings.fontWeight ?? 700,
             WebkitTextStroke: fontSettings.seasonStrokeWidth ? `${fontSettings.seasonStrokeWidth}px ${fontSettings.seasonStrokeColor}` : undefined,
             paintOrder: 'stroke fill',
-            lineHeight: 1.2,
-            maxHeight: `calc(${fontSettings.fontSize} * var(--u) * 1.2 * ${MAX_LINES})`,
+            lineHeight: fontSettings.lineHeight ?? 1.2,
+            letterSpacing: u(fontSettings.letterSpacing ?? 0),
+            transform: `translate(${u(fontSettings.offsetX ?? 0)}, ${u(fontSettings.offsetY ?? 0)})`,
+            maxHeight: `calc(${fontSettings.fontSize} * var(--u) * ${fontSettings.lineHeight ?? 1.2} * ${MAX_LINES})`,
             whiteSpace: 'pre-wrap',
           }}
         />
