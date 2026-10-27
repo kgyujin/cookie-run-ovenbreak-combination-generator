@@ -1,22 +1,19 @@
-export interface GameData {
-  cookies: GameItem[];
-  pets: GameItem[];
-  treasures: GameItem[];
-  dishes: GameItem[];
-  ingredients: GameItem[];
-  magicCandies: GameItem[];
-  blessings: BlessingItem[];
-}
+export type Category = 'cookies' | 'pets' | 'treasures' | 'dishes' | 'ingredients' | 'magicCandies' | 'blessings';
+
+export type GameData = Record<Category, GameItem[]> & {
+  /** 옛 이미지 경로/이름 → 현재 이름 (data/item-meta.json 의 renamed) */
+  renamed?: Record<string, string>;
+};
 
 export interface GameItem {
-  id: string;
+  id: string; // `${category}:${rarity}/${name}` — 파일명이 바뀌지 않는 한 고정
   name: string;
   image: string;
   rarity?: string; // legendary, epic, rare, common
-}
-
-export interface BlessingItem extends GameItem {
-  description: string;
+  description?: string;
+  aliases?: string[];
+  addedAt?: string; // YYYY-MM-DD, 신규 배지 표시용
+  pinned?: boolean;
 }
 
 export interface ComboData {
@@ -35,7 +32,6 @@ export interface MagicCandyData {
 
 export interface ScoreData {
   value: string;
-  unit: '-' | '점' | 'M' | 'K' | '억' | '만';
 }
 
 export interface ArenaData {
@@ -46,7 +42,6 @@ export interface ArenaData {
   dish: string;
   subCombo: ComboData;
   subScore: ScoreData;
-  isSubComboExpanded: boolean;
   mainCookieRatio: number; // 메인 조합 선달/이달 쿠키 비율 (0-100, 기본 54)
   subCookieRatio: number; // 대체 조합 선달/이달 쿠키 비율 (0-100, 기본 56)
 }
@@ -69,8 +64,6 @@ export interface FontSettings {
   customFontUrl?: string;
   customFontName?: string;
   fontColor?: string;
-  borderColor?: string;
-  imageBackgroundColor?: string;
   scoreColor?: string;
   scoreFontSize?: number;
   scoreStrokeColor?: string;
@@ -81,13 +74,13 @@ export interface DisplaySettings {
   scoreDisplayType: ScoreDisplayType;
 }
 
-export interface AppState {
+/** 저장·공유되는 조합표 상태 */
+export interface BoardState {
   background: BackgroundData;
   seasonName: string;
   seasonDish: string;
   seasonIngredients: [string, string, string];
   arenas: ArenaData[];
-  gameData: GameData | null;
   fontSettings: FontSettings;
   displaySettings: DisplaySettings;
 }

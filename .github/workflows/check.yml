@@ -1,0 +1,33 @@
+name: 검사
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  content:
+    name: 아이템 이미지·메타데이터 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/generateImageData.js --check
+
+  code:
+    name: 타입·린트·디자인 기준 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run generate-images
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run design:lint

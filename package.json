@@ -7,18 +7,23 @@
     "build": "node scripts/generateImageData.js && next build",
     "start": "next start",
     "lint": "next lint",
-    "generate-images": "node scripts/generateImageData.js"
+    "generate-images": "node scripts/generateImageData.js",
+    "check:content": "node scripts/generateImageData.js --check",
+    "design:lint": "designmd lint DESIGN.md",
+    "design:tokens": "designmd export --format tailwind DESIGN.md > design-tokens.json"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "html2canvas": "^1.4.1",
     "lz-string": "^1.5.0",
     "next": "14.2.0",
+    "pretendard": "^1.3.9",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@google/design.md": "^0.4.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

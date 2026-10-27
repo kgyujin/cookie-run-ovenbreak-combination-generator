@@ -1,692 +1,516 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import clsx from 'clsx';
+import { ReactNode, useId, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
+import { backgroundCss, fontFamilyOf } from '@/lib/board';
+import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
+import { formatScore } from '@/utils/scoreFormatter';
+import { BackgroundData, FontSettings, ScoreDisplayType } from '@/types';
+import Modal from './ui/Modal';
+import Button from './ui/Button';
+import { CheckIcon } from './ui/icons';
 
+type Section = 'background' | 'font' | 'display';
+
+// 공유 서버(share-assets 버킷)가 받는 형식·크기와 맞춘다
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const checkImage = (file: File) =>
+  !IMAGE_TYPES.includes(file.type) ? 'PNG, JPG, WEBP, GIF 이미지만 올릴 수 있어요' : file.size > MAX_FILE_SIZE ? '5MB 이하 파일만 올릴 수 있어요' : '';
+const checkFont = (file: File) =>
+  !/\.(ttf|otf|woff2?)$/i.test(file.name) ? 'TTF, OTF, WOFF, WOFF2 파일만 올릴 수 있어요' : file.size > MAX_FILE_SIZE ? '5MB 이하 파일만 올릴 수 있어요' : '';
+
+const readFile = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+const FONT_OPTIONS: [FontSettings['fontFamily'], string][] = [
+  ['Pretendard', 'Pretendard'],
+  ['CookieRun', '쿠키런'],
+  ['Custom', '직접 올리기'],
+];
+
+/**
+ * 설정 서랍. 바꾸는 즉시 조합표에 반영되어 보면서 고를 수 있고,
+ * '되돌리기'를 누르면 창을 열었을 때 상태로 돌아간다.
+ */
 export default function SettingsModal({ onClose }: { onClose: () => void }) {
-  const { background, setBackground, fontSettings, setFontSettings, displaySettings, setDisplaySettings } = useAppStore();
-  const [activeSection, setActiveSection] = useState<'background' | 'font' | 'display'>('background');
-  
-  // 모달 오픈 시 body 스크롤 방지
-  useEffect(() => {
-    document.body.classList.add('modal-open');
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, []);
-  
-  // Background states
-  const [activeTab, setActiveTab] = useState<'color' | 'gradient' | 'image'>(background.type);
-  const [colorValue, setColorValue] = useState(background.color || '#667eea');
-  const [gradient1, setGradient1] = useState(background.gradient?.[0] || '#667eea');
-  const [gradient2, setGradient2] = useState(background.gradient?.[1] || '#764ba2');
-  const [imageUrl, setImageUrl] = useState(background.imageUrl || '');
+  const background = useAppStore((s) => s.background);
+  const font = useAppStore((s) => s.fontSettings);
+  const scoreDisplayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
+  const { setBackground, setFontSettings: setF, setDisplaySettings, reset, showToast } = useAppStore.getState();
+  const [snapshot] = useState(() => {
+    const s = useAppStore.getState();
+    return { background: s.background, fontSettings: s.fontSettings, displaySettings: s.displaySettings };
+  });
+  const changed =
+    background !== snapshot.background || font !== snapshot.fontSettings || scoreDisplayType !== snapshot.displaySettings.scoreDisplayType;
+  const [section, setSection] = useState<Section>('background');
+  const [confirmReset, setConfirmReset] = useState(false);
 
-  // Font states
-  const [fontSize, setFontSize] = useState(fontSettings.fontSize);
-  const [fontFamily, setFontFamily] = useState(fontSettings.fontFamily);
-  const [textAlign, setTextAlign] = useState(fontSettings.textAlign);
-  const [customFontUrl, setCustomFontUrl] = useState(fontSettings.customFontUrl || '');
-  const [customFontName, setCustomFontName] = useState(fontSettings.customFontName || '');
-  const [fontColor, setFontColor] = useState(fontSettings.fontColor || '#111827');
-  const [borderColor, setBorderColor] = useState(fontSettings.borderColor || '#ffffff');
-  const [imageBackgroundColor, setImageBackgroundColor] = useState(fontSettings.imageBackgroundColor || '#ffffff');
-  const [scoreColor, setScoreColor] = useState(fontSettings.scoreColor || '#111827');
-  const [scoreFontSize, setScoreFontSize] = useState(fontSettings.scoreFontSize || 14);
-  const [scoreStrokeColor, setScoreStrokeColor] = useState(fontSettings.scoreStrokeColor || '#ffffff');
-  const [scoreStrokeWidth, setScoreStrokeWidth] = useState(fontSettings.scoreStrokeWidth || 0);
-
-  // Display states
-  const [scoreDisplayType, setScoreDisplayType] = useState(displaySettings.scoreDisplayType);
-
-  const randomGradient = () => {
-    const colors = [
-      '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
-      '#43e97b', '#38f9d7', '#fa709a', '#fee140', '#30cfd0', '#330867',
-    ];
-    const color1 = colors[Math.floor(Math.random() * colors.length)];
-    const color2 = colors[Math.floor(Math.random() * colors.length)];
-    setGradient1(color1);
-    setGradient2(color2);
+  const revert = () => {
+    setBackground(snapshot.background);
+    setF(snapshot.fontSettings);
+    setDisplaySettings(snapshot.displaySettings);
   };
 
-  const handleSave = () => {
-    // Save background settings
-    if (activeTab === 'color') {
-      setBackground({ type: 'color', color: colorValue });
-    } else if (activeTab === 'gradient') {
-      setBackground({ type: 'gradient', gradient: [gradient1, gradient2] });
-    } else if (activeTab === 'image') {
-      setBackground({ type: 'image', imageUrl });
-    }
-
-    // Save font settings
-    setFontSettings({
-      fontSize,
-      fontFamily,
-      textAlign,
-      customFontUrl,
-      customFontName,
-      fontColor,
-      borderColor,
-      imageBackgroundColor,
-      scoreColor,
-      scoreFontSize,
-      scoreStrokeColor,
-      scoreStrokeWidth,
-    });
-
-    // Save display settings
-    setDisplaySettings({
-      scoreDisplayType,
-    });
-
-    // Apply custom font if selected
-    if (fontFamily === 'Custom' && customFontUrl) {
-      const styleId = 'custom-font-style';
-      let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-      
-      if (!styleElement) {
-        styleElement = document.createElement('style');
-        styleElement.id = styleId;
-        document.head.appendChild(styleElement);
-      }
-
-      const fontFormat = customFontUrl.includes('.woff2') ? 'woff2' :
-                        customFontUrl.includes('.woff') ? 'woff' :
-                        customFontUrl.includes('.ttf') ? 'truetype' :
-                        customFontUrl.includes('.otf') ? 'opentype' : 'truetype';
-
-      styleElement.textContent = `
-        @font-face {
-          font-family: 'CustomFont';
-          src: url('${customFontUrl}') format('${fontFormat}');
-          font-display: swap;
-        }
-      `;
-    }
-
-    onClose();
-  };
-
-  const handleReset = () => {
-    // Use store.reset to clear state and persisted storage
-    try {
-      useAppStore.getState().reset();
-    } catch (e) {
-      console.error('Failed to reset store:', e);
-    }
-    // reset local inputs to defaults
-    const defaultBackground = { type: 'gradient', gradient: ['#667eea', '#764ba2'] };
-    setActiveTab('color');
-    setColorValue(defaultBackground.gradient?.[0] || '#667eea');
-    setGradient1(defaultBackground.gradient?.[0] || '#667eea');
-    setGradient2(defaultBackground.gradient?.[1] || '#764ba2');
-    setImageUrl('');
-    setFontSize(24);
-    setFontFamily('Pretendard');
-    setTextAlign('center');
-    setCustomFontUrl('');
-    setCustomFontName('');
-    setFontColor('#111827');
-    setBorderColor('#ffffff');
-    setImageBackgroundColor('#ffffff');
-    setScoreColor('#111827');
-    setScoreFontSize(14);
-    setScoreStrokeColor('#ffffff');
-    setScoreStrokeWidth(0);
-    setScoreDisplayType('comma');
-  };
+  const tabs: [Section, string][] = [
+    ['background', '배경'],
+    ['font', '글꼴·색'],
+    ['display', '점수 표기'],
+  ];
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 modal-backdrop" 
-      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
-      onClick={onClose}
-    >
-      <div 
-        className="macos-card-high rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col modal-content"
-        onClick={(e) => e.stopPropagation()}
+    <>
+      <Modal
+        title="설정"
+        onClose={onClose}
+        drawer
+        footer={
+          <>
+            <Button variant="ghost" className="mr-auto !px-3 !text-danger hover:!bg-danger/10" onClick={() => setConfirmReset(true)}>
+              전체 초기화
+            </Button>
+            <Button onClick={revert} disabled={!changed}>
+              되돌리기
+            </Button>
+            <Button variant="primary" onClick={onClose}>
+              완료
+            </Button>
+          </>
+        }
       >
-        {/* Header */}
-        <div className="p-5 border-b border-gray-200 flex items-center justify-between bg-white/95 backdrop-blur-xl shrink-0">
-          <h2 className="text-gray-800 text-xl font-bold">설정</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-800 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+        <div role="tablist" aria-label="설정 항목" className="sticky top-0 z-10 flex gap-1 border-b border-line bg-surface/95 px-3 pt-1 backdrop-blur">
+          {tabs.map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              id={`tab-${key}`}
+              aria-selected={section === key}
+              aria-controls={`panel-${key}`}
+              onClick={() => setSection(key)}
+              className={clsx(
+                '-mb-px h-touch flex-1 border-b-2 px-2 text-label-md transition-colors',
+                section === key ? 'border-primary text-primary' : 'border-transparent text-ink-subtle hover:text-ink'
+              )}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
-        {/* Section Tabs */}
-        <div className="flex border-b border-gray-200 shrink-0">
-          <button
-            onClick={() => setActiveSection('background')}
-            className={`flex-1 py-3 text-sm font-semibold transition-all ${
-              activeSection === 'background' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            🎨 배경
-          </button>
-          <button
-            onClick={() => setActiveSection('font')}
-            className={`flex-1 py-3 text-sm font-semibold transition-all ${
-              activeSection === 'font' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            ✍️ 폰트
-          </button>
-          <button
-            onClick={() => setActiveSection('display')}
-            className={`flex-1 py-3 text-sm font-semibold transition-all ${
-              activeSection === 'display' 
-                ? 'bg-white text-gray-900 shadow-sm' 
-                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            📊 표기
-          </button>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5">
-          {activeSection === 'background' && (
-            <div className="space-y-4">
-              {/* Background Type Tabs */}
-              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setActiveTab('color')}
-                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
-                    activeTab === 'color' ? 'bg-gray-200' : 'hover:bg-white/10'
-                  }`}
-                >
-                  단색
-                </button>
-                <button
-                  onClick={() => setActiveTab('gradient')}
-                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
-                    activeTab === 'gradient' ? 'bg-gray-200' : 'hover:bg-white/10'
-                  }`}
-                >
-                  그라데이션
-                </button>
-                <button
-                  onClick={() => setActiveTab('image')}
-                  className={`flex-1 py-2 text-gray-800 text-sm font-semibold transition-colors ${
-                    activeTab === 'image' ? 'bg-gray-200' : 'hover:bg-white/10'
-                  }`}
-                >
-                  이미지
-                </button>
-              </div>
-
-              {activeTab === 'color' && (
-                <div>
-                  <label className="block text-gray-800 text-sm font-semibold mb-2">배경 색상</label>
-                  <input
-                    type="color"
-                    value={colorValue}
-                    onChange={(e) => setColorValue(e.target.value)}
-                    className="w-full h-20 rounded-lg cursor-pointer"
-                  />
+        <div role="tabpanel" id={`panel-${section}`} aria-labelledby={`tab-${section}`} className="space-y-6 p-5">
+          {section === 'background' && (
+            <>
+              <fieldset>
+                <legend className="sr-only">배경</legend>
+                <div className="grid grid-cols-5 gap-2">
+                  {BACKGROUND_PRESETS.map((preset) => {
+                    const selected = isSameBackground(background, preset.background);
+                    return (
+                      <label key={preset.name} title={preset.name} className="group flex cursor-pointer flex-col items-center">
+                        <input
+                          type="radio"
+                          name="bg-preset"
+                          aria-label={preset.name}
+                          className="peer sr-only"
+                          checked={selected}
+                          onChange={() => {
+                            setBackground(preset.background);
+                            setF({ fontColor: preset.ink, scoreColor: preset.ink, scoreStrokeColor: preset.ink === '#ffffff' ? '#1c1917' : '#ffffff' });
+                          }}
+                        />
+                        <span
+                          className={clsx(
+                            'relative grid aspect-square w-full place-items-center rounded-md border transition-transform group-hover:-translate-y-0.5 group-active:scale-95 peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary',
+                            selected ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-line'
+                          )}
+                          style={{ background: backgroundCss(preset.background) }}
+                        >
+                          {selected && (
+                            <span style={{ color: preset.ink }} aria-hidden="true">
+                              <CheckIcon className="h-5 w-5" />
+                            </span>
+                          )}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
-              )}
+              </fieldset>
 
-              {activeTab === 'gradient' && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-gray-800 text-sm font-semibold mb-2">색상 1</label>
-                    <input
-                      type="color"
-                      value={gradient1}
-                      onChange={(e) => setGradient1(e.target.value)}
-                      className="w-full h-16 rounded-lg cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-gray-800 text-sm font-semibold mb-2">색상 2</label>
-                    <input
-                      type="color"
-                      value={gradient2}
-                      onChange={(e) => setGradient2(e.target.value)}
-                      className="w-full h-16 rounded-lg cursor-pointer"
-                    />
-                  </div>
-                  <button
-                    onClick={randomGradient}
-                    className="w-full bg-gray-100 rounded-lg px-4 py-2 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
-                  >
-                    🎲 랜덤 조합
-                  </button>
-                </div>
-              )}
-
-              {activeTab === 'image' && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-gray-800 text-sm font-semibold mb-2">이미지 URL</label>
-                    <input
-                      type="text"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full bg-white/30 border border-white/40 rounded-lg px-4 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    />
-                  </div>
-                  
-                  <div className="relative">
-                    <label className="block text-gray-800 text-sm font-semibold mb-2">또는 파일 업로드</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const result = event.target?.result as string;
-                            setImageUrl(result);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="hidden"
-                      id="bg-image-upload"
-                    />
-                    <label
-                      htmlFor="bg-image-upload"
-                      className="w-full bg-gray-100 rounded-lg px-4 py-3 text-gray-800 font-semibold hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      이미지 파일 선택
-                    </label>
-                  </div>
-
-                  {imageUrl && imageUrl.startsWith('data:image') && (
-                    <div className="relative">
-                      <img crossOrigin="anonymous" src={imageUrl} alt="Preview" className="w-full h-32 object-cover rounded-lg" />
-                      <button
-                        onClick={() => setImageUrl('')}
-                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-600/80 rounded-full p-1 transition-colors"
-                      >
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+              <CustomBackground background={background} onChange={setBackground} />
+            </>
           )}
 
-          {activeSection === 'font' && (
-            <div className="space-y-4">
-              {/* Font Size */}
+          {section === 'font' && (
+            <>
               <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">
-                  시즌명 폰트 크기: {fontSize}px
-                </label>
-                <input
-                  type="range"
-                  min="12"
-                  max="52"
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-gray-500 text-xs mt-1">
-                  <span>12px</span>
-                  <span>52px</span>
-                </div>
-              </div>
-
-              {/* Font Family */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 종류</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => setFontFamily('Pretendard')}
-                    className={`py-3 rounded-lg font-semibold transition-colors ${
-                      fontFamily === 'Pretendard'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    style={{ fontFamily: 'Pretendard Variable' }}
-                  >
-                    Pretendard
-                  </button>
-                  <button
-                    onClick={() => setFontFamily('CookieRun')}
-                    className={`py-3 rounded-lg font-semibold transition-colors ${
-                      fontFamily === 'CookieRun'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                    style={{ fontFamily: 'CookieRun' }}
-                  >
-                    쿠키런
-                  </button>
-                  <button
-                    onClick={() => setFontFamily('Custom')}
-                    className={`py-3 rounded-lg font-semibold transition-colors ${
-                      fontFamily === 'Custom'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    커스텀
-                  </button>
-                </div>
-              </div>
-
-              {/* Custom Font Upload */}
-              {fontFamily === 'Custom' && (
-                <div className="space-y-3 bg-gray-100 rounded-lg p-4">
-                  <div>
-                    <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 파일 업로드</label>
-                    <input
-                      type="file"
+                <Segmented label="글꼴" value={font.fontFamily} options={FONT_OPTIONS} onChange={(fontFamily) => setF({ fontFamily })} />
+                {font.fontFamily === 'Custom' && (
+                  <div className="mt-2">
+                    <FileButton
+                      label={font.customFontName || '글꼴 파일 선택'}
                       accept=".ttf,.otf,.woff,.woff2"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            const result = event.target?.result as string;
-                            setCustomFontUrl(result);
-                            setCustomFontName(file.name.replace(/\.[^/.]+$/, ''));
-                          };
-                          reader.readAsDataURL(file);
-                        }
+                      validate={checkFont}
+                      onData={(url, file) => {
+                        // 확장자에 맞는 MIME으로 바꿔 둔다 (글꼴 형식 판별·공유 업로드에 사용)
+                        const ext = file.name.split('.').pop()!.toLowerCase();
+                        setF({ customFontName: file.name.replace(/\.[^/.]+$/, ''), customFontUrl: url.replace(/^data:[^;]*;/, `data:font/${ext};`) });
                       }}
-                      className="hidden"
-                      id="custom-font-upload"
                     />
-                    <label
-                      htmlFor="custom-font-upload"
-                      className="w-full bg-white rounded-lg px-4 py-3 text-gray-800 font-semibold hover:bg-gray-200 transition-colors cursor-pointer flex items-center justify-center gap-2"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      {customFontName || '폰트 파일 선택 (TTF, OTF, WOFF, WOFF2)'}
-                    </label>
                   </div>
-                  {customFontUrl && (
-                    <div className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2">
-                      <span className="text-gray-800 text-sm truncate">{customFontName}</span>
-                      <button
-                        onClick={() => {
-                          setCustomFontUrl('');
-                          setCustomFontName('');
-                        }}
-                        className="text-red-400 hover:text-red-300 ml-2"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                )}
+              </div>
+
+              <Group title="시즌명">
+                <Range label="글자 크기" value={font.fontSize} min={12} max={52} onChange={(fontSize) => setF({ fontSize })} />
+                <Segmented
+                  label="정렬"
+                  value={font.textAlign}
+                  onChange={(textAlign) => setF({ textAlign })}
+                  options={[
+                    ['left', '왼쪽'],
+                    ['center', '가운데'],
+                    ['right', '오른쪽'],
+                  ]}
+                />
+                <ColorField label="글자색" value={font.fontColor ?? '#111827'} onChange={(fontColor) => setF({ fontColor })} />
+              </Group>
+
+              <Group title="점수">
+                <ColorField label="글자색" value={font.scoreColor ?? '#111827'} onChange={(scoreColor) => setF({ scoreColor })} />
+                <Range label="글자 크기" value={font.scoreFontSize ?? 14} min={10} max={48} onChange={(scoreFontSize) => setF({ scoreFontSize })} />
+                <Range
+                  label="외곽선 두께"
+                  value={font.scoreStrokeWidth ?? 0}
+                  min={0}
+                  max={5}
+                  step={0.5}
+                  onChange={(scoreStrokeWidth) => setF({ scoreStrokeWidth })}
+                />
+                {!!font.scoreStrokeWidth && (
+                  <ColorField label="외곽선 색" value={font.scoreStrokeColor ?? '#ffffff'} onChange={(scoreStrokeColor) => setF({ scoreStrokeColor })} />
+                )}
+              </Group>
+            </>
+          )}
+
+          {section === 'display' && (
+            <fieldset className="space-y-2">
+              <legend className="sr-only">점수 표기 방식</legend>
+              {(
+                [
+                  ['abbreviated', '숫자 간략화'],
+                  ['comma', '기본 숫자'],
+                  ['korean', '한글 단위'],
+                ] as [ScoreDisplayType, string][]
+              ).map(([value, label]) => (
+                <label
+                  key={value}
+                  className={clsx(
+                    'flex cursor-pointer items-center gap-3 rounded-md border p-3 transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary',
+                    scoreDisplayType === value ? 'border-primary bg-primary-soft' : 'border-line hover:bg-surface-cream'
                   )}
-                </div>
-              )}
-
-              {/* Text Align */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">텍스트 정렬</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => setTextAlign('left')}
-                    className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
-                      textAlign === 'left'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h14" />
-                    </svg>
-                    좌측
-                  </button>
-                  <button
-                    onClick={() => setTextAlign('center')}
-                    className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
-                      textAlign === 'center'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M5 18h14" />
-                    </svg>
-                    중앙
-                  </button>
-                  <button
-                    onClick={() => setTextAlign('right')}
-                    className={`py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2 ${
-                      textAlign === 'right'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M6 18h14" />
-                    </svg>
-                    우측
-                  </button>
-                </div>
-              </div>
-
-              {/* Font Color */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">폰트 색상</label>
-                <input
-                  type="color"
-                  value={fontColor}
-                  onChange={(e) => setFontColor(e.target.value)}
-                  className="w-full h-12 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              {/* Border Color */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">테두리 색상</label>
-                <input
-                  type="color"
-                  value={borderColor}
-                  onChange={(e) => setBorderColor(e.target.value)}
-                  className="w-full h-12 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              {/* Image Background Color */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">이미지 배경 색상</label>
-                <input
-                  type="color"
-                  value={imageBackgroundColor}
-                  onChange={(e) => setImageBackgroundColor(e.target.value)}
-                  className="w-full h-12 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              {/* Score Color */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 텍스트 색상</label>
-                <input
-                  type="color"
-                  value={scoreColor}
-                  onChange={(e) => setScoreColor(e.target.value)}
-                  className="w-full h-12 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              {/* Score Font Size */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">
-                  점수 폰트 크기: {scoreFontSize}px
-                </label>
-                <input
-                  type="range"
-                  min="10"
-                  max="48"
-                  value={scoreFontSize}
-                  onChange={(e) => setScoreFontSize(Number(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-gray-500 text-xs mt-1">
-                  <span>10px</span>
-                  <span>48px</span> {/* 라벨도 48px로 변경 */}
-                </div>
-              </div>
-
-              {/* Score Stroke Color (점수 외곽선 색상) */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 외곽선 색상</label>
-                <input
-                  type="color"
-                  value={scoreStrokeColor}
-                  onChange={(e) => setScoreStrokeColor(e.target.value)}
-                  className="w-full h-12 rounded-lg cursor-pointer"
-                />
-              </div>
-
-              {/* Score Stroke Width (점수 외곽선 두께) */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">
-                  점수 외곽선 두께: {scoreStrokeWidth}px
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.5" 
-                  value={scoreStrokeWidth}
-                  onChange={(e) => setScoreStrokeWidth(Number(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-gray-500 text-xs mt-1">
-                  <span>없음 (0px)</span>
-                  <span>두껍게 (5px)</span>
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div className="bg-gray-100 rounded-lg p-4">
-                <label className="block text-gray-800 text-xs font-semibold mb-2">미리보기</label>
-                <div
-                  className="text-white"
-                  style={{
-                    fontSize: `${fontSize}px`,
-                    fontFamily: fontFamily === 'CookieRun' ? 'CookieRun' : fontFamily === 'Custom' ? 'CustomFont' : 'Pretendard Variable',
-                      textAlign: textAlign as any,
-                      color: fontColor,
-                  }}
                 >
-                  시즌명 예시
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeSection === 'display' && (
-            <div className="space-y-4">
-              {/* Score Display Type */}
-              <div>
-                <label className="block text-gray-800 text-sm font-semibold mb-2">점수 표기 방식</label>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setScoreDisplayType('abbreviated')}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
-                      scoreDisplayType === 'abbreviated'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <div className="font-bold mb-1">숫자 간략화 (M/B 단위)</div>
-                    <div className="text-xs opacity-70">예시: 331M (3억 3100만), 1.5B (15억)</div>
-                  </button>
-                  <button
-                    onClick={() => setScoreDisplayType('comma')}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
-                      scoreDisplayType === 'comma'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <div className="font-bold mb-1">기본 숫자 (콤마 자동 추가)</div>
-                    <div className="text-xs opacity-70">예시: 331,000,000</div>
-                  </button>
-                  <button
-                    onClick={() => setScoreDisplayType('korean')}
-                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-left ${
-                      scoreDisplayType === 'korean'
-                        ? 'bg-white/30 text-gray-800 border-2 border-white/50'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    <div className="font-bold mb-1">한글 단위 표기</div>
-                    <div className="text-xs opacity-70">예시: 3억 3100만</div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Preview */}
-              <div className="bg-gray-100 rounded-lg p-4">
-                <label className="block text-gray-800 text-xs font-semibold mb-3">점수 미리보기</label>
-                <div className="space-y-2 text-gray-800 text-sm">
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-70">입력:</span>
-                    <span className="font-mono">331000000</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-70">표시:</span>
-                    <span className="font-bold">
-                      {scoreDisplayType === 'abbreviated' && '331M'}
-                      {scoreDisplayType === 'comma' && '331,000,000'}
-                      {scoreDisplayType === 'korean' && '3억 3100만'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+                  <input
+                    type="radio"
+                    name="score-display"
+                    checked={scoreDisplayType === value}
+                    onChange={() => setDisplaySettings({ scoreDisplayType: value })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <span className="flex-1 text-label-md">{label}</span>
+                  <span className="font-semibold tabular-nums text-ink">{formatScore('331000000', value)}</span>
+                </label>
+              ))}
+            </fieldset>
           )}
         </div>
+      </Modal>
 
-        {/* Footer */}
-        <div className="p-5 border-t border-gray-200 flex gap-3 bg-white/95 backdrop-blur-xl shrink-0">
-          <button
-            onClick={onClose}
-            className="flex-1 bg-gray-100 rounded-lg px-4 py-2.5 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={handleReset}
-            className="flex-1 bg-gray-100 rounded-lg px-4 py-2.5 text-gray-800 font-semibold hover:bg-gray-200 transition-colors"
-          >
-            초기화
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 bg-blue-500 rounded-lg px-4 py-2.5 text-white font-semibold hover:bg-blue-600 transition-colors shadow-sm"
-          >
-            적용
-          </button>
+      {confirmReset && (
+        <Modal
+          title="전체 초기화"
+          onClose={() => setConfirmReset(false)}
+          footer={
+            <>
+              <Button className="ml-auto" onClick={() => setConfirmReset(false)}>
+                취소
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  reset();
+                  showToast('초기화했어요');
+                  setConfirmReset(false);
+                  onClose();
+                }}
+              >
+                모두 지우기
+              </Button>
+            </>
+          }
+        >
+          <p className="p-5 text-body-md text-ink">모든 조합과 설정을 지울까요? 되돌릴 수 없어요.</p>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/** 직접 만들기: 단색 / 그라데이션 / 이미지 */
+function CustomBackground({ background, onChange }: { background: BackgroundData; onChange: (b: BackgroundData) => void }) {
+  const [open, setOpen] = useState(() => !BACKGROUND_PRESETS.some((p) => isSameBackground(background, p.background)));
+  const color = background.color ?? '#fffbf5';
+  const gradient = background.gradient ?? ['#ffc48c', '#f0845c'];
+
+  return (
+    <div className="rounded-lg border border-line">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-touch w-full items-center justify-between rounded-lg px-4 text-label-md hover:bg-surface-cream"
+      >
+        직접 설정
+        <span className={clsx('text-ink-subtle transition-transform', open && 'rotate-180')} aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      {open && (
+        <div className="space-y-4 border-t border-line p-4">
+          <Segmented
+            label="종류"
+            value={background.type}
+            onChange={(type) => onChange({ ...background, type, color, gradient })}
+            options={[
+              ['color', '단색'],
+              ['gradient', '그라데이션'],
+              ['image', '이미지'],
+            ]}
+          />
+          {background.type === 'color' && <ColorField label="배경색" value={color} onChange={(c) => onChange({ ...background, color: c })} />}
+          {background.type === 'gradient' && (
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1].map((i) => (
+                <ColorField
+                  key={i}
+                  label={i === 0 ? '시작 색' : '끝 색'}
+                  value={gradient[i]}
+                  onChange={(c) => {
+                    const next = [...gradient] as [string, string];
+                    next[i] = c;
+                    onChange({ ...background, gradient: next });
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {background.type === 'image' && (
+            <>
+              <FileButton
+                label={background.imageUrl?.startsWith('data:') ? '이미지 바꾸기' : '이미지 파일 선택'}
+                accept={IMAGE_TYPES.join(',')}
+                validate={checkImage}
+                onData={(imageUrl) => onChange({ ...background, imageUrl })}
+              />
+              <Field label="이미지 주소">
+                {(id) => (
+                  <input
+                    id={id}
+                    type="url"
+                    value={background.imageUrl?.startsWith('data:') ? '' : background.imageUrl ?? ''}
+                    onChange={(e) => onChange({ ...background, imageUrl: e.target.value })}
+                    placeholder="https://"
+                    className="field"
+                  />
+                )}
+              </Field>
+            </>
+          )}
         </div>
+      )}
+    </div>
+  );
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="space-y-4 rounded-lg border border-line p-4">
+      <legend className="-ml-1 px-1 text-label-md">{title}</legend>
+      {children}
+    </fieldset>
+  );
+}
+
+function Field({ label, children }: { label: string; children: (id: string) => ReactNode }) {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-label-md">
+        {label}
+      </label>
+      {children(id)}
+    </div>
+  );
+}
+
+/** 색 고르기 + #코드 직접 입력 */
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const id = useId();
+  const [text, setText] = useState(value);
+  const [prev, setPrev] = useState(value);
+  if (value !== prev) {
+    setPrev(value);
+    setText(value);
+  }
+  const commit = () => (/^#[0-9a-f]{6}$/i.test(text) ? onChange(text.toLowerCase()) : setText(value));
+
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-label-md">
+        {label}
+      </label>
+      <div className="flex h-touch items-center gap-2 rounded-md border border-line bg-surface pl-1.5 pr-2 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/15">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          aria-label={`${label} 고르기`}
+          className="h-8 w-10 shrink-0 cursor-pointer rounded-sm"
+        />
+        <input
+          id={id}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && commit()}
+          spellCheck={false}
+          maxLength={7}
+          className="w-full min-w-0 bg-transparent text-body-md uppercase tabular-nums text-ink focus:outline-none"
+        />
       </div>
     </div>
   );
 }
 
+function Range({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (v: number) => void;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label htmlFor={id} className="text-label-md">
+          {label}
+        </label>
+        <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-caption tabular-nums text-ink-muted">{value}px</span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="h-touch w-full accent-primary"
+      />
+    </div>
+  );
+}
 
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: [T, string][];
+  onChange: (v: T) => void;
+}) {
+  const name = useId();
+  return (
+    <fieldset>
+      <legend className="mb-1.5 text-label-md">{label}</legend>
+      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+        {options.map(([v, text]) => (
+          <label
+            key={v}
+            className={clsx(
+              'flex h-10 cursor-pointer items-center justify-center rounded-sm text-label-md transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-primary',
+              value === v ? 'bg-surface text-ink shadow-e1' : 'text-ink-muted hover:text-ink'
+            )}
+          >
+            <input type="radio" className="sr-only" name={name} value={v} checked={value === v} onChange={() => onChange(v)} />
+            {text}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+function FileButton({
+  label,
+  accept,
+  validate,
+  onData,
+}: {
+  label: string;
+  accept: string;
+  validate: (file: File) => string;
+  onData: (dataUrl: string, file: File) => void;
+}) {
+  const id = useId();
+  const [error, setError] = useState('');
+  return (
+    <div>
+      <input
+        id={id}
+        type="file"
+        accept={accept}
+        className="peer sr-only"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const message = validate(file);
+          setError(message);
+          if (!message) onData(await readFile(file), file);
+        }}
+      />
+      <label
+        htmlFor={id}
+        className="flex h-touch cursor-pointer items-center justify-center rounded-md border-[1.5px] border-dashed border-line px-4 text-label-md text-ink-muted transition-colors hover:border-primary hover:text-primary peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-primary"
+      >
+        {label}
+      </label>
+      {error && (
+        <p role="alert" className="mt-1.5 text-caption font-semibold text-danger">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}

@@ -1,7 +1,22 @@
+/**
+ * public/images 폴더와 data/item-meta.json 을 읽어 public/data/gameData.json 을 만든다.
+ *
+ *   node scripts/generateImageData.js          # 검사 후 gameData.json 생성 (dev/build 때 자동 실행)
+ *   node scripts/generateImageData.js --check  # 검사만 (파일 생성 안 함)
+ *
+ * 오류가 있으면 종료 코드 1로 끝나서 빌드/CI가 실패한다. 경고는 표시만 한다.
+ * 이미지 추가 방법은 README.md의 "아이템 추가하기"를 참고.
+ */
 const fs = require('fs');
 const path = require('path');
 
-// 카테고리별 폴더 매핑
+const ROOT = path.join(__dirname, '..');
+const IMAGES_DIR = path.join(ROOT, 'public', 'images');
+const META_PATH = path.join(ROOT, 'data', 'item-meta.json');
+const UPDATES_PATH = path.join(ROOT, 'data', 'updates.json');
+const OUTPUT_PATH = path.join(ROOT, 'public', 'data', 'gameData.json');
+
+// 카테고리 → 폴더
 const CATEGORY_FOLDERS = {
   cookies: 'cookies',
   pets: 'pets',
@@ -9,174 +24,181 @@ const CATEGORY_FOLDERS = {
   dishes: 'dishes',
   ingredients: 'ingredients',
   magicCandies: 'magic_candies',
-  blessings: 'blessings'
+  blessings: 'blessings',
 };
+const RARITIES = ['legendary', 'epic', 'rare', 'common'];
+const IMAGE_RE = /\.(png|jpe?g|webp)$/i;
+const IGNORED_FILES = new Set(['README.md', '.DS_Store', 'Thumbs.db', 'desktop.ini']);
+const MAX_SIZE = 1024 * 1024;
 
-// 등급 우선순위 (정렬용)
-const RARITY_ORDER = {
-  legendary: 0,
-  epic: 1,
-  rare: 2,
-  common: 3
-};
+const errors = [];
+const warnings = [];
+const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/');
 
-/**
- * 파일명에서 이름 추출 (확장자 제거)
- */
-function extractNameFromFilename(filename) {
-  return filename.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+function loadMeta() {
+  const empty = { pinned: [], added: {}, aliases: {}, descriptions: {}, hidden: [], renamed: {} };
+  if (!fs.existsSync(META_PATH)) return empty;
+  try {
+    return { ...empty, ...JSON.parse(fs.readFileSync(META_PATH, 'utf8')) };
+  } catch (e) {
+    errors.push(`${rel(META_PATH)}: JSON 형식이 잘못됐습니다 (쉼표·따옴표 확인) — ${e.message}`);
+    return empty;
+  }
 }
 
-/**
- * 특정 디렉토리의 이미지 파일 스캔
- */
-function scanDirectory(dirPath, category, rarity) {
-  const images = [];
-  
-  try {
-    if (!fs.existsSync(dirPath)) {
-      console.warn(`[WARN] 폴더 없음: ${dirPath}`);
-      return images;
+function scanImages(dir, category, rarity) {
+  const items = [];
+  for (const file of fs.readdirSync(dir)) {
+    const full = path.join(dir, file);
+    const stat = fs.statSync(full);
+    if (stat.isDirectory()) continue; // 하위 폴더는 scanCategory에서 처리
+    if (IGNORED_FILES.has(file)) continue;
+    if (!IMAGE_RE.test(file)) {
+      errors.push(`${rel(full)}: 지원하지 않는 파일 형식입니다 (png, jpg, webp만 가능)`);
+      continue;
     }
+    const rawName = file.replace(IMAGE_RE, '');
+    const name = rawName.normalize('NFC');
+    if (name !== rawName) warnings.push(`${rel(full)}: 파일명이 macOS 방식(NFD)으로 저장돼 있습니다. 동작은 하지만 이름을 다시 입력해 저장하는 것을 권장합니다`);
+    if (name !== name.trim() || /\s{2,}/.test(name)) warnings.push(`${rel(full)}: 파일명 앞뒤 공백이나 연속 공백이 있습니다`);
+    if (stat.size > MAX_SIZE) warnings.push(`${rel(full)}: 파일이 ${(stat.size / 1024 / 1024).toFixed(1)}MB로 큽니다 (1MB 이하 권장)`);
 
-    const files = fs.readdirSync(dirPath);
-    let idCounter = 1;
+    const folder = CATEGORY_FOLDERS[category];
+    items.push({
+      id: `${category}:${rarity ? `${rarity}/` : ''}${name}`,
+      name,
+      image: rarity ? `/images/${folder}/${rarity}/${file}` : `/images/${folder}/${file}`,
+      ...(rarity && { rarity }),
+    });
+  }
+  return items;
+}
 
-    files.forEach((file) => {
-      const filePath = path.join(dirPath, file);
-      let stat;
-      try {
-        stat = fs.statSync(filePath);
-      } catch (fileErr) {
-        console.error(`[ERROR] 파일 접근 실패: ${filePath}`, fileErr);
-        return;
-      }
+function scanCategory(category) {
+  const dir = path.join(IMAGES_DIR, CATEGORY_FOLDERS[category]);
+  if (!fs.existsSync(dir)) {
+    errors.push(`${rel(dir)}: 폴더가 없습니다`);
+    return [];
+  }
+  const subdirs = fs.readdirSync(dir).filter((f) => fs.statSync(path.join(dir, f)).isDirectory());
+  if (subdirs.length === 0) return scanImages(dir, category);
 
-      // 파일만 처리 (하위 디렉토리 제외)
-      if (stat.isFile() && /\.(png|jpg|jpeg|webp)$/i.test(file)) {
-        const name = extractNameFromFilename(file);
-        const relativePath = rarity 
-          ? `/images/${CATEGORY_FOLDERS[category]}/${rarity}/${file}`
-          : `/images/${CATEGORY_FOLDERS[category]}/${file}`;
+  const items = [];
+  for (const sub of subdirs) {
+    if (!RARITIES.includes(sub)) {
+      errors.push(`${rel(path.join(dir, sub))}: 알 수 없는 등급 폴더입니다 (${RARITIES.join(', ')} 중 하나)`);
+      continue;
+    }
+    items.push(...scanImages(path.join(dir, sub), category, sub));
+  }
+  const loose = fs.readdirSync(dir).filter((f) => IMAGE_RE.test(f));
+  for (const f of loose) errors.push(`${rel(path.join(dir, f))}: 등급 폴더(${RARITIES.join('/')}) 안에 넣어야 합니다`);
+  return items;
+}
 
-        const item = {
-          id: `${category}_${rarity || 'default'}_${idCounter++}`,
-          name,
-          image: relativePath
+function build() {
+  const meta = loadMeta();
+  const data = {};
+  for (const category of Object.keys(CATEGORY_FOLDERS)) data[category] = scanCategory(category);
+
+  const allNames = new Set(Object.values(data).flat().map((i) => i.name));
+  const checkNames = (names, field) => {
+    for (const n of names) if (!allNames.has(n)) warnings.push(`data/item-meta.json "${field}": "${n}" 이름의 이미지가 없습니다 (오타 확인)`);
+  };
+
+  // 메타데이터 적용
+  const addedAt = {};
+  for (const [date, names] of Object.entries(meta.added)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) errors.push(`data/item-meta.json "added": "${date}" 날짜는 YYYY-MM-DD 형식이어야 합니다`);
+    checkNames(names, 'added');
+    for (const n of names) addedAt[n] = date;
+  }
+  checkNames(meta.pinned, 'pinned');
+  checkNames(meta.hidden, 'hidden');
+  checkNames(Object.keys(meta.aliases), 'aliases');
+  checkNames(Object.keys(meta.descriptions), 'descriptions');
+  for (const [from, to] of Object.entries(meta.renamed)) {
+    if (!allNames.has(to)) errors.push(`data/item-meta.json "renamed": "${from}" → "${to}" 에서 바뀐 이름의 이미지가 없습니다`);
+  }
+
+  for (const category of Object.keys(data)) {
+    data[category] = data[category]
+      .filter((item) => !meta.hidden.includes(item.name))
+      .map((item) => {
+        return {
+          ...item,
+          ...(meta.pinned.includes(item.name) && { pinned: true }),
+          ...(addedAt[item.name] && { addedAt: addedAt[item.name] }),
+          ...(meta.descriptions[item.name] && { description: meta.descriptions[item.name] }),
+          ...(meta.aliases[item.name] && { aliases: meta.aliases[item.name] }),
         };
-        
-        if (rarity) {
-          item.rarity = rarity;
-        }
-        
-        images.push(item);
-      }
-    });
-  } catch (error) {
-    console.error(`[ERROR] 디렉토리 접근 실패: ${dirPath}`, error);
+      })
+      .sort(
+        (a, b) =>
+          (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) ||
+          RARITIES.indexOf(a.rarity) - RARITIES.indexOf(b.rarity) ||
+          a.name.localeCompare(b.name, 'ko')
+      );
   }
 
-  return images;
+  // 쿠키를 추가하면 보통 마법사탕·펫도 같은 이름으로 함께 추가한다
+  const names = (c) => new Set(data[c].map((i) => i.name));
+  const candies = names('magicCandies');
+  const pets = names('pets');
+  for (const cookie of data.cookies) {
+    if (cookie.pinned) continue;
+    const missing = [!candies.has(cookie.name) && '마법사탕', !pets.has(cookie.name) && '펫'].filter(Boolean);
+    if (missing.length) warnings.push(`쿠키 "${cookie.name}": 같은 이름의 ${missing.join('·')} 이미지가 없습니다 (없는 게 맞다면 무시)`);
+  }
+
+  data.renamed = meta.renamed;
+  return data;
 }
 
-/**
- * 등급별 폴더 구조를 가진 카테고리 스캔
- */
-function scanCategoryWithRarity(category, baseDir) {
-  const categoryPath = path.join(baseDir, CATEGORY_FOLDERS[category]);
-  const images = [];
-
+/** data/updates.json: [{ date: 'YYYY-MM-DD', title, items: [...] }] 최신순 */
+function checkUpdates() {
+  let notes;
   try {
-    if (!fs.existsSync(categoryPath)) {
-      console.warn(`[WARN] 카테고리 폴더 없음: ${categoryPath}`);
-      return images;
-    }
-
-    let items;
-    try {
-      items = fs.readdirSync(categoryPath);
-    } catch (readErr) {
-      console.error(`[ERROR] 카테고리 폴더 읽기 실패: ${categoryPath}`, readErr);
-      return images;
-    }
-    // 등급 폴더 확인
-    const rarityFolders = items.filter((item) => {
-      const itemPath = path.join(categoryPath, item);
-      let stat;
-      try {
-        stat = fs.statSync(itemPath);
-      } catch (statErr) {
-        console.error(`[ERROR] 등급 폴더 stat 실패: ${itemPath}`, statErr);
-        return false;
-      }
-      return stat.isDirectory();
-    });
-
-    if (rarityFolders.length > 0) {
-      // 등급별 폴더가 있는 경우
-      rarityFolders.forEach((rarity) => {
-        const rarityPath = path.join(categoryPath, rarity);
-        const rarityImages = scanDirectory(rarityPath, category, rarity);
-        images.push(...rarityImages);
-      });
-
-      // 등급순으로 정렬
-      images.sort((a, b) => {
-        const rarityA = RARITY_ORDER[a.rarity || ''] ?? 999;
-        const rarityB = RARITY_ORDER[b.rarity || ''] ?? 999;
-        if (rarityA !== rarityB) {
-          return rarityA - rarityB;
-        }
-        return a.name.localeCompare(b.name);
-      });
-    } else {
-      // 등급 폴더가 없는 경우 (루트에 바로 이미지)
-      images.push(...scanDirectory(categoryPath, category));
-    }
-  } catch (error) {
-    console.error(`[ERROR] 카테고리 접근 실패: ${category} (${categoryPath})`, error);
+    notes = JSON.parse(fs.readFileSync(UPDATES_PATH, 'utf8'));
+  } catch (e) {
+    return errors.push(`data/updates.json: JSON 형식이 잘못됐습니다 — ${e.message}`);
   }
-
-  return images;
-}
-
-/**
- * 모든 카테고리의 이미지 스캔
- */
-function scanAllImages() {
-  const publicDir = path.join(__dirname, '..', 'public');
-  const imagesDir = path.join(publicDir, 'images');
-  const result = {};
-
-  console.log('Scanning images from:', imagesDir);
-
-  Object.keys(CATEGORY_FOLDERS).forEach((category) => {
-    console.log(`Scanning category: ${category}...`);
-    result[category] = scanCategoryWithRarity(category, imagesDir);
-    console.log(`  Found ${result[category].length} images`);
+  if (!Array.isArray(notes)) return errors.push('data/updates.json: 배열([ ... ])이어야 합니다');
+  notes.forEach((n, i) => {
+    const where = `data/updates.json ${i + 1}번째 항목`;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(n?.date)) errors.push(`${where}: date는 YYYY-MM-DD 형식이어야 합니다`);
+    if (typeof n?.title !== 'string' || !n.title) errors.push(`${where}: title이 없습니다`);
+    if (!Array.isArray(n?.items) || n.items.some((t) => typeof t !== 'string')) errors.push(`${where}: items는 글자 목록이어야 합니다`);
+    if (i > 0 && n?.date > notes[i - 1]?.date) errors.push(`${where}: 최신 항목이 맨 위에 오도록 날짜순으로 정렬해 주세요`);
   });
-
-  return result;
 }
 
-// 메인 실행
 function main() {
-  console.log('Starting image data generation...\n');
-  try {
-    const allImages = scanAllImages();
-    const outputPath = path.join(process.cwd(), 'public', 'data', 'gameData.json');
-    const outputDir = path.dirname(outputPath);
-    fs.mkdirSync(outputDir, { recursive: true });
-    fs.writeFileSync(outputPath, JSON.stringify(allImages, null, 2));
-    console.log(`\n✓ Image data generated successfully!`);
-    console.log(`  Output: ${outputPath}`);
-    console.log(`\nSummary:`);
-    Object.entries(allImages).forEach(([category, items]) => {
-      console.log(`  ${category}: ${items.length} items`);
-    });
-  } catch (err) {
-    console.error('이미지 데이터 생성 중 오류 발생:', err);
+  const checkOnly = process.argv.includes('--check');
+  const data = build();
+  checkUpdates();
+
+  const counts = Object.entries(data)
+    .filter(([k]) => k !== 'renamed')
+    .map(([k, v]) => `${k} ${v.length}`)
+    .join(', ');
+  console.log(`[아이템] ${counts}`);
+  if (warnings.length) {
+    console.log(`\n[경고 ${warnings.length}건] 사이트는 동작하지만 확인해 주세요`);
+    for (const w of warnings) console.log(`  - ${w}`);
+  }
+  if (errors.length) {
+    console.error(`\n[오류 ${errors.length}건] 고친 뒤 다시 실행하세요`);
+    for (const e of errors) console.error(`  - ${e}`);
     process.exit(1);
+  }
+
+  if (!checkOnly) {
+    fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
+    fs.writeFileSync(OUTPUT_PATH, JSON.stringify(data));
+    console.log(`\n✓ ${rel(OUTPUT_PATH)} 생성 완료`);
+  } else {
+    console.log('\n✓ 검사 통과');
   }
 }
 

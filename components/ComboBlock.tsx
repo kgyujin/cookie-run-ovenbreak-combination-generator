@@ -1,655 +1,311 @@
 ﻿'use client';
 
 import clsx from 'clsx';
-import { useAppStore } from '@/store/useAppStore';
-import Image from 'next/image';
+import { CSSProperties, KeyboardEvent, PointerEvent, useState } from 'react';
+import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
+import { fontFamilyOf, textGlow, u } from '@/lib/board';
+import { Category, MagicCandyData } from '@/types';
+import Slot from './Slot';
+import YoutubeDialog from './YoutubeDialog';
 
+const MIN_RATIO = 30;
+const MAX_RATIO = 70;
+
+/**
+ * 아레나 1개의 조합표. 배치(위치·크기)는 기존 디자인 그대로이며,
+ * 모든 px 값은 u()로 감싸 보드 배율에 맞춰 함께 커지고 작아진다.
+ */
 export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
-  const arena = useAppStore((state) => state.arenas[arenaIndex]);
-  const isExporting = useAppStore((state) => state.isExporting);
-  const gameData = useAppStore((state) => state.gameData);
-  const displaySettings = useAppStore((state) => state.displaySettings);
-  const fontSettings = useAppStore((state) => state.fontSettings);
-  const setModalOpen = useAppStore((state) => state.setModalOpen);
-  const setArenaMainCombo = useAppStore((state) => state.setArenaMainCombo);
-  const setArenaMagicCandy = useAppStore((state) => state.setArenaMagicCandy);
-  const setArenaScore = useAppStore((state) => state.setArenaScore);
-  const setArenaDish = useAppStore((state) => state.setArenaDish);
-  const setArenaSubCombo = useAppStore((state) => state.setArenaSubCombo);
-  const setArenaSubScore = useAppStore((state) => state.setArenaSubScore);
-  const setArenaYoutubeUrl = useAppStore((state) => state.setArenaYoutubeUrl);
-  const setMainCookieRatio = useAppStore((state) => state.setMainCookieRatio);
-  const setSubCookieRatio = useAppStore((state) => state.setSubCookieRatio);
+  const arena = useAppStore((s) => s.arenas[arenaIndex]);
+  const fontSettings = useAppStore((s) => s.fontSettings);
+  const openPicker = useAppStore((s) => s.openPicker);
+  const setArenaCombo = useAppStore((s) => s.setArenaCombo);
+  const setArenaMagicCandy = useAppStore((s) => s.setArenaMagicCandy);
+  const setArenaDish = useAppStore((s) => s.setArenaDish);
+  const setCookieRatio = useAppStore((s) => s.setCookieRatio);
+  const [youtubeOpen, setYoutubeOpen] = useState(false);
 
-  const handleImageClick = (type: string) => {
-    if (isExporting) return; // 저장 중에는 이미지 변경 불가
-    setModalOpen(true, arenaIndex, type);
+  const n = arenaIndex + 1;
+  const pick = (category: Category, label: string, current: string, apply: (image: string) => void) => () =>
+    openPicker({ category, label: `${n}번 ${label}`, current, apply });
+
+  const comboSlot = (combo: 'mainCombo' | 'subCombo', field: ComboField, category: Category, label: string) => {
+    const current = field.startsWith('treasure') ? arena[combo].treasures[Number(field.slice(-1))] : arena[combo][field as 'pet'];
+    return {
+      image: current,
+      label: `${n}번 ${label}`,
+      text: label,
+      onSelect: pick(category, label, current, (image) => setArenaCombo(arenaIndex, combo, field, image)),
+    };
   };
+  const candySlot = (field: keyof MagicCandyData, category: Category, label: string) => ({
+    image: arena.magicCandy[field],
+    label: `${n}번 ${label}`,
+    text: label,
+    onSelect: pick(category, label, arena.magicCandy[field], (image) => setArenaMagicCandy(arenaIndex, field, image)),
+  });
 
-  // 통일된 그림자 스타일 (모든 요소에 동일한 깊이감)
-  const unifiedShadow = isExporting
-    ? ''
-    : 'shadow-[0_4px_16px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.08)]';
-  
-  const macosBase = isExporting 
-    ? 'bg-transparent' 
-    : 'bg-white/95 backdrop-blur-lg rounded-lg';
-  
-  const badgeStyle = isExporting
-    ? ''
-    : 'badge';
-
-  // 메인 조합 쿠키 크기 계산 (총 56% 공간을 비율에 따라 분배)
+  // 메인 조합 쿠키 크기 (총 56% 공간을 비율에 따라 분배)
   const mainCookie1Width = (arena.mainCookieRatio / 100) * 56;
   const mainCookie2Width = ((100 - arena.mainCookieRatio) / 100) * 56;
-  const mainCookie2Left = 2 + mainCookie1Width + 2; // 선달쿠키 left(2%) + width + 간격(2%)
-
-  // 대체 조합 쿠키 크기 계산 (총 96% 공간을 비율에 따라 분배, gap 2% 제외)
+  // 대체 조합 쿠키 크기 (총 96% 공간을 비율에 따라 분배)
   const subCookie1Width = (arena.subCookieRatio / 100) * 96;
   const subCookie2Width = ((100 - arena.subCookieRatio) / 100) * 96;
 
-  // 축복 description 가져오기
-  const getBlessing1Desc = () => {
-    if (!gameData || !arena.magicCandy.cookie1Blessing) return '';
-    const blessing = gameData.blessings?.find((b: any) => b.image === arena.magicCandy.cookie1Blessing);
-    return blessing?.description || '';
-  };
-
-  const getBlessing2Desc = () => {
-    if (!gameData || !arena.magicCandy.cookie2Blessing) return '';
-    const blessing = gameData.blessings?.find((b: any) => b.image === arena.magicCandy.cookie2Blessing);
-    return blessing?.description || '';
+  const scoreStyle: CSSProperties = {
+    color: fontSettings.scoreColor,
+    fontSize: u(fontSettings.scoreFontSize ?? 14),
+    fontFamily: fontFamilyOf(fontSettings.fontFamily),
+    WebkitTextStroke: fontSettings.scoreStrokeWidth ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}` : undefined,
+    paintOrder: 'stroke fill',
   };
 
   return (
-    <div 
-      className="relative w-full"
-      style={{ height: '425px' }}
-    >
-      {/* ===== BASE LAYER (z-10) ===== */}
-      
-      {/* A. 선달 쿠키 - Base Layer */}
-      <div 
-        onClick={() => handleImageClick('mainCookie1')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden',
-          arena.mainCombo.cookie1 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 10, 
-          width: `${mainCookie1Width}%`, 
-          height: '44.3%', 
-          top: '22%', 
-          left: '2%' 
-        }}
-      >
-        {arena.mainCombo.cookie1 ? (
-          <Image src={arena.mainCombo.cookie1} alt="선달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-lg font-bold">선달 쿠키</span>
-        )}
-      </div>
-
-      {/* 메인 조합 크기 조절 슬라이더 - 선달/이달 쿠키 사이 */}
-      {!isExporting && (
-        <div 
-          className="absolute cursor-ew-resize flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
-          style={{ 
-            zIndex: 25, 
-            width: '2%', 
-            height: '44.3%', 
-            top: '22%', 
-            left: `${2 + mainCookie1Width}%`,
-            background: 'rgba(0, 0, 0, 0.08)',
-            borderLeft: '2px solid rgba(0, 0, 0, 0.15)',
-            borderRight: '2px solid rgba(0, 0, 0, 0.15)',
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            const startX = e.clientX;
-            const startRatio = arena.mainCookieRatio;
-            const container = e.currentTarget.parentElement;
-            
-            if (!container) return;
-            
-            const handleMouseMove = (moveEvent: MouseEvent) => {
-              const deltaX = moveEvent.clientX - startX;
-              const containerWidth = container.offsetWidth;
-              const deltaRatio = (deltaX / containerWidth) * 100 * (100 / 56); // 56%가 전체 공간
-              let newRatio = startRatio + deltaRatio;
-              newRatio = Math.max(30, Math.min(70, newRatio)); // 30-70% 범위 제한
-              setMainCookieRatio(arenaIndex, newRatio);
-            };
-            
-            const handleMouseUp = () => {
-              document.removeEventListener('mousemove', handleMouseMove);
-              document.removeEventListener('mouseup', handleMouseUp);
-            };
-            
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleMouseUp);
-          }}
-        >
-          <div className="text-gray-600 text-xs opacity-70">⋮</div>
-        </div>
-      )}
-
-      {/* B. 이달 쿠키 - Base Layer */}
-      <div 
-        onClick={() => handleImageClick('mainCookie2')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden',
-          arena.mainCombo.cookie2 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 10, 
-          width: `${mainCookie2Width}%`, 
-          height: '44.3%', 
-          top: '22%', 
-          left: `${mainCookie2Left}%` 
-        }}
-      >
-        {arena.mainCombo.cookie2 ? (
-          <Image src={arena.mainCombo.cookie2} alt="이달 쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-base font-bold">이달 쿠키</span>
-        )}
-      </div>
-
-      {/* ===== MID LAYER (z-20) ===== */}
-      
-      {/* D. 펫 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('mainPet')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.mainCombo.pet && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '75px',
-          height: '75px',
-          aspectRatio: '1/1',
-          top: '8%', 
-          left: '4%' 
-        }}
-      >
-        {arena.mainCombo.pet ? (
-          <Image src={arena.mainCombo.pet} alt="펫" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs font-semibold">펫</span>
-        )}
-      </div>
-
-      {/* E. 보물 1 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('mainTreasure0')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[0] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '50px',
-          height: '50px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          left: '2%'
-        }}
-      >
-        {arena.mainCombo.treasures[0] ? (
-          <Image src={arena.mainCombo.treasures[0]} alt="보물1" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물1</span>
-        )}
-      </div>
-
-      {/* 보물 2 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('mainTreasure1')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[1] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '50px',
-          height: '50px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          left: 'calc(2% + 60px)'
-        }}
-      >
-        {arena.mainCombo.treasures[1] ? (
-          <Image src={arena.mainCombo.treasures[1]} alt="보물2" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물2</span>
-        )}
-      </div>
-
-      {/* 보물 3 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('mainTreasure2')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.mainCombo.treasures[2] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '50px',
-          height: '50px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          left: 'calc(2% + 120px)'
-        }}
-      >
-        {arena.mainCombo.treasures[2] ? (
-          <Image src={arena.mainCombo.treasures[2]} alt="보물3" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물3</span>
-        )}
-      </div>
-
-      {/* F. 최고점 - Mid Layer */}
-      <input
-        type="text"
-        value={isExporting && arena.score.value ? formatScore(arena.score.value, displaySettings.scoreDisplayType) : arena.score.value}
-        onChange={(e) => setArenaScore(arenaIndex, 'value', e.target.value)}
-        disabled={isExporting}
-        placeholder={isExporting ? '' : '최고점 (숫자만 입력)'}
-        className={clsx(
-          'absolute px-2 py-1 text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all',
-          // 기존 text-gray-800 제거 (style에서 제어하기 위함)
-          // text-xs 클래스도 style의 fontSize가 덮어씌우므로 있어도 무관하지만 명시적으로 style 우선
-          arena.score.value && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '35%', 
-          height: '10%', 
-          top: '9%', 
-          right: '3%',
-          // [추가된 부분] 설정된 폰트 색상과 크기 적용
-          color: fontSettings.scoreColor,
-          fontSize: `${fontSettings.scoreFontSize}px`,
-          fontFamily: fontSettings.fontFamily === 'Custom' ? 'CustomFont' : fontSettings.fontFamily, // (선택사항) 폰트 종류까지 맞추려면 추가
-          // ▼ [추가] 외곽선 스타일 적용
-          WebkitTextStroke: fontSettings.scoreStrokeWidth && fontSettings.scoreStrokeWidth > 0
-            ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}`
-            : 'unset',
-            
-          // (선택) 외곽선이 글자 안쪽을 먹지 않도록 바깥으로 그리기
-          paintOrder: 'stroke fill'
-        }}
+    <section aria-label={`${n}번 아레나`} className="relative w-full" style={{ height: u(425) }}>
+      {/* ===== BASE LAYER ===== */}
+      <Slot
+        {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
+        labelSize={18}
+        imageClassName="object-contain object-bottom"
+        style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
+      />
+      <RatioHandle
+        label="메인 조합 선달·이달 쿠키 크기 비율"
+        value={arena.mainCookieRatio}
+        space={56}
+        onChange={(r) => setCookieRatio('mainCookieRatio', r)}
+        style={{ position: 'absolute', zIndex: 25, width: '2%', height: '44.3%', top: '22%', left: `${2 + mainCookie1Width}%` }}
+      />
+      <Slot
+        {...comboSlot('mainCombo', 'cookie2', 'cookies', '이달 쿠키')}
+        labelSize={16}
+        imageClassName="object-contain object-bottom"
+        style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%` }}
       />
 
-      {/* G. 선달 마법사탕 + 축복 (겹침) - Mid Layer */}
-      <div 
-        className={clsx(
-          'absolute cursor-pointer overflow-hidden flex items-center justify-center',
-          arena.magicCandy.cookie1Candy && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '72px',
-          height: '72px',
-          aspectRatio: '1/1',
-          top: '9%', 
-          left: '38%',
-          position: 'absolute'
-        }}
-        onClick={() => handleImageClick('candy1')}
-      >
-        {arena.magicCandy.cookie1Candy ? (
-          <Image src={arena.magicCandy.cookie1Candy} alt="선달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-[10px] text-center leading-tight">선달<br/>사탕</span>
-        )}
-        
-        {/* 선달 축복 - Child (우측 하단 1/4 영역) */}
-        <div 
-          onClick={(e) => { e.stopPropagation(); handleImageClick('blessing1'); }}
-          className={clsx(
-            'absolute cursor-pointer overflow-hidden hover:scale-105 transition-all',
-            arena.magicCandy.cookie1Blessing && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
-          )}
-          style={{ 
-            zIndex: 30, 
-            bottom: -2, 
-            right: -2, 
-            width: '50%', 
-            height: '50%' 
-          }}
-          title={getBlessing1Desc()}
-        >
-          {arena.magicCandy.cookie1Blessing ? (
-            <Image src={arena.magicCandy.cookie1Blessing} alt="선달 축복" fill className="object-contain" crossOrigin="anonymous" />
-          ) : (
-            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[8px]">축복</span>
-          )}
-        </div>
-      </div>
-
-      {/* H. 이달 마법사탕 + 축복 (겹침) - Mid Layer */}
-      <div 
-        className={clsx(
-          'absolute cursor-pointer overflow-hidden flex items-center justify-center',
-          arena.magicCandy.cookie2Candy && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '72px',
-          height: '72px',
-          aspectRatio: '1/1',
-          top: '9%', 
-          left: '49%',
-          position: 'absolute'
-        }}
-        onClick={() => handleImageClick('candy2')}
-      >
-        {arena.magicCandy.cookie2Candy ? (
-          <Image src={arena.magicCandy.cookie2Candy} alt="이달 마법사탕" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-[10px] text-center leading-tight">이달<br/>사탕</span>
-        )}
-        
-        {/* 이달 축복 - Child (우측 하단 1/4 영역) */}
-        <div 
-          onClick={(e) => { e.stopPropagation(); handleImageClick('blessing2'); }}
-          className={clsx(
-            'absolute cursor-pointer overflow-hidden hover:scale-105 transition-all',
-            arena.magicCandy.cookie2Blessing && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
-          )}
-          style={{ 
-            zIndex: 30, 
-            bottom: -2, 
-            right: -2, 
-            width: '50%', 
-            height: '50%' 
-          }}
-          title={getBlessing2Desc()}
-        >
-          {arena.magicCandy.cookie2Blessing ? (
-            <Image src={arena.magicCandy.cookie2Blessing} alt="이달 축복" fill className="object-contain" crossOrigin="anonymous" />
-          ) : (
-            !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[8px]">축복</span>
-          )}
-        </div>
-      </div>
-
-      {/* I. 대체 조합 Contents - Mid Layer (대체 조합 Base 위에 겹침, width 35%) */}
-      <div 
-        className="absolute"
-        style={{ 
-          zIndex: 20, 
-          top: '22%', 
-          right: '3%', 
-          width: '35%',
-          height: '56%'
-        }}
-      >
-        {/* 대체 펫 - 좌상단 */}
-        <div 
-          onClick={() => handleImageClick('subPet')}
-          className={clsx(
-            'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-            arena.subCombo.pet && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-          )}
-          style={{ 
-            top: '2%',
-            left: '2%',
-            width: '40px',
-            height: '40px',
-            aspectRatio: '1/1'
-          }}
-        >
-          {arena.subCombo.pet ? (
-            <Image src={arena.subCombo.pet} alt="대체 펫" fill className="object-contain" crossOrigin="anonymous" />
-          ) : (
-            !isExporting && <span className="text-gray-500 text-xs">대체 펫</span>
-          )}
-        </div>
-
-        {/* 대체 최고점 - 대체 펫 옆 */}
-        <input
-          type="text"
-          value={isExporting && arena.subScore.value ? formatScore(arena.subScore.value, displaySettings.scoreDisplayType) : arena.subScore.value}
-          onChange={(e) => setArenaSubScore(arenaIndex, 'value', e.target.value)}
-          disabled={isExporting}
-          placeholder={isExporting ? '' : '대체 최고점 (숫자만 입력)'}
-          className={clsx(
-            'absolute px-2 py-1 text-center focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed transition-all',
-             // 기존 text-gray-800 제거
-            arena.subScore.value && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-          )}
-          style={{ 
-            top: '2%',
-            left: 'calc(2% + 50px)',
-            right: '2%',
-            height: '40px',
-            // [추가된 부분] 설정된 폰트 색상과 크기 적용
-            color: fontSettings.scoreColor,
-            fontSize: `${fontSettings.scoreFontSize}px`,
-            fontFamily: fontSettings.fontFamily === 'Custom' ? 'CustomFont' : fontSettings.fontFamily, // (선택사항)
-            // ▼ [추가] 외곽선 스타일 적용
-          WebkitTextStroke: fontSettings.scoreStrokeWidth && fontSettings.scoreStrokeWidth > 0
-            ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}`
-            : 'unset',
-            
-          // (선택) 외곽선이 글자 안쪽을 먹지 않도록 바깥으로 그리기
-          paintOrder: 'stroke fill'
-          }}
+      {/* ===== MID LAYER ===== */}
+      <Slot {...comboSlot('mainCombo', 'pet', 'pets', '펫')} style={{ zIndex: 20, width: u(75), height: u(75), top: '8%', left: '4%' }} />
+      {[0, 1, 2].map((t) => (
+        <Slot
+          key={t}
+          {...comboSlot('mainCombo', `treasure${t}` as ComboField, 'treasures', `보물${t + 1}`)}
+          style={{ zIndex: 20, width: u(50), height: u(50), bottom: u(80), left: `calc(2% + ${t * 60} * var(--u))` }}
         />
+      ))}
 
-        {/* 대체 쿠키 1, 2 - 나란히 배치 (동적 비율) */}
+      <ScoreInput
+        arenaIndex={arenaIndex}
+        field="score"
+        label="최고점"
+        placeholder="최고점 (숫자만 입력)"
+        style={{ ...scoreStyle, zIndex: 20, width: '35%', height: '10%', top: '9%', right: '3%' }}
+      />
+
+      {/* 마법사탕 + 축복 (축복은 사탕 우측 하단 1/4에 겹침) */}
+      {([1, 2] as const).map((c) => (
+        <div
+          key={c}
+          className={clsx('absolute overflow-hidden', !arena.magicCandy[`cookie${c}Candy`] && 'slot-empty')}
+          style={{ zIndex: 20, width: u(72), height: u(72), top: '9%', left: c === 1 ? '38%' : '49%' }}
+        >
+          <Slot
+            {...candySlot(`cookie${c}Candy`, 'magicCandies', `${c === 1 ? '선달' : '이달'} 마법사탕`)}
+            text={`${c === 1 ? '선달' : '이달'}\n사탕`}
+            labelSize={10}
+            emptyClassName=""
+            className="inset-0"
+          />
+          <Slot
+            {...candySlot(`cookie${c}Blessing`, 'blessings', `${c === 1 ? '선달' : '이달'} 축복`)}
+            text="축복"
+            labelSize={8}
+            emptyClassName="badge"
+            style={{ zIndex: 30, bottom: -2, right: -2, width: '50%', height: '50%' }}
+          />
+        </div>
+      ))}
+
+      {/* 대체 조합 (width 35%) */}
+      <div className="absolute" style={{ zIndex: 20, top: '22%', right: '3%', width: '35%', height: '56%' }}>
+        <Slot {...comboSlot('subCombo', 'pet', 'pets', '대체 펫')} style={{ top: '2%', left: '2%', width: u(40), height: u(40) }} />
+        <ScoreInput
+          arenaIndex={arenaIndex}
+          field="subScore"
+          label="대체 최고점"
+          placeholder="대체 최고점 (숫자만 입력)"
+          style={{ ...scoreStyle, top: '2%', left: `calc(2% + 50 * var(--u))`, right: '2%', height: u(40) }}
+        />
         <div className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
-          {/* 대체 선달 쿠키 (동적) */}
-          <div 
-            onClick={() => handleImageClick('subCookie1')}
-            className={clsx(
-              'relative cursor-pointer hover:opacity-90 transition-all overflow-hidden',
-              arena.subCombo.cookie1 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-            )}
+          <Slot
+            {...comboSlot('subCombo', 'cookie1', 'cookies', '대체 선달 쿠키')}
+            text={'대체\n선달\n쿠키'}
+            labelSize={10}
+            className="!relative h-full"
+            imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie1Width}%` }}
-          >
-            {arena.subCombo.cookie1 ? (
-              <Image src={arena.subCombo.cookie1} alt="대체선달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
-            ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[10px]">대체<br/>선달<br/>쿠키</span>
-            )}
-          </div>
-          
-          {/* 대체 조합 크기 조절 슬라이더 */}
-          {!isExporting && (
-            <div 
-              className="cursor-ew-resize flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
-              style={{ 
-                width: '2%',
-                background: 'rgba(0, 0, 0, 0.08)',
-                borderLeft: '2px solid rgba(0, 0, 0, 0.15)',
-                borderRight: '2px solid rgba(0, 0, 0, 0.15)',
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const startX = e.clientX;
-                const startRatio = arena.subCookieRatio;
-                const container = e.currentTarget.parentElement;
-                
-                if (!container) return;
-                
-                const handleMouseMove = (moveEvent: MouseEvent) => {
-                  const deltaX = moveEvent.clientX - startX;
-                  const containerWidth = container.offsetWidth;
-                  const deltaRatio = (deltaX / containerWidth) * 100 * (100 / 96); // 96%가 전체 공간
-                  let newRatio = startRatio + deltaRatio;
-                  newRatio = Math.max(30, Math.min(70, newRatio)); // 30-70% 범위 제한
-                  setSubCookieRatio(arenaIndex, newRatio);
-                };
-                
-                const handleMouseUp = () => {
-                  document.removeEventListener('mousemove', handleMouseMove);
-                  document.removeEventListener('mouseup', handleMouseUp);
-                };
-                
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-              }}
-            >
-              <div className="text-gray-600 text-xs opacity-70">⋮</div>
-            </div>
-          )}
-          
-          {/* 대체 이달 쿠키 (동적) */}
-          <div 
-            onClick={() => handleImageClick('subCookie2')}
-            className={clsx(
-              'relative cursor-pointer hover:opacity-90 transition-all overflow-hidden',
-              arena.subCombo.cookie2 && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-            )}
+          />
+          <RatioHandle
+            label="대체 조합 선달·이달 쿠키 크기 비율"
+            value={arena.subCookieRatio}
+            space={96}
+            onChange={(r) => setCookieRatio('subCookieRatio', r)}
+            style={{ position: 'relative', width: '2%' }}
+          />
+          <Slot
+            {...comboSlot('subCombo', 'cookie2', 'cookies', '대체 이달 쿠키')}
+            text={'대체\n이달\n쿠키'}
+            labelSize={10}
+            className="!relative h-full"
+            imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie2Width}%` }}
-          >
-            {arena.subCombo.cookie2 ? (
-              <Image src={arena.subCombo.cookie2} alt="대체이달쿠키" fill className="object-contain object-bottom" crossOrigin="anonymous" />
-            ) : (
-              !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-[10px]">대체<br/>이달<br/>쿠키</span>
-            )}
-          </div>
+          />
         </div>
       </div>
 
-      {/* J. 대체 보물 1 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('subTreasure0')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[0] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '40px',
-          height: '40px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          right: 'calc(3% + 100px)'
-        }}
-      >
-        {arena.subCombo.treasures[0] ? (
-          <Image src={arena.subCombo.treasures[0]} alt="대체보물1" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물1</span>
-        )}
-      </div>
+      {[0, 1, 2].map((t) => (
+        <Slot
+          key={t}
+          {...comboSlot('subCombo', `treasure${t}` as ComboField, 'treasures', `대체 보물${t + 1}`)}
+          text={`보물${t + 1}`}
+          style={{ zIndex: 20, width: u(40), height: u(40), bottom: u(80), right: `calc(3% + ${(2 - t) * 50} * var(--u))` }}
+        />
+      ))}
 
-      {/* 대체 보물 2 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('subTreasure1')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[1] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '40px',
-          height: '40px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          right: 'calc(3% + 50px)'
-        }}
+      {/* ===== TOP LAYER ===== */}
+      {/* 아레나 번호 (유튜브 링크) */}
+      <button
+        type="button"
+        onClick={() => setYoutubeOpen(true)}
+        aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
+        title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
+        className="slot absolute flex items-center justify-center font-bold"
+        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(18) }}
       >
-        {arena.subCombo.treasures[1] ? (
-          <Image src={arena.subCombo.treasures[1]} alt="대체보물2" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물2</span>
-        )}
-      </div>
-
-      {/* 대체 보물 3 - Mid Layer */}
-      <div 
-        onClick={() => handleImageClick('subTreasure2')}
-        className={clsx(
-          'absolute cursor-pointer hover:opacity-90 transition-all overflow-hidden flex items-center justify-center',
-          arena.subCombo.treasures[2] && !isExporting ? 'bg-transparent' : `${macosBase} ${unifiedShadow}`
-        )}
-        style={{ 
-          zIndex: 20, 
-          width: '40px',
-          height: '40px',
-          aspectRatio: '1/1',
-          bottom: '80px', 
-          right: '3%'
-        }}
-      >
-        {arena.subCombo.treasures[2] ? (
-          <Image src={arena.subCombo.treasures[2]} alt="대체보물3" fill className="object-contain" crossOrigin="anonymous" />
-        ) : (
-          !isExporting && <span className="text-gray-500 text-xs">보물3</span>
-        )}
-      </div>
-
-      {/* ===== TOP LAYER (z-30) ===== */}
-      
-      {/* K. 아레나 숫자 (유튜브 링크) - Top Layer */}
-      <div 
-        className={clsx(
-          'absolute cursor-pointer hover:scale-105 transition-all flex items-center justify-center group',
-          badgeStyle
-        )}
-        style={{ 
-          zIndex: 30, 
-          width: '48px', 
-          height: '48px', 
-          top: '12px', 
-          left: '12px' 
-        }}
-        onClick={() => {
-          if (isExporting) return;
-          const url = prompt('유튜브 링크를 입력하세요:', arena.youtubeUrl || '');
-          if (url !== null) setArenaYoutubeUrl(arenaIndex, url || null);
-        }}
-      >
-        <span 
-          className={clsx(
-            'font-bold text-lg',
-            arena.youtubeUrl && 'text-red-500'
-          )}
+        <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
+        <span
+          className="relative"
           style={{
             color: arena.youtubeUrl ? '#ef4444' : fontSettings.fontColor,
-            textShadow: '0 0 3px white, 0 0 5px white, 0 0 8px white, 1px 1px 2px white, -1px -1px 2px white, 1px -1px 2px white, -1px 1px 2px white'
+            textShadow: textGlow(arena.youtubeUrl ? '#ef4444' : fontSettings.fontColor),
           }}
         >
-          {arena.youtubeUrl && '▶ '}{arenaIndex + 1}
+          {arena.youtubeUrl && '▶ '}
+          {n}
         </span>
-        {!isExporting && (
-          <div className="opacity-0 group-hover:opacity-100 absolute top-full left-1/2 -translate-x-1/2 mt-2 text-white text-xs whitespace-nowrap bg-gray-800 px-3 py-1 rounded-lg z-50 shadow-lg">
-            유튜브 링크 {arena.youtubeUrl ? '수정' : '추가'}
-          </div>
-        )}
-      </div>
+      </button>
 
-      {/* L. 요리 - Top Layer */}
-      <div 
-        onClick={() => handleImageClick('dish')}
-        className={clsx(
-          'absolute cursor-pointer hover:scale-105 transition-all overflow-hidden flex items-center justify-center',
-          arena.dish && !isExporting ? 'bg-transparent' : !isExporting && badgeStyle
-        )}
-        style={{ 
-          zIndex: 30, 
-          width: '60px', 
-          height: '60px', 
-          top: '12px', 
-          right: '12px' 
-        }}
-      >
-        {arena.dish ? (
-          <Image src={arena.dish} alt="요리" fill className="object-contain" />
-        ) : (
-          !isExporting && <span className="absolute inset-0 flex items-center justify-center text-gray-500 text-xs">요리</span>
-        )}
-      </div>
+      {/* 요리 */}
+      <Slot
+        image={arena.dish}
+        label={`${n}번 요리`}
+        text="요리"
+        onSelect={pick('dishes', '요리', arena.dish, (image) => setArenaDish(arenaIndex, image))}
+        emptyClassName="badge"
+        style={{ zIndex: 30, width: u(60), height: u(60), top: u(12), right: u(12) }}
+      />
 
-    </div>
+      {youtubeOpen && <YoutubeDialog arenaIndex={arenaIndex} onClose={() => setYoutubeOpen(false)} />}
+    </section>
   );
 }
 
+/** 최고점 입력. 입력 중에는 숫자 그대로, 그 외에는 설정한 표기 방식으로 보여준다. */
+function ScoreInput({
+  arenaIndex,
+  field,
+  label,
+  placeholder,
+  style,
+}: {
+  arenaIndex: number;
+  field: 'score' | 'subScore';
+  label: string;
+  placeholder: string;
+  style: CSSProperties;
+}) {
+  const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
+  const displayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
+  const setArenaScore = useAppStore((s) => s.setArenaScore);
+  const [editing, setEditing] = useState(false);
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      aria-label={`${arenaIndex + 1}번 ${label}`}
+      value={editing || !value ? value : formatScore(value, displayType)}
+      onFocus={() => setEditing(true)}
+      onBlur={() => setEditing(false)}
+      onChange={(e) => setArenaScore(arenaIndex, field, e.target.value)}
+      placeholder={placeholder}
+      className={clsx('slot absolute min-w-0 bg-transparent px-2 py-1 text-center placeholder:text-ink-subtle', !value && 'slot-empty')}
+      style={style}
+    />
+  );
+}
+
+/** 선달/이달 쿠키 사이 크기 조절 손잡이. 마우스·터치로 끌거나, 포커스 후 ←/→ 키로 조절. */
+function RatioHandle({
+  label,
+  value,
+  space,
+  onChange,
+  style,
+}: {
+  label: string;
+  value: number;
+  /** 두 쿠키가 나눠 쓰는 전체 폭 (부모 폭 대비 %) */
+  space: number;
+  onChange: (ratio: number) => void;
+  style: CSSProperties;
+}) {
+  const clamp = (r: number) => Math.max(MIN_RATIO, Math.min(MAX_RATIO, r));
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    const handle = e.currentTarget;
+    const container = handle.parentElement;
+    if (!container) return;
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
+    const startX = e.clientX;
+    const startRatio = value;
+    const move = (ev: globalThis.PointerEvent) =>
+      onChange(clamp(startRatio + ((ev.clientX - startX) / container.offsetWidth) * 100 * (100 / space)));
+    const up = () => {
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', up);
+      handle.removeEventListener('pointercancel', up);
+    };
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', up);
+    handle.addEventListener('pointercancel', up);
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = e.shiftKey ? 5 : 1;
+    const next = { ArrowLeft: value - step, ArrowRight: value + step, Home: MIN_RATIO, End: MAX_RATIO }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    onChange(clamp(next));
+  };
+
+  return (
+    <div
+      data-edit-only
+      role="slider"
+      tabIndex={0}
+      aria-label={label}
+      aria-valuemin={MIN_RATIO}
+      aria-valuemax={MAX_RATIO}
+      aria-valuenow={Math.round(value)}
+      aria-valuetext={`선달 ${Math.round(value)}%, 이달 ${100 - Math.round(value)}%`}
+      onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
+      className="ratio-handle"
+      style={style}
+    >
+      <span aria-hidden="true">⋮</span>
+    </div>
+  );
+}
