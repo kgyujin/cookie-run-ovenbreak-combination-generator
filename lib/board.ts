@@ -31,7 +31,7 @@ export function backgroundCss(background: BackgroundData) {
 export function backgroundEdgeColor(background: BackgroundData) {
   if (background.type === 'color') return background.color ?? '#fffbf5';
   if (background.type === 'gradient') return background.gradient?.[0] ?? '#fffbf5';
-  return '#1c1917';
+  return background.imageUrl ? '#1c1917' : '#fffbf5'; // 이미지 주소가 없으면 기본 바탕과 같게
 }
 
 /** 글자색이 밝으면 어두운 테두리 빛, 어두우면 흰 테두리 빛 (어떤 배경에서도 번호가 읽히게) */
@@ -51,7 +51,7 @@ export function withOpacity(hex: string, opacity: number) {
 }
 
 /** 아레나·시즌 영역 카드 모양 */
-export function cardStyle(style: BoardStyle): CSSProperties {
+export function cardStyle(style: Pick<BoardStyle, 'cardColor' | 'cardOpacity' | 'cardRadius' | 'cardBorderWidth' | 'cardBorderColor' | 'cardShadow'>): CSSProperties {
   return {
     backgroundColor: withOpacity(style.cardColor, style.cardOpacity),
     borderRadius: u(style.cardRadius),

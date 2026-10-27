@@ -34,7 +34,9 @@ export default function Toolbar() {
     if (count === -1 && !isReturningVisitor) return markUpdatesSeen(updates);
     const unseen = count === -1 ? 1 : count;
     setNewUpdates(unseen);
-    if (unseen > 0) setUpdatesOpen(true);
+    // 공유 링크로 들어온 경우는 공유된 조합표가 먼저: 소식은 종 표시로만 알린다 (창이 두 개 겹치지 않게)
+    const fromShare = /^\/s\//.test(location.pathname) || location.search.includes('data=');
+    if (unseen > 0 && !fromShare && !document.querySelector('dialog:modal')) setUpdatesOpen(true);
   }, [updates]);
 
   const closeUpdates = () => {
@@ -89,11 +91,11 @@ export default function Toolbar() {
             variant="secondary"
             onClick={saveImage}
             aria-disabled={saving}
-            aria-label="이미지로 저장" className="w-touch px-0 sm:w-auto sm:px-4">
+            aria-label="이미지 저장" className="w-touch px-0 sm:w-auto sm:px-4">
             <DownloadIcon />
             <span className="hidden sm:inline">{saving ? '저장 중…' : '이미지 저장'}</span>
           </Button>
-          <Button variant="primary" onClick={() => setShareOpen(true)} aria-label="공유 링크 만들기" className="w-touch px-0 sm:w-auto sm:px-4">
+          <Button variant="primary" onClick={() => setShareOpen(true)} aria-label="링크 공유" className="w-touch px-0 sm:w-auto sm:px-4">
             <LinkIcon />
             <span className="hidden sm:inline">링크 공유</span>
           </Button>

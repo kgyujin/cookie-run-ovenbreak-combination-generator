@@ -31,10 +31,7 @@ export default function Editor() {
 
   // 게임 데이터 (빌드 때 생성된 JSON)
   useEffect(() => {
-    fetch('/data/gameData.json')
-      .then((res) => res.json())
-      .then((data) => useAppStore.getState().setGameData(data))
-      .catch((err) => console.error('Failed to load game data:', err));
+    useAppStore.getState().loadGameData();
   }, []);
 
   // 공유된 조합표 불러오기: 짧은 링크 또는 예전 방식의 ?data= 긴 링크.
@@ -47,17 +44,25 @@ export default function Editor() {
       if (isBoardEmpty(pickBoard(useAppStore.getState()))) applyShared(board);
       else setIncoming(board);
     };
-    const shareId = window.location.pathname.match(/^\/s\/([A-Za-z0-9]{4,16})\/?$/)?.[1];
+    const sharePath = window.location.pathname.match(/^\/s\/([^/]*)\/?$/);
+    const shareId = sharePath?.[1].match(/^[A-Za-z0-9]{4,16}$/)?.[0];
+    if (sharePath && !shareId) {
+      window.history.replaceState(null, '', '/');
+      showToast('공유 링크 주소가 올바르지 않아요. 주소를 다시 확인해 주세요', 'error');
+      return;
+    }
     if (shareId) {
+      showToast('공유된 조합표를 불러오고 있어요');
       loadShortLink(shareId)
         .then((board) => {
-          if (!board) throw new Error('not found');
-          receive(board);
+          if (board) return receive(board);
+          window.history.replaceState(null, '', '/');
+          showToast('공유 링크를 찾을 수 없어요. 주소를 다시 확인해 주세요', 'error');
         })
         .catch((err) => {
+          // 연결 문제일 때는 주소를 그대로 두어 새로고침으로 다시 시도할 수 있게
           console.error('Failed to load share:', err);
-          window.history.replaceState(null, '', '/');
-          showToast('공유 링크를 찾을 수 없어요', 'error');
+          showToast('공유된 조합표를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요', 'error');
         });
       return;
     }
@@ -74,11 +79,29 @@ export default function Editor() {
     }
   }, []);
 
+  // 직접 올린 배경 사진은 짧은 blob: 주소로 바꿔서 쓴다 (밝기 등을 바꿀 때마다 수 MB 문자열을 다시 넣지 않게)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   useEffect(() => {
-    document.body.style.background = backgroundCss(background);
+    const dataUrl = background.imageUrl;
+    if (!dataUrl?.startsWith('data:')) return setPhotoUrl(null);
+    let objectUrl = '';
+    fetch(dataUrl)
+      .then((res) => res.blob())
+      .then((blob) => setPhotoUrl((objectUrl = URL.createObjectURL(blob))))
+      .catch(() => setPhotoUrl(null));
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      setPhotoUrl(null);
+    };
+  }, [background.imageUrl]);
+
+  useEffect(() => {
+    document.body.style.background = backgroundCss(photoUrl ? { ...background, imageUrl: photoUrl } : background);
     if (background.type === 'image' && background.imageFit !== 'repeat') document.body.style.backgroundAttachment = 'fixed';
     document.documentElement.style.setProperty('--page-edge', backgroundEdgeColor(background));
-  }, [background]);
+    // 저장된 조합표와 배경을 적용한 뒤에 보여준다 (빈 화면 → 내 조합표로 바뀌는 깜빡임 방지, layout.tsx)
+    document.documentElement.dataset.ready = '';
+  }, [background, photoUrl]);
 
   // 직접 올린 글꼴 적용 (FontFace API — 주소가 CSS로 해석되지 않음)
   useEffect(() => {

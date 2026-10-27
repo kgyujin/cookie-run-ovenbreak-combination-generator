@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
 /** 로그인 정보는 서버 DB 없이, 암호화한 쿠키(브라우저 스크립트로 읽을 수 없음)에 담는다 */
@@ -52,3 +52,20 @@ export const SESSION_MAX_AGE = SESSION_HOURS * 3600;
 
 /** 다른 사이트에서 보낸 요청(CSRF)을 막는다 */
 export const sameOrigin = (req: Request) => req.headers.get('origin') === new URL(req.url).origin;
+
+/** 로그인 시작 표시: 서버만 만들 수 있게 서명한다 (쿠키를 직접 넣어 관리 페이지 주소를 알아내지 못하게) */
+const sign = (state: string) => createHmac('sha256', key()).update(`oauth-state:${state}`).digest('base64url');
+
+export function newOAuthState() {
+  const state = randomBytes(24).toString('base64url');
+  return { state, cookie: `${state}.${sign(state)}` };
+}
+
+/** 서명이 맞으면 state 값, 아니면 null */
+export function verifyOAuthState(cookie: string | undefined) {
+  const [state, mac] = (cookie ?? '').split('.');
+  if (!state || !mac) return null;
+  const expected = Buffer.from(sign(state));
+  const given = Buffer.from(mac);
+  return expected.length === given.length && timingSafeEqual(expected, given) ? state : null;
+}

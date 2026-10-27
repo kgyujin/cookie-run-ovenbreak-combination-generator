@@ -69,19 +69,30 @@ export function createPathResolver(gameData: GameData) {
     const parsed = parsePath(path);
     if (!parsed) return path;
     const { folder, name } = parsed;
-    return byKey.get(`${folder}/${name}`) ?? byKey.get(`${folder}/${renamed[name]}`) ?? path;
+    // 이름이 여러 번 바뀌었어도 따라간다 (순환 방지로 최대 10번)
+    for (let n: string | undefined = name, i = 0; n && i < 10; n = renamed[n], i++) {
+      const found = byKey.get(`${folder}/${n}`);
+      if (found) return found;
+    }
+    return path;
   };
 }
 
 export function resolveBoardItems(board: BoardState, gameData: GameData): BoardState {
-  const r = createPathResolver(gameData);
+  const resolve = createPathResolver(gameData);
+  let changed = false;
+  const r = (path: string) => {
+    const next = resolve(path);
+    if (next !== path) changed = true;
+    return next;
+  };
   const combo = (c: BoardState['arenas'][number]['mainCombo']) => ({
     pet: r(c.pet),
     cookie1: r(c.cookie1),
     cookie2: r(c.cookie2),
     treasures: c.treasures.map(r) as [string, string, string],
   });
-  return {
+  const result = {
     ...board,
     seasonDish: r(board.seasonDish),
     seasonIngredients: board.seasonIngredients.map(r) as [string, string, string],
@@ -98,4 +109,6 @@ export function resolveBoardItems(board: BoardState, gameData: GameData): BoardS
       },
     })),
   };
+  // 바뀐 경로가 없으면 그대로 돌려줘서 화면 전체를 다시 그리지 않게
+  return changed ? result : board;
 }

@@ -58,6 +58,10 @@ export default memo(function Header() {
           rows={1}
           aria-label="시즌명 (최대 3줄)"
           onChange={(e) => setSeasonName(e.target.value.split('\n').slice(0, MAX_LINES).join('\n'))}
+          onKeyDown={(e) => {
+            // 이미 3줄이면 줄바꿈을 막는다 (막지 않으면 다음 글자가 3번째 줄 끝에 붙음)
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing && seasonName.split('\n').length >= MAX_LINES) e.preventDefault();
+          }}
           placeholder="시즌명"
           className="title-input scrollbar-hide w-full resize-none overflow-hidden border-none bg-transparent p-0 placeholder:text-ink-subtle"
           style={{
@@ -82,6 +86,7 @@ export default memo(function Header() {
         <div className={clsx('relative h-[55%]', !seasonDish && 'card-empty')} style={{ padding: u(2) }}>
           <Slot
             image={seasonDish}
+            full
             label="시즌 요리"
             labelSize={14}
             emptyClassName="slot-soft"

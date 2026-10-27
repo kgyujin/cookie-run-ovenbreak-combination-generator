@@ -1,7 +1,5 @@
-const SUPABASE_URL = 'https://ekaxwuciwzxpjvqjvrsq.supabase.co';
-
-// 관리자 페이지 주소는 저장소에 적지 않고 Vercel 환경변수로만 정한다 (lib/studio/config.ts 와 같은 규칙)
-const STUDIO_PATH = /^[A-Za-z0-9_-]{8,64}$/.test(process.env.STUDIO_PATH ?? '') ? process.env.STUDIO_PATH : '';
+// 짧은 링크 서버 (lib/share.ts와 같은 환경변수)
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ekaxwuciwzxpjvqjvrsq.supabase.co';
 
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
@@ -35,22 +33,17 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
-      // 아이템 이미지는 자주 바뀌지 않으므로 하루 동안 캐시 (gameData.json은 매번 확인)
-      { source: '/images/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
-      { source: '/thumbs/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
+      // 아이템 이미지는 1시간 캐시 (관리 페이지에서 같은 이름으로 이미지를 바꿔도 늦어도 1시간 안에 새 그림). gameData.json은 매번 확인
+      { source: '/images/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' }] },
+      { source: '/thumbs/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, stale-while-revalidate=86400' }] },
       { source: '/api/studio/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
     ];
-  },
-  async redirects() {
-    // 관리자 페이지는 정해 둔 주소로만 연다
-    return [{ source: '/studio', destination: '/', permanent: false }];
   },
   async rewrites() {
     return {
       beforeFiles: [
         // 짧은 링크는 정적 페이지로 처리 (아이디는 화면에서 주소를 읽어 불러옴 → 서버 함수 실행 없음)
         { source: '/s/:id', destination: '/' },
-        ...(STUDIO_PATH ? [{ source: `/${STUDIO_PATH}`, destination: '/studio' }] : []),
       ],
     };
   },

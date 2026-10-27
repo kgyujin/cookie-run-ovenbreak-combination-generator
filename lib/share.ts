@@ -18,6 +18,7 @@ async function rpc<T>(fn: string, args: object): Promise<T> {
     method: 'POST',
     headers: { ...headers(), 'Content-Type': 'application/json' },
     body: JSON.stringify(args),
+    signal: AbortSignal.timeout(10_000), // 응답이 없으면 기다리지 않고 긴 링크로 대신한다
   });
   if (!res.ok) throw new Error(`${fn} 실패 (${res.status})`);
   return res.json();
@@ -36,6 +37,7 @@ async function uploadDataUrl(dataUrl: string) {
     method: 'POST',
     headers: { ...headers(), 'Content-Type': blob.type },
     body: blob,
+    signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) throw new Error(`파일 업로드 실패 (${res.status})`);
   const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;

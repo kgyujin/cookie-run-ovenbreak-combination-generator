@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { STUDIO_PATH, studioConfigured } from '@/lib/studio/config';
 import { canWrite, getUser, revokeToken } from '@/lib/studio/github';
-import { SESSION_COOKIE, SESSION_MAX_AGE, STATE_COOKIE, cookieOptions, sealSession } from '@/lib/studio/session';
+import { SESSION_COOKIE, SESSION_MAX_AGE, STATE_COOKIE, cookieOptions, sealSession, verifyOAuthState } from '@/lib/studio/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +21,10 @@ export async function GET(req: Request) {
 
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state') ?? '';
-  const expected = cookies().get(STATE_COOKIE)?.value ?? '';
-  if (!code || !expected || !same(state, expected)) return back('failed');
+  // 서버가 서명한 로그인 시작 표시가 없으면 관리 페이지에서 시작한 로그인이 아니다 (주소를 알려 주지 않음)
+  const expected = verifyOAuthState(cookies().get(STATE_COOKIE)?.value);
+  if (!expected) return new NextResponse(null, { status: 404 });
+  if (!code || !same(state, expected)) return back('failed');
 
   try {
     const tokenRes = await fetch('https://github.com/login/oauth/access_token', {

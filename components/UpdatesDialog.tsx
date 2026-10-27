@@ -12,7 +12,7 @@ export default function UpdatesDialog({ updates, newCount, onClose }: { updates:
       title="업데이트"
       onClose={onClose}
       footer={
-        <Button variant="primary" className="ml-auto" onClick={onClose}>
+        <Button variant="primary" className="ml-auto" onClick={onClose} data-autofocus>
           확인
         </Button>
       }

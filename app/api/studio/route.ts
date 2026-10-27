@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { BRANCH, CATEGORY_FOLDERS, REPO, studioConfigured } from '@/lib/studio/config';
 import { OpError, buildChanges } from '@/lib/studio/apply';
-import { GitHubError, canWrite, commitChanges, listImages, readFile } from '@/lib/studio/github';
-import { StudioOp, describeOp } from '@/lib/studio/ops';
+import { ConflictError, GitHubError, canWrite, commitChanges, listImages, readFile, revokeToken } from '@/lib/studio/github';
+import { CATEGORY_LABELS, StudioOp, describeOp, nameOf } from '@/lib/studio/ops';
 import { SESSION_COOKIE, getSession, sameOrigin } from '@/lib/studio/session';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 이미지 여러 장을 올리는 저장도 끝까지
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
@@ -14,7 +15,14 @@ async function authorize() {
   if (!studioConfigured()) return { error: new NextResponse(null, { status: 404 }) };
   const session = getSession();
   if (!session) return { error: json({ error: '로그인이 필요해요' }, 401) };
-  if (!(await canWrite(session.token, session.login))) {
+  let allowed: boolean;
+  try {
+    allowed = await canWrite(session.token, session.login);
+  } catch {
+    return { error: json({ error: GITHUB_DOWN }, 502) };
+  }
+  if (!allowed) {
+    await revokeToken(session.token);
     const res = json({ error: '로그인이 끝났거나 권한이 없어요. 다시 로그인해 주세요' }, 401);
     res.cookies.delete(SESSION_COOKIE);
     return { error: res };
@@ -22,22 +30,29 @@ async function authorize() {
   return { session };
 }
 
+const GITHUB_DOWN = 'GitHub에 연결하지 못했어요. 잠시 후 다시 시도해 주세요';
+
 const FOLDER_TO_CATEGORY = Object.fromEntries(Object.entries(CATEGORY_FOLDERS).map(([c, f]) => [f, c]));
 
 /** 관리 화면에 필요한 데이터 (숨긴 아이템까지 포함한 저장소의 현재 상태) */
 export async function GET() {
   const { session, error } = await authorize();
   if (error) return error;
-  const [files, meta, updates] = await Promise.all([
-    listImages(session.token, BRANCH),
-    readFile(session.token, 'data/item-meta.json', BRANCH),
-    readFile(session.token, 'data/updates.json', BRANCH),
-  ]);
-  const items = Array.from(files.keys()).flatMap((path) => {
+  let files, meta, updates;
+  try {
+    [files, meta, updates] = await Promise.all([
+      listImages(session.token, BRANCH),
+      readFile(session.token, 'data/item-meta.json', BRANCH),
+      readFile(session.token, 'data/updates.json', BRANCH),
+    ]);
+  } catch {
+    return json({ error: GITHUB_DOWN }, 502);
+  }
+  const items = Array.from(files.entries()).flatMap(([path, sha]) => {
     const [, , folder, ...rest] = path.split('/');
     const category = FOLDER_TO_CATEGORY[folder];
     if (!category) return [];
-    return [{ category, rarity: rest.length > 1 ? rest[0] : undefined, name: rest[rest.length - 1].replace(/\.[^.]+$/, '').normalize('NFC'), image: path.slice('public'.length) }];
+    return [{ category, rarity: rest.length > 1 ? rest[0] : undefined, name: rest[rest.length - 1].replace(/\.[^.]+$/, '').normalize('NFC'), image: path.slice('public'.length), sha }];
   });
   return json({
     user: { login: session.login, avatar: session.avatar },
@@ -64,7 +79,16 @@ export async function POST(req: Request) {
       session.token,
       (head) => buildChanges(session.token, ops, head),
       () => {
-        const lines = ops.map(describeOp);
+        // 같은 이름을 지우고 바로 다시 올린 건 '이미지 바꿈' 한 줄로
+        const lines: string[] = [];
+        ops.forEach((op, i) => {
+          const next = ops[i + 1];
+          const replaced = (del?: StudioOp, add?: StudioOp) =>
+            del?.type === 'delete' && add?.type === 'add' && del.category === add.category && nameOf(del.image) === add.name;
+          if (replaced(ops[i - 1], op)) return;
+          if (op.type === 'delete' && replaced(op, next)) lines.push(`${CATEGORY_LABELS[op.category] ?? '아이템'} 이미지 바꿈: ${nameOf(op.image)}`);
+          else lines.push(describeOp(op));
+        });
         const title = lines.length > 1 ? `${lines[0]} 외 ${lines.length - 1}건` : lines[0];
         return `${title}\n\n관리자 페이지에서 ${session.login} 님이 저장\n${lines.map((l) => `- ${l}`).join('\n')}`;
       }
@@ -72,8 +96,9 @@ export async function POST(req: Request) {
     return json({ sha: commit.sha, url: commit.html_url });
   } catch (e) {
     if (e instanceof OpError) return json({ error: e.message }, 400);
-    if (e instanceof GitHubError && e.status === 422) return json({ error: '다른 사람이 방금 저장했어요. 새로고침한 뒤 다시 시도해 주세요' }, 409);
+    if (e instanceof ConflictError) return json({ error: '다른 관리자가 같은 때에 저장하고 있어요. 잠시 후 다시 저장해 주세요' }, 409);
+    if (e instanceof GitHubError && e.status === 401) return json({ error: '로그인이 끝났어요. 다시 로그인해 주세요' }, 401);
     console.error('studio commit failed', e instanceof Error ? e.message : e);
-    return json({ error: '저장하지 못했어요. 잠시 후 다시 시도해 주세요' }, 502);
+    return json({ error: '저장하지 못했어요. 바꾼 내용은 그대로 있으니 잠시 후 다시 저장해 주세요' }, 502);
   }
 }

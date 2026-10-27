@@ -28,6 +28,27 @@ const readFile = (file: File) =>
     reader.readAsDataURL(file);
   });
 
+/**
+ * 배경 사진은 화면에 필요한 크기(긴 변 2560px)로 줄여 webp로 저장한다.
+ * 브라우저 저장 공간(약 5MB)을 넘으면 자동 저장이 멈추기 때문. 움직이는 GIF는 그대로 둔다.
+ */
+async function shrinkImage(dataUrl: string, file: File) {
+  if (file.type === 'image/gif') return dataUrl;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 2560 / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size <= 1024 * 1024) return dataUrl;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const small = canvas.toDataURL('image/webp', 0.88);
+    return small.startsWith('data:image/webp') && small.length < dataUrl.length ? small : dataUrl;
+  } catch {
+    return dataUrl;
+  }
+}
+
 const WEIGHTS: [string, string][] = [
   ['400', '보통'],
   ['700', '굵게'],
@@ -205,7 +226,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                   label={background.imageUrl?.startsWith('data:') ? '이미지 바꾸기' : '이미지 파일 선택'}
                   accept={IMAGE_TYPES.join(',')}
                   validate={checkImage}
-                  onData={(imageUrl) => setBg({ imageUrl })}
+                  onData={async (imageUrl, file) => setBg({ imageUrl: await shrinkImage(imageUrl, file) })}
                 />
                 <Field label="이미지 주소">
                   {(id) => (

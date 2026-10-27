@@ -6,7 +6,7 @@
  */
 export const REPO = 'kgyujin/cookie-run-ovenbreak-combination-generator';
 export const BRANCH = 'main';
-// 영문·숫자·-·_ 8자 이상만 (next.config.js 와 같은 규칙)
+// 영문, 숫자, -, _ 로 8자 이상만
 export const STUDIO_PATH = /^[A-Za-z0-9_-]{8,64}$/.test(process.env.STUDIO_PATH ?? '') ? process.env.STUDIO_PATH! : '';
 
 export function studioConfigured() {

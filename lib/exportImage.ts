@@ -44,6 +44,8 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
   });
 }
 
+const MAX_PNG_BYTES = 8 * 1024 * 1024;
+
 /** 외곽선을 글자 뒤에 깔리는 그림자 고리로 바꾼다 (html2canvas는 외곽선을 글자 위에 덮어 그려 글자가 얇아지거나 사라짐) */
 function strokeAsShadow(width: number, color: string) {
   const steps = Math.max(12, Math.ceil(width * 8));
@@ -58,6 +60,18 @@ const COPIED_STYLES = [
   'fontFamily', 'fontSize', 'fontWeight', 'color', 'letterSpacing', 'lineHeight', 'textAlign', 'transform', 'textShadow',
 ] as const;
 
+/** 칸 안쪽 폭에 맞게 글자를 줄이고 끝에 '…' */
+function fitWithEllipsis(field: HTMLInputElement | HTMLTextAreaElement) {
+  const cs = getComputedStyle(field);
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (!ctx) return field.value;
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const room = field.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  let text = field.value;
+  while (text.length > 1 && ctx.measureText(`${text}…`).width > room) text = text.slice(0, -1);
+  return `${text}…`;
+}
+
 /**
  * html2canvas는 입력칸 글자를 따로 그리면서 칸 높이에 맞춰 잘라 버린다(글자가 반만 보임).
  * 저장용 복제본에서는 입력칸을 같은 모양의 일반 글자 상자로 바꾼다.
@@ -69,18 +83,21 @@ function replaceFields(originals: (HTMLInputElement | HTMLTextAreaElement)[], cl
     // 복제본 문서의 계산값을 쓴다 (원본은 저장 모드로 바뀌는 전환 효과가 진행 중일 수 있음)
     const cs = clone.ownerDocument.defaultView!.getComputedStyle(clone);
     const box = clone.ownerDocument.createElement('div');
-    box.textContent = field.value;
-    for (const key of COPIED_STYLES) box.style[key] = cs[key];
     const isTextarea = field.tagName === 'TEXTAREA';
+    // 화면에서 칸을 넘쳐 '…'으로 보이는 긴 점수는 저장 이미지에서도 똑같이 줄인다 (html2canvas는 '…'를 그리지 않음)
+    box.textContent = !isTextarea && field.scrollWidth > field.clientWidth + 1 ? fitWithEllipsis(field) : field.value;
+    for (const key of COPIED_STYLES) box.style[key] = cs[key];
     Object.assign(box.style, {
-      display: isTextarea ? 'block' : 'flex',
-      alignItems: 'center',
-      justifyContent: { left: 'flex-start', right: 'flex-end', start: 'flex-start', end: 'flex-end' }[cs.textAlign] ?? 'center',
+      display: 'block',
       whiteSpace: isTextarea ? 'pre-wrap' : 'nowrap',
       overflow: 'visible',
       border: 'none',
       boxShadow: 'none',
     });
+    if (!isTextarea) {
+      // 한 줄 입력칸: 줄 높이를 칸 높이와 같게 해서 세로 가운데 (html2canvas는 flex 가운데 정렬을 아래로 밀리게 그림)
+      Object.assign(box.style, { paddingTop: '0', paddingBottom: '0', lineHeight: `${parseFloat(cs.height)}px` });
+    }
     const strokeWidth = parseFloat(cs.webkitTextStrokeWidth);
     if (strokeWidth > 0) {
       const ring = strokeAsShadow(strokeWidth, cs.webkitTextStrokeColor);
@@ -128,13 +145,23 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       },
     });
 
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const toBlob = (type: string, quality?: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, quality));
+    let blob = await toBlob('image/png');
+    let ext = 'png';
+    // 사진 배경 등으로 너무 크면(메신저 업로드 한도) 화질이 거의 같은 JPG로
+    if (blob && blob.size > MAX_PNG_BYTES) {
+      const jpg = await toBlob('image/jpeg', 0.92);
+      if (jpg && jpg.size < blob.size) [blob, ext] = [jpg, 'jpg'];
+    }
     if (!blob) throw new Error('이미지 변환 실패');
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = `쿠키런_조합표_${new Date().toISOString().slice(0, 10)}.png`;
+    link.download = `쿠키런_조합표_${new Date().toISOString().slice(0, 10)}.${ext}`;
     link.href = url;
+    // 문서에 붙여서 눌러야 파일 이름이 지켜지는 브라우저가 있다
+    document.body.appendChild(link);
     link.click();
+    link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   } finally {
     captureArea.classList.remove('is-exporting');

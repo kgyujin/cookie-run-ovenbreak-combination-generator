@@ -1,5 +1,5 @@
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES } from './config';
-import { MAX_IMAGE_BYTES, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
+import { CATEGORY_LABELS, MAX_IMAGE_BYTES, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
 import { TreeChange, listImages, readFile } from './github';
 
 export class OpError extends Error {}
@@ -19,33 +19,48 @@ const strList = (v: unknown, max: number, len: number) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, len)).filter(Boolean).slice(0, max) : [];
 
 const dirName = (path: string) => path.slice(0, path.lastIndexOf('/'));
+const hasOwn = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k);
+const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase(); // 대소문자만 다른 이름은 윈도우·맥에서 같은 파일
+const isRealDate = (d: string) => {
+  const t = Date.parse(`${d}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(t) && new Date(t).toISOString().startsWith(d);
+};
 
 /** 요청을 하나하나 검사해서, 저장소에 쓸 파일 변경 목록으로 바꾼다 */
 export async function buildChanges(token: string, ops: unknown, headSha: string): Promise<TreeChange[]> {
   if (!Array.isArray(ops) || ops.length === 0) throw new OpError('변경할 내용이 없어요');
-  if (ops.length > MAX_OPS) throw new OpError(`한 번에 ${MAX_OPS}개까지 저장할 수 있어요`);
+  if (ops.length > MAX_OPS) throw new OpError('한 번에 저장하기에는 변경이 너무 많아요. 나눠서 저장해 주세요');
 
   const files = await listImages(token, headSha); // 작업하면서 함께 갱신한다
-  const changes: TreeChange[] = [];
+  const headPaths = new Set(files.keys());
+  let changes: TreeChange[] = [];
+  /** 같은 경로의 앞선 변경은 덮어쓴다 (예: 지운 뒤 같은 이름으로 다시 올리기) */
+  const setChange = (change: TreeChange) => {
+    changes = changes.filter((c) => c.path !== change.path);
+    if (!('delete' in change) || headPaths.has(change.path)) changes.push(change);
+  };
   const meta = JSON.parse((await readFile(token, META_PATH, headSha))?.text || '{}');
   for (const k of ['pinned', 'hidden']) meta[k] ??= [];
   for (const k of ['added', 'aliases', 'descriptions', 'renamed']) meta[k] ??= {};
   const metaBefore = JSON.stringify(meta);
   let notes: any[] | null = null;
+  let notesAdded = false;
   let totalBytes = 0;
 
   const dirOf = (category: string, rarity?: string) => {
-    if (!(category in CATEGORY_FOLDERS)) throw new OpError('알 수 없는 종류예요');
+    if (!hasOwn(CATEGORY_FOLDERS, category)) throw new OpError('알 수 없는 종류예요');
     const needsRarity = RARITY_CATEGORIES.includes(category as never);
     if (needsRarity && !RARITIES.includes(rarity as never)) throw new OpError('등급을 골라 주세요');
     return `public/images/${CATEGORY_FOLDERS[category as keyof typeof CATEGORY_FOLDERS]}${needsRarity ? `/${rarity}` : ''}`;
   };
   const nameTaken = (dir: string, name: string, except?: string) =>
-    Array.from(files.keys()).some((p) => p !== except && dirName(p) === dir && nameOf(p) === name);
+    Array.from(files.keys()).some((p) => p !== except && dirName(p) === dir && sameName(nameOf(p), name));
   const existing = (image: unknown) => {
     const path = `public${String(image ?? '')}`;
     return files.has(path) && !path.includes('..') ? path : null;
   };
+  /** 'public/images/cookies/epic/x.png' → 'cookies' */
+  const categoryOf = (path: string) => Object.keys(CATEGORY_FOLDERS).find((c) => CATEGORY_FOLDERS[c as keyof typeof CATEGORY_FOLDERS] === path.split('/')[2]);
 
   for (const raw of ops as StudioOp[]) {
     switch (raw?.type) {
@@ -61,7 +76,7 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         if (totalBytes > MAX_TOTAL_IMAGE_BYTES) throw new OpError('한 번에 올리는 이미지가 너무 커요. 나눠서 저장해 주세요');
         if (nameTaken(dir, name)) throw new OpError(`${name}: 같은 이름이 이미 있어요`);
         const path = `${dir}/${name}.${ext}`;
-        changes.push({ path, content: bytes.toString('base64'), encoding: 'base64' });
+        setChange({ path, content: bytes.toString('base64'), encoding: 'base64' });
         files.set(path, '');
         break;
       }
@@ -70,29 +85,40 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         if (!name) throw new OpError('새 이름을 확인해 주세요');
         const from = existing(raw.from);
         const sha = from && files.get(from);
-        if (!from || !sha) throw new OpError('옮길 파일을 찾을 수 없어요 (이미 바뀌었을 수 있어요)');
+        if (!from || !sha) throw new OpError(`${nameOf(String(raw.from ?? ''))}: 옮길 파일을 찾을 수 없어요 (이미 바뀌었을 수 있어요)`);
         const oldName = nameOf(from);
-        const toDir = dirOf(raw.category, raw.rarity ?? dirName(from).split('/').pop());
+        // 종류는 바꿀 수 없다 (등급과 이름만)
+        const toDir = dirOf(categoryOf(from) ?? '', raw.rarity ?? dirName(from).split('/').pop());
         const to = `${toDir}/${name}.${from.split('.').pop()}`;
         if (to === from) break;
         if (nameTaken(toDir, name, from)) throw new OpError(`${name}: 같은 이름이 이미 있어요`);
-        changes.push({ path: to, sha }, { path: from, delete: true });
+        setChange({ path: to, sha });
+        setChange({ path: from, delete: true });
         files.delete(from);
         files.set(to, sha);
         if (name !== oldName) {
-          // 예전 이름으로 저장·공유된 조합표도 새 이름으로 이어지게, 이름에 붙은 정보도 함께 옮긴다
-          for (const [k, v] of Object.entries(meta.renamed)) if (v === oldName) meta.renamed[k] = name;
+          // 이름에 붙은 정보는 같은 이름의 다른 아이템(펫, 마법사탕 등)과 함께 쓰므로,
+          // 아직 그 이름을 쓰는 파일이 남아 있으면 옮기지 않고 복사한다
+          const shared = Array.from(files.keys()).some((p) => nameOf(p) === oldName);
+          // 예전 이름으로 저장하거나 공유한 조합표도 새 이름으로 이어지게 (여러 번 바뀐 이름도 끊기지 않게)
+          if (!shared) for (const [k, v] of Object.entries(meta.renamed)) if (v === oldName) meta.renamed[k] = name;
           meta.renamed[oldName] = name;
-          for (const k of ['pinned', 'hidden']) meta[k] = meta[k].map((n: string) => (n === oldName ? name : n));
-          for (const d of Object.keys(meta.added)) meta.added[d] = meta.added[d].map((n: string) => (n === oldName ? name : n));
-          for (const k of ['aliases', 'descriptions']) if (meta[k][oldName] !== undefined) [meta[k][name], meta[k][oldName]] = [meta[k][oldName], undefined];
+          for (const k of ['pinned', 'hidden']) {
+            if (meta[k].includes(oldName) && !meta[k].includes(name)) meta[k].push(name);
+            if (!shared) meta[k] = meta[k].filter((n: string) => n !== oldName);
+          }
+          for (const d of Object.keys(meta.added)) if (meta.added[d].includes(oldName)) meta.added[d] = [...meta.added[d].filter((n: string) => n !== name), name];
+          for (const k of ['aliases', 'descriptions']) {
+            if (meta[k][oldName] !== undefined) meta[k][name] ??= meta[k][oldName];
+            if (!shared) meta[k][oldName] = undefined;
+          }
         }
         break;
       }
       case 'delete': {
         const target = existing(raw.image);
-        if (!target) throw new OpError('지울 파일을 찾을 수 없어요 (이미 지워졌을 수 있어요)');
-        changes.push({ path: target, delete: true });
+        if (!target) throw new OpError(`${nameOf(String(raw.image ?? ''))}: 지울 파일을 찾을 수 없어요 (이미 지워졌을 수 있어요)`);
+        setChange({ path: target, delete: true });
         files.delete(target);
         break;
       }
@@ -117,15 +143,24 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         const date = String(raw.date ?? '');
         const title = String(raw.title ?? '').trim().slice(0, 40);
         const items = strList(raw.items, 20, 100);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !title || items.length === 0) throw new OpError('업데이트 소식의 날짜, 제목, 내용을 확인해 주세요');
+        if (!isRealDate(date) || !title || items.length === 0) throw new OpError('업데이트 소식의 날짜, 제목, 내용을 확인해 주세요');
         notes ??= JSON.parse((await readFile(token, UPDATES_PATH, headSha))?.text || '[]');
+        // 저장이 끝났는데 응답만 늦어 다시 저장한 경우 같은 소식이 두 번 들어가지 않게
+        if (notes!.some((n) => n.date === date && n.title === title && JSON.stringify(n.items) === JSON.stringify(items))) break;
         notes!.push({ date, title, items });
+        notesAdded = true;
         notes!.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
         break;
       }
       default:
         throw new OpError('알 수 없는 요청이에요');
     }
+  }
+
+  // 종류 폴더가 통째로 비면 빌드가 멈추므로 마지막 하나는 남긴다
+  for (const [category, folder] of Object.entries(CATEGORY_FOLDERS)) {
+    if (!Array.from(files.keys()).some((p) => p.startsWith(`public/images/${folder}/`)))
+      throw new OpError(`${CATEGORY_LABELS[category as keyof typeof CATEGORY_FOLDERS]}: 마지막 남은 아이템은 지울 수 없어요`);
   }
 
   // 지우거나 이름이 바뀌어 없어진 아이템의 정보는 정리한다 (빌드 때 이름 검사에 걸리지 않게)
@@ -136,11 +171,11 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
     const kept = (list as string[]).filter((n) => names.has(n));
     meta.added[date] = kept.length ? kept : undefined;
   }
-  for (const [from, to] of Object.entries(meta.renamed)) if (!names.has(to as string)) meta.renamed[from] = undefined;
+  for (const [from, to] of Object.entries(meta.renamed)) if (from === to || !names.has(to as string)) meta.renamed[from] = undefined;
 
   const metaText = JSON.stringify(meta, null, 2) + '\n';
-  if (JSON.stringify(JSON.parse(metaText)) !== metaBefore) changes.push({ path: META_PATH, content: metaText, encoding: 'utf-8' });
-  if (notes) changes.push({ path: UPDATES_PATH, content: JSON.stringify(notes, null, 2) + '\n', encoding: 'utf-8' });
+  if (JSON.stringify(JSON.parse(metaText)) !== metaBefore) setChange({ path: META_PATH, content: metaText, encoding: 'utf-8' });
+  if (notes && notesAdded) setChange({ path: UPDATES_PATH, content: JSON.stringify(notes, null, 2) + '\n', encoding: 'utf-8' });
   if (changes.length === 0) throw new OpError('바뀐 내용이 없어요');
   return changes;
 }

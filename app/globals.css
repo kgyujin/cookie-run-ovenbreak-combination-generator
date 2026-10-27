@@ -50,19 +50,52 @@ html {
   scrollbar-gutter: stable;
   /* 위·아래로 끝까지 당겼을 때 흰 바탕이 드러나지 않게 */
   overscroll-behavior-y: none;
-  background-color: var(--page-edge, #fffbf5);
+  background-color: var(--page-edge, #fff3d6);
 }
 
 body {
-  background: #fffbf5;
+  /* 기본 배경(버터 쿠키)과 같게: 화면 코드가 적용되기 전에도 색이 바뀌지 않게 */
+  background: linear-gradient(135deg, #fff3d6, #ffd59e);
   color: #1c1917;
   word-break: keep-all;
   overflow-x: hidden;
 }
 
+/* 저장된 조합표를 불러오는 동안만 가린다 (편집 화면에서만, layout.tsx). 화면 코드가 늦어져도 2초 뒤에는 보이게 */
+html[data-saved]:not([data-ready]) body {
+  visibility: hidden;
+  /* 바탕은 html에 미리 칠한 저장된 색이 보이게 (body 바탕은 숨겨도 그려지므로 비움) */
+  background: none !important;
+  animation: reveal 0s 2s forwards;
+}
+@keyframes reveal {
+  to {
+    visibility: visible;
+  }
+}
+
 /* 화면을 막는 창(모달)일 때만 뒤 스크롤을 잠근다. 설정 패널은 열린 채로 스크롤 가능 */
 body:has(dialog:modal) {
   overflow: hidden;
+}
+/* 창의 어두운 배경이 스크롤바 자리까지 덮이도록 바깥 바탕도 같은 만큼 어둡게 */
+html:has(dialog.modal:modal) {
+  background-color: color-mix(in srgb, var(--page-edge, #fffbf5) 50%, #1c1917);
+}
+html:has(dialog.modal-drawer:modal) {
+  background-color: color-mix(in srgb, var(--page-edge, #fffbf5) 88%, #1c1917);
+}
+
+/* 검색칸 지우기(×) 버튼을 사이트 색에 맞춘다 */
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  background: #a8a29e;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 12.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 12.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1Z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 :focus-visible {
@@ -244,6 +277,8 @@ input.slot:focus,
 
 .modal-wide {
   max-width: 48rem;
+  /* 검색·필터 결과 수에 따라 창 크기가 바뀌며 흔들리지 않게 높이 고정 */
+  height: min(85dvh, 760px);
 }
 
 .modal::backdrop {
@@ -311,11 +346,15 @@ input.slot:focus,
 /* 높이가 낮은 화면(가로 휴대폰, 크게 확대한 화면): 패널을 오른쪽에 세워서 붙이고, 선택 창 머리말은 같이 스크롤 */
 @media (max-height: 560px) and (max-width: 1023px) {
   .panel[open] {
-    inset: 8px 8px 8px auto;
+    /* 도구 막대(설정·저장·공유)는 가리지 않게 그 아래부터 */
+    inset: 68px 8px 8px auto;
     width: min(380px, 60vw);
     height: auto;
     border-radius: 20px;
     animation-name: slide-in-right;
+  }
+  .panel-handle {
+    display: none;
   }
   .board-wrap.panel-open {
     padding-bottom: 16px;
@@ -360,6 +399,9 @@ input.slot:focus,
     margin: auto 0 0;
     border-radius: 24px 24px 0 0;
   }
+  .modal-wide {
+    height: 90dvh;
+  }
   .modal[open] {
     animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -391,7 +433,8 @@ input.slot:focus,
 
 /* 목록이 차례로 나타남 (항목당 10ms, 최대 120ms — 기다리는 느낌이 없게 짧게) */
 .blur-fade {
-  animation: rise-in 0.18s ease-out both;
+  /* backwards: 끝난 뒤에는 효과를 남기지 않는다 (남으면 카드마다 위치 기준이 바뀌어 키보드 이동 계산이 틀어짐) */
+  animation: rise-in 0.18s ease-out backwards;
   animation-delay: calc(min(var(--i, 0), 12) * 10ms);
 }
 
@@ -450,4 +493,14 @@ input.slot:focus,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  /* 화면 코드가 늦어질 때 2초 뒤 보여 주는 안전장치는 남긴다 */
+  html[data-saved]:not([data-ready]) body {
+    animation: reveal 0s 2s forwards !important;
+  }
+}
+
+/* 이미지 저장(html2canvas)이 글자 기준선을 재려고 잠깐 넣는 1×1 그림이 블록으로 바뀌면 글자가 아래로 밀려 그려진다 */
+img[width='1'][height='1'] {
+  display: inline !important;
+  vertical-align: baseline !important;
 }

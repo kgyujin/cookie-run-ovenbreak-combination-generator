@@ -20,6 +20,8 @@ export default function Slot({
   emptyClassName = 'slot-empty',
   labelSize = 12,
   imageClassName = 'object-contain',
+  full = false,
+  labelClassName,
 }: {
   image: string;
   /** 스크린리더용 이름 */
@@ -32,6 +34,10 @@ export default function Slot({
   emptyClassName?: string;
   labelSize?: number;
   imageClassName?: string;
+  /** 크게 보이는 칸(메인 쿠키, 시즌 요리)은 원본, 나머지는 작은 이미지(최대 320px)로 빠르게 */
+  full?: boolean;
+  /** 빈 칸 글자 위치 조정 (다른 칸이 겹쳐 올라오는 자리 피하기) */
+  labelClassName?: string;
 }) {
   const item = useAppStore((s) => (image ? getItemMap(s.gameData).get(image) : undefined));
   const name = item?.name;
@@ -46,11 +52,11 @@ export default function Slot({
       style={style}
     >
       {image ? (
-        <img src={image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
+        <img src={(!full && item?.thumb) || image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
       ) : (
         <span
           data-edit-only
-          className="absolute inset-0 flex items-center justify-center whitespace-pre-line text-center font-semibold leading-tight text-ink-muted"
+          className={clsx('absolute inset-0 flex items-center justify-center whitespace-pre-line text-center font-semibold leading-tight text-ink-muted', labelClassName)}
           style={{ fontSize: u(labelSize) }}
         >
           {text}

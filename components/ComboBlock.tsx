@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import { CSSProperties, KeyboardEvent, PointerEvent, memo, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
 import { cardStyle, fontFamilyOf, textGlow, u, withOpacity } from '@/lib/board';
@@ -18,8 +19,34 @@ const MAX_RATIO = 70;
  */
 export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const arena = useAppStore((s) => s.arenas[arenaIndex]);
-  const fontSettings = useAppStore((s) => s.fontSettings);
-  const boardStyle = useAppStore((s) => s.boardStyle);
+  // 이 아레나에 쓰는 설정만 구독 (시즌명 글자 크기 같은 다른 설정을 바꿀 때 12개 아레나를 다시 그리지 않게)
+  const fontSettings = useAppStore(
+    useShallow((s) => ({
+      fontFamily: s.fontSettings.fontFamily,
+      fontColor: s.fontSettings.fontColor,
+      numberColor: s.fontSettings.numberColor,
+      numberSize: s.fontSettings.numberSize,
+      scoreColor: s.fontSettings.scoreColor,
+      scoreFontSize: s.fontSettings.scoreFontSize,
+      scoreFontWeight: s.fontSettings.scoreFontWeight,
+      scoreAlign: s.fontSettings.scoreAlign,
+      scoreStrokeWidth: s.fontSettings.scoreStrokeWidth,
+      scoreStrokeColor: s.fontSettings.scoreStrokeColor,
+    }))
+  );
+  const boardStyle = useAppStore(
+    useShallow((s) => ({
+      card: s.boardStyle.card,
+      cardColor: s.boardStyle.cardColor,
+      cardOpacity: s.boardStyle.cardOpacity,
+      cardRadius: s.boardStyle.cardRadius,
+      cardBorderWidth: s.boardStyle.cardBorderWidth,
+      cardBorderColor: s.boardStyle.cardBorderColor,
+      cardShadow: s.boardStyle.cardShadow,
+      numberBg: s.boardStyle.numberBg,
+      numberBgColor: s.boardStyle.numberBgColor,
+    }))
+  );
   const openPicker = useAppStore((s) => s.openPicker);
   const setArenaCombo = useAppStore((s) => s.setArenaCombo);
   const setArenaMagicCandy = useAppStore((s) => s.setArenaMagicCandy);
@@ -112,6 +139,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       {/* ===== BASE LAYER ===== */}
       <Slot
         {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
+        full
         labelSize={18}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
@@ -126,6 +154,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       />
       <Slot
         {...comboSlot('mainCombo', 'cookie2', 'cookies', '이달 쿠키')}
+        full
         labelSize={16}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%` }}
@@ -162,6 +191,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
             {...candySlot(`cookie${c}Candy`, 'magicCandies', `${c === 1 ? '선달' : '이달'} 마법사탕`)}
             text={`${c === 1 ? '선달' : '이달'}\n사탕`}
             labelSize={10}
+            labelClassName="pb-[38%] pr-[18%]"
             emptyClassName=""
             className="inset-0"
           />
@@ -247,7 +277,14 @@ function ScoreInput({
 }) {
   const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
   const displayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
-  const boardStyle = useAppStore((s) => s.boardStyle);
+  const boardStyle = useAppStore(
+    useShallow((s) => ({
+      scoreBg: s.boardStyle.scoreBg,
+      scoreBgColor: s.boardStyle.scoreBgColor,
+      scoreBgOpacity: s.boardStyle.scoreBgOpacity,
+      scoreBgRadius: s.boardStyle.scoreBgRadius,
+    }))
+  );
   const setArenaScore = useAppStore((s) => s.setArenaScore);
   const [editing, setEditing] = useState(false);
 
@@ -266,7 +303,8 @@ function ScoreInput({
       onBlur={() => setEditing(false)}
       onChange={(e) => setArenaScore(arenaIndex, field, e.target.value)}
       placeholder={placeholder}
-      className={clsx('slot absolute min-w-0 bg-transparent px-2 py-1 placeholder:text-ink-subtle', !value && 'slot-empty')}
+      maxLength={20}
+      className={clsx('slot absolute min-w-0 text-ellipsis bg-transparent px-2 py-1 placeholder:text-ink-subtle', !value && 'slot-empty')}
       style={{
         ...style,
         // 외곽선은 입력한 점수에만 (빈 칸 안내 글자에는 그리지 않음)

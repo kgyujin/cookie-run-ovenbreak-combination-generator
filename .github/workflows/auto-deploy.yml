@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# 저장이 연달아 들어와도 한 번에 하나씩 (빈 커밋끼리 부딪히지 않게)
+concurrency:
+  group: trigger-deploy
+  cancel-in-progress: false
+
 jobs:
   trigger-deploy:
     runs-on: ubuntu-latest
@@ -26,5 +31,6 @@ jobs:
 
       - name: Push Empty Commit
         run: |
+          git pull --rebase origin main
           git commit --allow-empty -m "Trigger Vercel Deploy [Auto]"
           git push origin main

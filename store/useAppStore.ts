@@ -71,10 +71,25 @@ const str = (v: unknown, max = 300) => (typeof v === 'string' ? v.slice(0, max) 
 const clamp = (v: unknown, min: number, max: number, fallback: number) =>
   Number.isFinite(Number(v)) && v !== null && v !== '' ? Math.min(max, Math.max(min, Number(v))) : fallback;
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T => (options.includes(v as T) ? (v as T) : fallback);
-const color = (v: unknown, fallback?: string) => (/^#[0-9a-f]{3,8}$/i.test(str(v)) ? str(v) : fallback);
+/** #rrggbb만 (#rgb는 늘려서 받음) */
+const color = (v: unknown, fallback?: string) => {
+  const s = str(v, 9);
+  if (/^#[0-9a-f]{6}$/i.test(s)) return s;
+  if (/^#[0-9a-f]{3}$/i.test(s)) return `#${s[1]}${s[1]}${s[2]}${s[2]}${s[3]}${s[3]}`;
+  return fallback;
+};
 const weight = (v: unknown, fallback: number) => ([400, 700, 900].includes(Number(v)) ? Number(v) : fallback);
-/** 아이템 이미지는 항상 사이트 내부 경로 */
-const itemImage = (v: unknown) => (/^\/images\/[^?#]+$/.test(str(v)) && !str(v).includes('..') ? str(v) : '');
+/** 아이템 이미지는 항상 사이트 안의 /images/ 아래 그림 파일 (%2e%2e 같은 우회 경로 차단) */
+const itemImage = (v: unknown) => {
+  const s = str(v);
+  let decoded = '';
+  try {
+    decoded = decodeURIComponent(s);
+  } catch {
+    return '';
+  }
+  return /^\/images\/[^?#\\]+\.(png|jpe?g|webp)$/i.test(s) && !decoded.includes('..') && !decoded.includes('\\') ? s : '';
+};
 
 const DATA_URL = {
   image: /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/,
@@ -249,6 +264,7 @@ export interface PickerRequest {
 
 export interface AppStore extends BoardState {
   gameData: GameData | null;
+  gameDataError: boolean;
   picker: PickerRequest | null;
   settingsOpen: boolean;
   toast: { id: number; message: string; tone: 'success' | 'error' } | null;
@@ -267,6 +283,7 @@ export interface AppStore extends BoardState {
   setArenaDish: (arenaIndex: number, image: string) => void;
   setCookieRatio: (combo: 'mainCookieRatio' | 'subCookieRatio', ratio: number) => void;
   setGameData: (data: GameData) => void;
+  loadGameData: () => Promise<void>;
   loadBoard: (raw: unknown) => void;
   reset: () => void;
   setFontSettings: (settings: Partial<FontSettings>) => void;
@@ -283,6 +300,7 @@ export const useAppStore = create<AppStore>((set) => {
   return {
     ...initialBoard(),
     gameData: null,
+    gameDataError: false,
     picker: null,
     toast: null,
     openPicker: (picker) => set({ picker }),
@@ -324,7 +342,24 @@ export const useAppStore = create<AppStore>((set) => {
     setCookieRatio: (combo, ratio) =>
       set((state) => ({ arenas: state.arenas.map((arena) => ({ ...arena, [combo]: ratio })) })),
 
-    setGameData: (gameData) => set((state) => ({ gameData, ...resolveBoardItems(pickBoard(state), gameData) })),
+    setGameData: (gameData) => set((state) => ({ gameData, gameDataError: false, ...resolveBoardItems(pickBoard(state), gameData) })),
+
+    // 아이템 목록 (빌드 때 생성된 JSON). 잠깐 끊겨도 몇 번 다시 시도한다
+    loadGameData: async () => {
+      set({ gameDataError: false });
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch('/data/gameData.json', attempt ? { cache: 'reload' } : undefined);
+          if (!res.ok) throw new Error(`gameData ${res.status}`);
+          useAppStore.getState().setGameData(await res.json());
+          return;
+        } catch (err) {
+          console.error('Failed to load game data:', err);
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+        }
+      }
+      set({ gameDataError: true });
+    },
 
     loadBoard: (raw) =>
       set((state) => {
@@ -365,10 +400,18 @@ if (typeof window !== 'undefined') {
       localStorage.setItem('appState', JSON.stringify(board));
     } catch (e) {
       console.error('Failed to persist state:', e);
+      // 직접 올린 큰 배경·글꼴 파일 때문에 저장 공간이 모자라면, 그 파일만 빼고 나머지는 계속 저장한다
+      try {
+        const slim = {
+          ...board,
+          background: board.background.imageUrl?.startsWith('data:') ? DEFAULT_BACKGROUND : board.background,
+          fontSettings: board.fontSettings.customFontUrl?.startsWith('data:') ? { ...board.fontSettings, customFontUrl: '' } : board.fontSettings,
+        };
+        localStorage.setItem('appState', JSON.stringify(slim));
+      } catch {}
       if (!warnedQuota) {
         warnedQuota = true;
-        // 직접 올린 큰 배경·글꼴 파일 때문에 브라우저 저장 공간이 부족한 경우
-        useAppStore.getState().showToast('브라우저 저장 공간이 부족해 자동 저장이 안 돼요. 올린 파일 크기를 줄여 주세요', 'error');
+        useAppStore.getState().showToast('올린 파일이 커서 이 브라우저에는 저장되지 않아요. 나머지 내용은 계속 저장돼요', 'error');
       }
     }
   };

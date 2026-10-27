@@ -12,7 +12,11 @@ async function gh<T>(token: string, path: string, init?: RequestInit): Promise<T
     },
     cache: 'no-store',
   });
-  if (!res.ok) throw new GitHubError(res.status, `${init?.method ?? 'GET'} ${path}: ${res.status}`);
+  if (!res.ok) {
+    // 요청 한도 초과(403 + 남은 횟수 0)는 권한 없음과 구분해 429로 다룬다
+    const status = res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0' ? 429 : res.status;
+    throw new GitHubError(status, `${init?.method ?? 'GET'} ${path}: ${res.status}`);
+  }
   return res.status === 204 ? (undefined as T) : res.json();
 }
 
@@ -21,6 +25,9 @@ export class GitHubError extends Error {
     super(message);
   }
 }
+
+/** 저장하는 사이에 다른 사람이 먼저 저장해서 다시 시도해도 맞출 수 없을 때 */
+export class ConflictError extends Error {}
 
 /** 로그아웃·권한 없음일 때 받은 토큰을 GitHub에서 바로 폐기한다 */
 export async function revokeToken(token: string) {
@@ -37,13 +44,14 @@ export async function getUser(token: string) {
   return gh<{ login: string; avatar_url: string }>(token, '/user');
 }
 
-/** 저장소에 쓰기 권한(write/maintain/admin)이 있는지 */
+/** 저장소에 쓰기 권한(write/maintain/admin)이 있는지. GitHub 장애 같은 다른 오류는 그대로 던진다 (로그아웃시키지 않게) */
 export async function canWrite(token: string, login: string) {
   try {
     const { permission } = await gh<{ permission: string }>(token, `/repos/${REPO}/collaborators/${encodeURIComponent(login)}/permission`);
     return ['admin', 'maintain', 'write'].includes(permission);
-  } catch {
-    return false;
+  } catch (e) {
+    if (e instanceof GitHubError && [401, 403, 404].includes(e.status)) return false;
+    throw e;
   }
 }
 
@@ -83,7 +91,7 @@ export type TreeChange =
  * 그 사이 다른 커밋이 들어와 앞서 나갈 수 없으면(fast-forward 불가) 한 번 다시 시도한다.
  */
 export async function commitChanges(token: string, build: (headSha: string) => Promise<TreeChange[]>, message: () => string) {
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     const ref = await gh<{ object: { sha: string } }>(token, `/repos/${REPO}/git/ref/heads/${BRANCH}`);
     const headSha = ref.object.sha;
     const head = await gh<{ tree: { sha: string } }>(token, `/repos/${REPO}/git/commits/${headSha}`);
@@ -115,8 +123,8 @@ export async function commitChanges(token: string, build: (headSha: string) => P
       });
       return commit;
     } catch (e) {
-      if (!(e instanceof GitHubError && e.status === 422) || attempt === 1) throw e;
+      if (!(e instanceof GitHubError && e.status === 422)) throw e;
     }
   }
-  throw new Error('unreachable');
+  throw new ConflictError();
 }

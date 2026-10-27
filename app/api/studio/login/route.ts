@@ -1,14 +1,14 @@
-import { randomBytes } from 'crypto';
 import { NextResponse } from 'next/server';
-import { studioConfigured } from '@/lib/studio/config';
-import { STATE_COOKIE, cookieOptions } from '@/lib/studio/session';
+import { STUDIO_PATH, studioConfigured } from '@/lib/studio/config';
+import { STATE_COOKIE, cookieOptions, newOAuthState } from '@/lib/studio/session';
 
 export const dynamic = 'force-dynamic';
 
 /** GitHub 로그인 화면으로 보낸다 */
 export function GET(req: Request) {
-  if (!studioConfigured()) return new NextResponse(null, { status: 404 });
-  const state = randomBytes(24).toString('base64url');
+  // 관리 페이지에서 누른 로그인만 받는다 (주소를 모르는 사람에게는 아무것도 알려 주지 않음)
+  if (!studioConfigured() || new URL(req.url).searchParams.get('from') !== `/${STUDIO_PATH}`) return new NextResponse(null, { status: 404 });
+  const { state, cookie } = newOAuthState();
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID!);
   url.searchParams.set('redirect_uri', `${new URL(req.url).origin}/api/studio/callback`);
@@ -16,6 +16,6 @@ export function GET(req: Request) {
   url.searchParams.set('state', state);
   url.searchParams.set('allow_signup', 'false');
   const res = NextResponse.redirect(url);
-  res.cookies.set(STATE_COOKIE, state, cookieOptions(600));
+  res.cookies.set(STATE_COOKIE, cookie, cookieOptions(600));
   return res;
 }

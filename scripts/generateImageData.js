@@ -16,8 +16,9 @@ const IMAGES_DIR = path.join(ROOT, 'public', 'images');
 const META_PATH = path.join(ROOT, 'data', 'item-meta.json');
 const UPDATES_PATH = path.join(ROOT, 'data', 'updates.json');
 const OUTPUT_PATH = path.join(ROOT, 'public', 'data', 'gameData.json');
-const THUMBS_DIR = path.join(ROOT, 'public', 'thumbs'); // 선택 창용 작은 이미지 (빌드 때 생성, 커밋 안 함)
-const THUMB_SIZE = 160;
+const THUMBS_DIR = path.join(ROOT, 'public', 'thumbs'); // 작은 이미지 (빌드 때 생성, 커밋 안 함)
+const THUMB_STAMP = path.join(THUMBS_DIR, '.size'); // 크기를 바꾸면 모두 다시 만든다
+const THUMB_SIZE = 320; // 선택 창과 조합표의 작은 칸에 쓴다 (선명한 화면·저장 이미지 2배 기준)
 // 한 날짜에 이보다 많이 추가된 건 첫 데이터 등록 같은 일괄 작업으로 보고 업데이트 소식에서 뺀다
 const BULK_LIMIT = 40;
 const CATEGORY_NAMES = { cookies: '쿠키', pets: '펫', treasures: '보물', dishes: '요리', ingredients: '재료', magicCandies: '마법사탕', blessings: '축복' };
@@ -44,12 +45,31 @@ const rel = (p) => path.relative(ROOT, p).split(path.sep).join('/');
 function loadMeta() {
   const empty = { pinned: [], added: {}, aliases: {}, descriptions: {}, hidden: [], renamed: {} };
   if (!fs.existsSync(META_PATH)) return empty;
+  let meta;
   try {
-    return { ...empty, ...JSON.parse(fs.readFileSync(META_PATH, 'utf8')) };
+    meta = { ...empty, ...JSON.parse(fs.readFileSync(META_PATH, 'utf8')) };
   } catch (e) {
     errors.push(`${rel(META_PATH)}: JSON 형식이 잘못됐습니다 (쉼표·따옴표 확인) — ${e.message}`);
     return empty;
   }
+  // 형식이 틀리면 엉뚱하게 동작하므로(예: 문자열 hidden은 글자 일부만 같아도 숨김) 오류로 막는다
+  const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+  const strings = (v) => Array.isArray(v) && v.every((x) => typeof x === 'string');
+  const rules = {
+    pinned: [strings, '["이름", ...]'],
+    hidden: [strings, '["이름", ...]'],
+    added: [(v) => isObj(v) && Object.values(v).every(strings), '{ "YYYY-MM-DD": ["이름", ...] }'],
+    aliases: [(v) => isObj(v) && Object.values(v).every(strings), '{ "이름": ["다른 이름", ...] }'],
+    descriptions: [(v) => isObj(v) && Object.values(v).every((x) => typeof x === 'string'), '{ "이름": "설명" }'],
+    renamed: [(v) => isObj(v) && Object.values(v).every((x) => typeof x === 'string'), '{ "옛 이름": "새 이름" }'],
+  };
+  for (const [key, [ok, shape]] of Object.entries(rules)) {
+    if (!ok(meta[key])) {
+      errors.push(`${rel(META_PATH)} "${key}": ${shape} 형식이어야 합니다`);
+      meta[key] = empty[key];
+    }
+  }
+  return meta;
 }
 
 function scanImages(dir, category, rarity) {
@@ -57,7 +77,11 @@ function scanImages(dir, category, rarity) {
   for (const file of fs.readdirSync(dir)) {
     const full = path.join(dir, file);
     const stat = fs.statSync(full);
-    if (stat.isDirectory()) continue; // 하위 폴더는 scanCategory에서 처리
+    if (stat.isDirectory()) {
+      // 종류 폴더 바로 아래의 등급 폴더는 scanCategory에서 처리. 등급 폴더 안의 폴더는 읽지 않으므로 알린다
+      if (rarity) errors.push(`${rel(full)}: 등급 폴더 안에는 폴더를 만들 수 없습니다 (이미지를 등급 폴더에 바로 넣어 주세요)`);
+      continue;
+    }
     if (IGNORED_FILES.has(file)) continue;
     if (!IMAGE_RE.test(file)) {
       errors.push(`${rel(full)}: 지원하지 않는 파일 형식입니다 (png, jpg, webp만 가능)`);
@@ -67,6 +91,12 @@ function scanImages(dir, category, rarity) {
     const name = rawName.normalize('NFC');
     if (name !== rawName) warnings.push(`${rel(full)}: 파일명이 macOS 방식(NFD)으로 저장돼 있습니다. 동작은 하지만 이름을 다시 입력해 저장하는 것을 권장합니다`);
     if (name !== name.trim() || /\s{2,}/.test(name)) warnings.push(`${rel(full)}: 파일명 앞뒤 공백이나 연속 공백이 있습니다`);
+    // 주소에서 특별한 뜻을 가지는 글자가 들어가면 이미지를 불러오지 못한다
+    if (/[#%?\\]/.test(name)) {
+      errors.push(`${rel(full)}: 파일명에 # % ? \\ 는 쓸 수 없습니다`);
+      continue;
+    }
+    if (/\s\(\d+\)$/.test(name)) warnings.push(`${rel(full)}: 이름 끝의 "(숫자)"가 사이트에 그대로 보입니다 (복사한 파일이면 이름을 정리해 주세요)`);
     if (stat.size > MAX_SIZE) warnings.push(`${rel(full)}: 파일이 ${(stat.size / 1024 / 1024).toFixed(1)}MB로 큽니다 (1MB 이하 권장)`);
 
     const folder = CATEGORY_FOLDERS[category];
@@ -112,14 +142,38 @@ function gitAddedDates() {
   const git = (cmd) => execSync(`git -c core.quotepath=off ${cmd}`, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
   try {
     const shallowFile = path.resolve(ROOT, git('rev-parse --git-path shallow').trim());
+    // Vercel처럼 최근 기록만 받아 온 경우(얕은 클론) 파일 내용 없이 기록만 더 받아 온다 (NEW 표시와 업데이트 소식에 필요)
+    if (fs.existsSync(shallowFile)) {
+      try {
+        execSync('git fetch --unshallow --filter=blob:none --quiet', { cwd: ROOT, stdio: 'ignore', timeout: 90_000 });
+      } catch {}
+    }
     const boundary = new Set(fs.existsSync(shallowFile) ? fs.readFileSync(shallowFile, 'utf8').split('\n').filter(Boolean) : []);
     if (boundary.size) warnings.push('Git 기록 일부만 받아 와서(얕은 클론) 오래된 업데이트 소식이 빠질 수 있습니다. Vercel은 환경변수 VERCEL_DEEP_CLONE=true 로 해결');
-    let date = null;
-    for (const line of git('log -M --diff-filter=A --format=@%H%x20%cs --name-only -- public/images').split('\n')) {
-      if (line.startsWith('@')) {
-        const [hash, d] = line.slice(1).split(' ');
-        date = boundary.has(hash) ? null : d;
-      } else if (line && date && !dates.has(line)) dates.set(line, date);
+    // 오래된 커밋부터 따라간다. 이름·등급을 옮기거나(R) 같은 이름으로 이미지를 바꾼 것(지우고 다시 추가)은
+    // 처음 추가된 날짜를 이어받는다 (오타 수정이나 그림 교체로 '새 아이템'이 되지 않게)
+    const stem = (p) => p.replace(/\.[^./]+$/, '');
+    for (const block of git('log --reverse -M --diff-filter=ADR --format=%x01%H%x20%cs --name-status -- public/images').split('\x01').filter(Boolean)) {
+      const [head, ...lines] = block.split('\n');
+      const [hash, d] = head.split(' ');
+      const date = boundary.has(hash) ? null : d;
+      const rows = lines.filter(Boolean).map((l) => l.split('\t'));
+      const deleted = new Map();
+      for (const [status, file] of rows) {
+        if (status !== 'D') continue;
+        deleted.set(stem(file), dates.get(file));
+        dates.delete(file);
+      }
+      for (const [status, file, renamedTo] of rows) {
+        if (status.startsWith('R')) {
+          const prev = dates.get(file);
+          dates.delete(file);
+          if (prev) dates.set(renamedTo, prev);
+        } else if (status === 'A') {
+          const prev = deleted.has(stem(file)) ? deleted.get(stem(file)) : date;
+          if (prev) dates.set(file, prev);
+        }
+      }
     }
     const today = new Date().toISOString().slice(0, 10);
     for (const line of git('ls-files --others --exclude-standard -- public/images').split('\n')) if (line) dates.set(line, today);
@@ -161,6 +215,14 @@ function build() {
   const meta = loadMeta();
   const data = {};
   for (const category of Object.keys(CATEGORY_FOLDERS)) data[category] = scanCategory(category);
+
+  // 같은 폴더에 이름이 같은 이미지(확장자나 대소문자만 다름)가 있으면 어느 쪽을 쓸지 정할 수 없다
+  const seen = new Map();
+  for (const item of Object.values(data).flat()) {
+    const key = item.id.toLowerCase();
+    if (seen.has(key)) errors.push(`${item.image}: ${seen.get(key)} 와(과) 이름이 같습니다. 하나만 남겨 주세요`);
+    else seen.set(key, item.image);
+  }
 
   const allNames = new Set(Object.values(data).flat().map((i) => i.name));
   const checkNames = (names, field) => {
@@ -262,6 +324,7 @@ async function makeThumbnails(data) {
     return;
   }
   const items = Object.keys(CATEGORY_NAMES).flatMap((c) => data[c]);
+  const sizeChanged = !fs.existsSync(THUMB_STAMP) || fs.readFileSync(THUMB_STAMP, 'utf8') !== String(THUMB_SIZE);
   let made = 0;
   for (let i = 0; i < items.length; i += 16) {
     await Promise.all(
@@ -270,18 +333,24 @@ async function makeThumbnails(data) {
         const thumb = `/thumbs${item.image.replace(/^\/images/, '').replace(IMAGE_RE, '.webp')}`;
         const dest = path.join(ROOT, 'public', thumb);
         try {
-          if (!fs.existsSync(dest) || fs.statSync(dest).mtimeMs < fs.statSync(src).mtimeMs) {
+          if (sizeChanged || !fs.existsSync(dest) || fs.statSync(dest).mtimeMs < fs.statSync(src).mtimeMs) {
             fs.mkdirSync(path.dirname(dest), { recursive: true });
             await sharp(src).resize(THUMB_SIZE, THUMB_SIZE, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toFile(dest);
             made++;
           }
-          item.thumb = thumb;
+          // 원본이 이미 작으면 원본을 그대로 쓴다. 주소에 내용 값을 붙여 이미지를 바꾸면 바로 새 그림이 보이게
+          if (fs.statSync(dest).size < fs.statSync(src).size) {
+            const hash = require('crypto').createHash('md5').update(fs.readFileSync(src)).digest('hex').slice(0, 8);
+            item.thumb = `${thumb}?v=${hash}`;
+          }
         } catch (e) {
           warnings.push(`${item.image}: 작은 이미지 생성 실패 (${e.message})`);
         }
       })
     );
   }
+  fs.mkdirSync(THUMBS_DIR, { recursive: true });
+  fs.writeFileSync(THUMB_STAMP, String(THUMB_SIZE));
   if (made) console.log(`[작은 이미지] ${made}개 생성`);
 }
 

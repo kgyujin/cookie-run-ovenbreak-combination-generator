@@ -28,11 +28,16 @@ function parseScore(value: string): number | null {
 export function formatScore(value: string, displayType: ScoreDisplayType): string {
   if (!value || value.trim() === '') return value;
 
-  // 숫자만 쓴 경우 콤마 표기는 문자열 그대로 처리 (아주 큰 수도 자릿수가 틀어지지 않게)
-  const digits = value.replace(/[,\s]/g, '');
-  if (displayType === 'comma' && /^\d+$/.test(digits)) return digits.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // 전각 숫자(１２３)도 읽는다
+  const input = value.normalize('NFKC');
+  // 숫자만 쓴 경우 콤마·한글 표기는 문자열·큰 정수로 처리 (아주 큰 수도 자릿수가 틀어지지 않게)
+  const digits = input.replace(/[,\s]/g, '').replace(/점$/, '');
+  if (/^\d+$/.test(digits)) {
+    if (displayType === 'comma') return digits.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (displayType === 'korean') return formatKoreanBig(BigInt(digits));
+  }
 
-  const num = parseScore(value);
+  const num = parseScore(input);
   if (num === null || !Number.isFinite(num)) return value;
 
   switch (displayType) {
@@ -71,6 +76,26 @@ function formatAbbreviated(num: number): string {
  */
 function formatComma(num: number): string {
   return Math.round(num).toLocaleString('en-US');
+}
+
+/** 한글 단위 표기의 큰 정수 버전 (조 단위를 넘는 아주 큰 수) */
+function formatKoreanBig(num: bigint): string {
+  if (num === BigInt(0)) return '0';
+  const units: [bigint, string][] = [
+    [BigInt('10000000000000000'), '경'],
+    [BigInt('1000000000000'), '조'],
+    [BigInt('100000000'), '억'],
+    [BigInt('10000'), '만'],
+  ];
+  const parts: string[] = [];
+  for (const [value, unit] of units) {
+    if (num >= value) {
+      parts.push(`${num / value}${unit}`);
+      num %= value;
+    }
+  }
+  if (num > BigInt(0)) parts.push(num.toString());
+  return parts.join(' ');
 }
 
 /**

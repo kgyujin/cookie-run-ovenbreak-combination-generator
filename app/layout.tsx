@@ -17,12 +17,16 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
 };
 
+const RESTORE_SCRIPT = `try{var s=JSON.parse(localStorage.getItem('appState'));if(s&&/^\\/(s\\/[^/]+\\/?)?$/.test(location.pathname)){var d=document.documentElement,b=s.background||{},c=b.type==='color'?b.color:b.type==='gradient'&&b.gradient?b.gradient[0]:b.type==='image'&&b.imageUrl?'#1c1917':'#fffbf5';d.setAttribute('data-saved','');if(/^#[0-9a-f]{6}$/i.test(c))d.style.setProperty('--page-edge',c)}}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <head>
         {/* 아이템 목록을 화면 코드와 동시에 받기 시작 */}
         <link rel="preload" href="/data/gameData.json" as="fetch" crossOrigin="anonymous" />
+        {/* 저장된 조합표가 있으면 불러올 때까지 잠깐 가리고, 바깥 바탕색은 미리 칠한다 (빈 화면이 먼저 보였다 바뀌는 깜빡임 방지) */}
+        <script dangerouslySetInnerHTML={{ __html: RESTORE_SCRIPT }} />
       </head>
       <body className="min-h-dvh font-sans">{children}</body>
     </html>

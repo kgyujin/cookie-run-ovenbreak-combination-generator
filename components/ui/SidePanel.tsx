@@ -52,7 +52,7 @@ export default function SidePanel({
     >
       <div className="flex h-full flex-col">
         <div className="shrink-0 border-b border-line bg-surface-cream">
-          <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line lg:hidden" aria-hidden="true" />
+          <div className="panel-handle mx-auto mt-2 h-1 w-10 rounded-full bg-line lg:hidden" aria-hidden="true" />
           <div className="flex items-center justify-between gap-2 py-1.5 pl-5 pr-2">
             <h2 id={titleId} className="text-title-md">
               {title}
