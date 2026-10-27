@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { isReturningVisitor, pickBoard, useAppStore } from '@/store/useAppStore';
 import { markUpdatesSeen, unseenCount } from '@/lib/updates';
 import Button from './ui/Button';
@@ -43,6 +43,7 @@ export default function Toolbar() {
     setNewUpdates(0);
   };
 
+  const saveButtonRef = useRef<HTMLButtonElement>(null);
   const saveImage = async () => {
     const area = document.getElementById('capture-area');
     if (!area || saving) return;
@@ -56,6 +57,7 @@ export default function Toolbar() {
       console.error('Failed to save image:', e);
       showToast('이미지 저장에 실패했어요. 다시 시도해 주세요', 'error');
     } finally {
+      saveButtonRef.current?.focus(); // 저장 중 오버레이가 사라진 뒤 포커스를 버튼으로 돌려놓음
       setSaving(false);
     }
   };
@@ -82,7 +84,12 @@ export default function Toolbar() {
             <SettingsIcon />
             <span className="hidden sm:inline">설정</span>
           </Button>
-          <Button variant="secondary" onClick={saveImage} disabled={saving} aria-label="이미지로 저장" className="w-touch px-0 sm:w-auto sm:px-4">
+          <Button
+            ref={saveButtonRef}
+            variant="secondary"
+            onClick={saveImage}
+            aria-disabled={saving}
+            aria-label="이미지로 저장" className="w-touch px-0 sm:w-auto sm:px-4">
             <DownloadIcon />
             <span className="hidden sm:inline">{saving ? '저장 중…' : '이미지 저장'}</span>
           </Button>

@@ -1,5 +1,6 @@
 import { compressToEncodedURIComponent } from 'lz-string';
 import { BoardState } from '@/types';
+import { DEFAULT_BACKGROUND } from './backgrounds';
 
 /**
  * 짧은 공유 링크 (Supabase).
@@ -63,7 +64,8 @@ export async function loadShortLink(id: string): Promise<unknown | null> {
 /** 예비용 긴 링크 (짧은 링크를 만들 수 없을 때). 직접 올린 파일은 너무 커서 제외한다. */
 export function createLongLink(board: BoardState) {
   const payload = structuredClone(board);
-  if (payload.background.imageUrl?.startsWith('data:')) payload.background.imageUrl = '';
+  // 직접 올린 배경 이미지는 담을 수 없으므로 기본 배경으로 바꿔서 보낸다 (빈 이미지 배경 방지)
+  if (payload.background.imageUrl?.startsWith('data:')) payload.background = DEFAULT_BACKGROUND;
   if (payload.fontSettings.customFontUrl?.startsWith('data:')) payload.fontSettings.customFontUrl = '';
   return `${window.location.origin}/?data=${compressToEncodedURIComponent(JSON.stringify(payload))}`;
 }

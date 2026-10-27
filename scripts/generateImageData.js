@@ -111,7 +111,7 @@ function gitAddedDates() {
   const dates = new Map();
   const git = (cmd) => execSync(`git -c core.quotepath=off ${cmd}`, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
   try {
-    const shallowFile = path.join(ROOT, '.git', 'shallow');
+    const shallowFile = path.resolve(ROOT, git('rev-parse --git-path shallow').trim());
     const boundary = new Set(fs.existsSync(shallowFile) ? fs.readFileSync(shallowFile, 'utf8').split('\n').filter(Boolean) : []);
     if (boundary.size) warnings.push('Git 기록 일부만 받아 와서(얕은 클론) 오래된 업데이트 소식이 빠질 수 있습니다. Vercel은 환경변수 VERCEL_DEEP_CLONE=true 로 해결');
     let date = null;
@@ -124,7 +124,7 @@ function gitAddedDates() {
     const today = new Date().toISOString().slice(0, 10);
     for (const line of git('ls-files --others --exclude-standard -- public/images').split('\n')) if (line) dates.set(line, today);
   } catch {
-    // Git이 없는 환경: 날짜 없이 진행 (item-meta.json의 added만 사용)
+    warnings.push('Git 기록을 읽지 못해 새 아이템 날짜와 업데이트 소식을 자동으로 만들지 못했습니다 (item-meta.json의 added만 사용)');
   }
   return dates;
 }
@@ -151,7 +151,7 @@ function autoUpdates(data) {
     }
     const items = Object.keys(CATEGORY_NAMES)
       .filter((c) => groups.has(c))
-      .map((c) => `${CATEGORY_NAMES[c]} ${[...groups.get(c)].join(', ')} 추가`);
+      .map((c) => `${CATEGORY_NAMES[c]} 추가: ${[...groups.get(c)].join(', ')}`);
     notes.push({ date, title: '새 아이템', items });
   }
   return notes;

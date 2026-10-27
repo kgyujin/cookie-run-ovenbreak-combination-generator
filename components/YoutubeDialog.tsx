@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { safeUrl, useAppStore } from '@/store/useAppStore';
+import { safeYoutubeUrl, useAppStore } from '@/store/useAppStore';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { PlayIcon } from './ui/icons';
@@ -10,8 +10,8 @@ import { PlayIcon } from './ui/icons';
 function youtubeId(url: string) {
   try {
     const u = new URL(url.trim());
-    if (u.hostname.endsWith('youtu.be')) return u.pathname.slice(1).split('/')[0] || null;
-    if (!u.hostname.endsWith('youtube.com')) return null;
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('/')[0] || null;
+    if (u.hostname !== 'youtube.com' && !u.hostname.endsWith('.youtube.com')) return null;
     return u.searchParams.get('v') ?? u.pathname.match(/^\/(?:shorts|live|embed)\/([\w-]+)/)?.[1] ?? null;
   } catch {
     return null;
@@ -27,7 +27,7 @@ export default function YoutubeDialog({ arenaIndex, onClose }: { arenaIndex: num
 
   const save = (e: FormEvent) => {
     e.preventDefault();
-    const valid = safeUrl(url);
+    const valid = safeYoutubeUrl(url);
     if (url.trim() && !valid) return setError(true);
     setArenaYoutubeUrl(arenaIndex, valid || null);
     onClose();
@@ -44,7 +44,7 @@ export default function YoutubeDialog({ arenaIndex, onClose }: { arenaIndex: num
             id="youtube-url"
             type="text"
             inputMode="url"
-            autoFocus
+            data-autofocus
             value={url}
             onChange={(e) => {
               setUrl(e.target.value);
@@ -57,7 +57,7 @@ export default function YoutubeDialog({ arenaIndex, onClose }: { arenaIndex: num
           />
           {error && (
             <p id="youtube-url-help" className="mt-1.5 text-caption font-semibold text-danger">
-              https://로 시작하는 주소를 입력해 주세요.
+              유튜브 영상 주소를 입력해 주세요.
             </p>
           )}
         </div>

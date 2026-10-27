@@ -44,6 +44,52 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
   });
 }
 
+/** 외곽선을 글자 뒤에 깔리는 그림자 고리로 바꾼다 (html2canvas는 외곽선을 글자 위에 덮어 그려 글자가 얇아지거나 사라짐) */
+function strokeAsShadow(width: number, color: string) {
+  const steps = Math.max(12, Math.ceil(width * 8));
+  return Array.from({ length: steps }, (_, i) => {
+    const a = (i / steps) * Math.PI * 2;
+    return `${(Math.cos(a) * width).toFixed(2)}px ${(Math.sin(a) * width).toFixed(2)}px 0 ${color}`;
+  }).join(', ');
+}
+
+const COPIED_STYLES = [
+  'position', 'left', 'top', 'width', 'height', 'zIndex', 'margin', 'padding', 'boxSizing', 'borderRadius', 'backgroundColor',
+  'fontFamily', 'fontSize', 'fontWeight', 'color', 'letterSpacing', 'lineHeight', 'textAlign', 'transform', 'textShadow',
+] as const;
+
+/**
+ * html2canvas는 입력칸 글자를 따로 그리면서 칸 높이에 맞춰 잘라 버린다(글자가 반만 보임).
+ * 저장용 복제본에서는 입력칸을 같은 모양의 일반 글자 상자로 바꾼다.
+ */
+function replaceFields(originals: (HTMLInputElement | HTMLTextAreaElement)[], clones: (HTMLInputElement | HTMLTextAreaElement)[]) {
+  originals.forEach((field, i) => {
+    const clone = clones[i];
+    if (!clone) return;
+    // 복제본 문서의 계산값을 쓴다 (원본은 저장 모드로 바뀌는 전환 효과가 진행 중일 수 있음)
+    const cs = clone.ownerDocument.defaultView!.getComputedStyle(clone);
+    const box = clone.ownerDocument.createElement('div');
+    box.textContent = field.value;
+    for (const key of COPIED_STYLES) box.style[key] = cs[key];
+    const isTextarea = field.tagName === 'TEXTAREA';
+    Object.assign(box.style, {
+      display: isTextarea ? 'block' : 'flex',
+      alignItems: 'center',
+      justifyContent: { left: 'flex-start', right: 'flex-end', start: 'flex-start', end: 'flex-end' }[cs.textAlign] ?? 'center',
+      whiteSpace: isTextarea ? 'pre-wrap' : 'nowrap',
+      overflow: 'visible',
+      border: 'none',
+      boxShadow: 'none',
+    });
+    const strokeWidth = parseFloat(cs.webkitTextStrokeWidth);
+    if (strokeWidth > 0) {
+      const ring = strokeAsShadow(strokeWidth, cs.webkitTextStrokeColor);
+      box.style.textShadow = cs.textShadow && cs.textShadow !== 'none' ? `${ring}, ${cs.textShadow}` : ring;
+    }
+    clone.replaceWith(box);
+  });
+}
+
 /**
  * 조합표를 PNG로 저장한다. 화면 크기와 관계없이 항상 같은 폭(2열 배치)으로 만든다.
  * 저장하는 동안 .is-exporting 클래스로 빈 칸 표시·편집용 요소를 숨긴다.
@@ -59,6 +105,8 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
   try {
     await nextFrame();
     await nextFrame();
+    // 화면 밖이라 아직 안 불러온(lazy) 이미지도 저장에는 필요하므로 바로 불러오게 한다
+    captureArea.querySelectorAll('img[loading="lazy"]').forEach((img) => img.setAttribute('loading', 'eager'));
     await Promise.all([document.fonts?.ready, waitForImages(captureArea)]);
 
     const { offsetWidth: w, offsetHeight: h } = captureArea;
@@ -69,9 +117,14 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       logging: false,
       windowWidth: width,
       onclone: (doc) => {
-        doc.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => (el.placeholder = ''));
         const clonedArea = doc.getElementById(captureArea.id);
-        if (clonedArea) applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
+        if (!clonedArea) return;
+        applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
+        const fields = 'input:not([type=hidden]), textarea';
+        replaceFields(
+          Array.from(captureArea.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(fields)),
+          Array.from(clonedArea.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(fields))
+        );
       },
     });
 

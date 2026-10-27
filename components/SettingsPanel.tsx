@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { initialBoard, useAppStore } from '@/store/useAppStore';
 import { backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
@@ -41,7 +41,6 @@ const SECTIONS = [
   ['score', '점수'],
   ['number', '번호'],
   ['style', '카드와 여백'],
-  ['reset', '초기화'],
 ] as const;
 
 /** 설정 패널. 바꾸는 즉시 조합표에 반영되고, '되돌리기'로 패널을 열었을 때 상태로 돌아간다. */
@@ -63,12 +62,8 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   const [confirm, setConfirm] = useState<'style' | 'all' | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  const revert = () => {
-    setBackground(snapshot.background);
-    setF(snapshot.fontSettings);
-    setDisplaySettings(snapshot.displaySettings);
-    setS(snapshot.boardStyle);
-  };
+  // 합치기(merge)가 아니라 통째로 바꿔야 나중에 추가된 값(번호 색, 글꼴 파일 등)까지 되돌아간다
+  const revert = () => useAppStore.setState(snapshot);
   const setBg = (patch: Partial<BackgroundData>) => setBackground({ ...background, ...patch });
   const [active, setActive] = useState<string>('bg');
 
@@ -86,7 +81,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
     if (!list) return;
     const onScroll = () => {
       const top = list.getBoundingClientRect().top + 40;
-      const sections = Array.from(list.querySelectorAll<HTMLElement>('section[id^="set-"]'));
+      const sections = SECTIONS.map(([id]) => list.querySelector<HTMLElement>(`#set-${id}`)).filter((el): el is HTMLElement => !!el);
       const current = sections.filter((el) => el.getBoundingClientRect().top <= top).pop() ?? sections[0];
       const atEnd = list.scrollTop + list.clientHeight >= list.scrollHeight - 4;
       setActive((atEnd ? sections[sections.length - 1] : current).id.slice(4));
@@ -97,10 +92,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
   const resetStyle = () => {
     const { background: bg, fontSettings, displaySettings, boardStyle } = initialBoard();
-    setBackground(bg);
-    setF(fontSettings);
-    setDisplaySettings(displaySettings);
-    setS(boardStyle);
+    useAppStore.setState({ background: bg, fontSettings, displaySettings, boardStyle });
   };
 
   return (
@@ -139,15 +131,17 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       >
         <div ref={bodyRef} className="divide-y divide-line">
           <Section id="bg" title="배경">
-            <div role="radiogroup" aria-label="추천 배경" className="grid grid-cols-5 gap-2">
-              {BACKGROUND_PRESETS.map((preset) => {
+            <div role="radiogroup" aria-label="추천 배경" onKeyDown={radioArrows(5)} className="grid grid-cols-5 gap-2">
+              {BACKGROUND_PRESETS.map((preset, i) => {
                 const selected = isSameBackground(background, preset.background);
+                const anySelected = BACKGROUND_PRESETS.some((p) => isSameBackground(background, p.background));
                 return (
                   <button
                     key={preset.name}
                     type="button"
                     role="radio"
                     aria-checked={selected}
+                    tabIndex={selected || (!anySelected && i === 0) ? 0 : -1}
                     aria-label={preset.name}
                     title={preset.name}
                     onClick={() => {
@@ -250,7 +244,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
           <Section id="font" title="글꼴">
             <Segmented
-              label="시즌명과 점수 글꼴"
+              label="글꼴"
               value={font.fontFamily}
               options={[
                 ['Pretendard', 'Pretendard'],
@@ -276,7 +270,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <Section id="season" title="시즌명">
             <Range label="크기" value={font.fontSize} min={12} max={52} onChange={(fontSize) => setF({ fontSize })} />
             <Segmented label="굵기" value={String(font.fontWeight ?? 700)} options={WEIGHTS} onChange={(w) => setF({ fontWeight: Number(w) })} />
-            <ColorField label="색" value={font.fontColor ?? '#111827'} onChange={(fontColor) => setF({ fontColor })} />
+            <ColorField label="색" value={font.fontColor ?? '#1c1917'} onChange={(fontColor) => setF({ fontColor })} />
             <div className="grid grid-cols-[auto_1fr] items-start gap-4">
               <AlignGrid
                 horizontal={font.textAlign}
@@ -322,7 +316,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               ]}
             />
             <Segmented label="굵기" value={String(font.scoreFontWeight ?? 400)} options={WEIGHTS} onChange={(w) => setF({ scoreFontWeight: Number(w) })} />
-            <ColorField label="색" value={font.scoreColor ?? '#111827'} onChange={(scoreColor) => setF({ scoreColor })} />
+            <ColorField label="색" value={font.scoreColor ?? '#1c1917'} onChange={(scoreColor) => setF({ scoreColor })} />
             <Stroke
               width={font.scoreStrokeWidth ?? 0}
               color={font.scoreStrokeColor ?? '#ffffff'}
@@ -333,7 +327,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
           <Section id="number" title="아레나 번호">
             <Range label="크기" value={font.numberSize ?? 18} min={12} max={32} onChange={(numberSize) => setF({ numberSize })} />
-            <ColorField label="색" value={font.numberColor ?? font.fontColor ?? '#111827'} onChange={(numberColor) => setF({ numberColor })} />
+            <ColorField label="색" value={font.numberColor ?? font.fontColor ?? '#1c1917'} onChange={(numberColor) => setF({ numberColor })} />
           </Section>
 
           <Section id="style" title="카드와 여백">
@@ -410,6 +404,24 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+/**
+ * 라디오 묶음 키보드 조작: Tab으로는 선택된 하나만 들어가고, 화살표로 옮기며 바로 선택한다.
+ * cols: 한 줄에 몇 개인지 (위/아래 화살표 이동 거리)
+ */
+function radioArrows(cols: number) {
+  return (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: cols, ArrowUp: -cols }[e.key];
+    if (!step) return;
+    const radios = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]'));
+    const index = radios.indexOf(document.activeElement as HTMLButtonElement);
+    if (index === -1) return;
+    e.preventDefault();
+    const next = radios[(index + step + radios.length) % radios.length];
+    next.focus();
+    next.click();
+  };
+}
+
 /** 9칸 위치 고르기 (가로 정렬 × 세로 위치) */
 function AlignGrid({
   horizontal,
@@ -435,7 +447,7 @@ function AlignGrid({
       <p className="mb-1.5 text-caption font-semibold text-ink-muted" id="align-grid-label">
         위치
       </p>
-      <div role="radiogroup" aria-labelledby="align-grid-label" className="grid w-[108px] grid-cols-3 gap-1 rounded-md bg-surface-sunken p-1">
+      <div role="radiogroup" aria-labelledby="align-grid-label" onKeyDown={radioArrows(3)} className="grid w-[108px] grid-cols-3 gap-1 rounded-md bg-surface-sunken p-1">
         {rows.flatMap(([v, vLabel]) =>
           cols.map(([h, hLabel]) => {
             const on = horizontal === h && vertical === v;
@@ -445,11 +457,12 @@ function AlignGrid({
                 type="button"
                 role="radio"
                 aria-checked={on}
+                tabIndex={on ? 0 : -1}
                 aria-label={`${vLabel} ${hLabel}`}
                 onClick={() => onChange(h, v)}
                 className={clsx(
                   'grid h-8 place-items-center rounded-sm transition-colors',
-                  on ? 'bg-primary shadow-e1' : 'hover:bg-surface'
+                  on ? 'bg-primary shadow-e1 ring-1 ring-primary-ink' : 'hover:bg-surface'
                 )}
               >
                 <span className={clsx('h-1.5 rounded-full', on ? 'w-4 bg-ink' : 'w-2.5 bg-ink-subtle/60')} aria-hidden="true" />
@@ -472,10 +485,10 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={clsx('relative h-7 w-12 shrink-0 rounded-full transition-colors', checked ? 'bg-primary-ink' : 'bg-line')}
+        className={clsx('relative h-7 w-12 shrink-0 rounded-full border-[1.5px] transition-colors', checked ? 'border-primary-ink bg-primary-ink' : 'border-ink-subtle bg-surface-sunken')}
       >
         <span
-          className={clsx('absolute top-1 h-5 w-5 rounded-full bg-white shadow-e1 transition-[left]', checked ? 'left-6' : 'left-1')}
+          className={clsx('absolute top-[2.5px] h-5 w-5 rounded-full shadow-e1 transition-[left]', checked ? 'left-[22px] bg-white' : 'left-[2.5px] bg-ink-subtle')}
           aria-hidden="true"
         />
       </button>
@@ -574,7 +587,21 @@ function Range({
   onChange: (v: number) => void;
 }) {
   const id = useId();
-  const clamp = (v: number) => Math.min(max, Math.max(min, v));
+  const shown = String(Math.round(value * 100) / 100);
+  // 숫자 칸은 입력하는 동안에는 그대로 두고, 칸을 벗어나거나 Enter를 누를 때 범위에 맞춰 적용
+  const [text, setText] = useState(shown);
+  const [prev, setPrev] = useState(shown);
+  if (shown !== prev) {
+    setPrev(shown);
+    setText(shown);
+  }
+  const commit = () => {
+    const n = Number(text);
+    if (text.trim() === '' || Number.isNaN(n)) return setText(shown);
+    const next = Math.min(max, Math.max(min, n));
+    onChange(next);
+    setText(String(Math.round(next * 100) / 100));
+  };
   return (
     <div>
       <div className="flex items-center justify-between">
@@ -584,12 +611,14 @@ function Range({
         <span className="flex items-center rounded-md border border-line bg-surface pr-2 focus-within:border-primary-ink">
           <input
             type="number"
-            value={Math.round(value * 100) / 100}
+            value={text}
             min={min}
             max={max}
             step={step}
             aria-label={`${label} 값`}
-            onChange={(e) => e.target.value !== '' && onChange(clamp(Number(e.target.value)))}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => e.key === 'Enter' && commit()}
             className="h-8 w-14 bg-transparent pl-2 text-right text-caption tabular-nums text-ink focus:outline-none"
           />
           <span className="text-caption text-ink-subtle">{unit}</span>
@@ -624,13 +653,13 @@ function Segmented<T extends string>({
   return (
     <fieldset>
       <legend className="mb-1.5 text-caption font-semibold text-ink-muted">{label}</legend>
-      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(5.5em, 100%), 1fr))` }}>
         {options.map(([v, text]) => (
           <label
             key={v}
             className={clsx(
               'relative flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-sm px-1 text-caption font-semibold tabular-nums transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-primary-ink',
-              value === v ? 'bg-surface text-ink shadow-e1' : 'text-ink-muted hover:text-ink'
+              value === v ? 'bg-surface text-ink shadow-e1 ring-1 ring-ink/40' : 'text-ink-muted hover:text-ink'
             )}
           >
             <input type="radio" className="sr-only" name={name} value={v} checked={value === v} onChange={() => onChange(v)} />

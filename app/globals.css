@@ -106,7 +106,7 @@ body:has(dialog:modal) {
   transition: transform 0.12s ease-out, opacity 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
 }
 
-.slot:not(input):hover {
+.slot:not(input):not(.slot-overlay):hover {
   transform: translateY(-2px);
 }
 
@@ -115,7 +115,6 @@ body:has(dialog:modal) {
 }
 
 .slot:focus-visible {
-  z-index: 50 !important;
   outline: 3px solid #8a5300;
   outline-offset: -3px;
   box-shadow: inset 0 0 0 5px #fff;
@@ -125,13 +124,11 @@ input.slot {
   cursor: text;
 }
 
-/* 점수·시즌명 입력 중: 굵은 테두리 대신 옅은 바탕으로 표시 */
+/* 점수·시즌명 입력 중: 상자 테두리 대신 아래 밑줄로 표시 (흰 줄을 함께 그어 어떤 배경에서도 보이게) */
 input.slot:focus,
 .title-input:focus {
   outline: none;
-  box-shadow: none;
-  background-color: rgb(255 255 255 / 0.55);
-  border-radius: 8px;
+  box-shadow: inset 0 -3px 0 #8a5300, inset 0 -5px 0 #fff;
 }
 
 /* 비어 있는 칸 (편집 중에만 보임): 점선 테두리 = "눌러서 채우기" */
@@ -142,8 +139,9 @@ input.slot:focus,
   box-shadow: 0 1px 2px rgb(28 25 23 / 0.06), 0 4px 12px rgb(28 25 23 / 0.08);
 }
 
+/* 겹쳐 있는 칸(축복, 요리, 번호)은 떠오르지 않게: 떠오르면 아래 칸이 마우스에 걸려 같이 강조됨 */
 .slot-empty:hover,
-.slot-empty:has(> .slot:hover) {
+.slot-empty:has(> .slot:first-child:hover) {
   border-color: #8a5300;
   background: #fff;
 }
@@ -182,11 +180,19 @@ input.slot:focus,
   cursor: ew-resize;
   touch-action: none;
   opacity: 0;
-  color: #4b5563;
+  position: relative;
+  color: #57534e;
   font-size: 12px;
   background: rgba(0, 0, 0, 0.08);
   border-inline: 2px solid rgba(0, 0, 0, 0.15);
   transition: opacity 0.15s ease;
+}
+
+.ratio-handle::before {
+  /* 누르기 쉽게 보이지 않는 터치 영역을 좌우로 넓힌다 */
+  content: '';
+  position: absolute;
+  inset: 0 -10px;
 }
 
 .ratio-handle:hover,
@@ -207,6 +213,10 @@ input.slot:focus,
 /* 이미지 저장 중: 편집용 표시를 모두 숨긴다 (lib/exportImage.ts) */
 .is-exporting {
   padding: var(--export-pad, 64px) !important;
+}
+
+.is-exporting * {
+  transition: none !important;
 }
 
 .is-exporting [data-edit-only] {
@@ -237,8 +247,7 @@ input.slot:focus,
 }
 
 .modal::backdrop {
-  background: rgb(28 25 23 / 0.45);
-  backdrop-filter: blur(4px);
+  background: rgb(28 25 23 / 0.5);
 }
 
 .modal[open] {
@@ -296,6 +305,30 @@ input.slot:focus,
     height: 50dvh;
     border-radius: 24px 24px 0 0;
     animation-name: slide-up;
+  }
+}
+
+/* 높이가 낮은 화면(가로 휴대폰, 크게 확대한 화면): 패널을 오른쪽에 세워서 붙이고, 선택 창 머리말은 같이 스크롤 */
+@media (max-height: 560px) and (max-width: 1023px) {
+  .panel[open] {
+    inset: 8px 8px 8px auto;
+    width: min(380px, 60vw);
+    height: auto;
+    border-radius: 20px;
+    animation-name: slide-in-right;
+  }
+  .board-wrap.panel-open {
+    padding-bottom: 16px;
+    padding-right: calc(min(380px, 60vw) + 16px);
+  }
+  .picker-head {
+    position: static;
+  }
+}
+
+@media (max-height: 560px) {
+  .picker-head {
+    position: static;
   }
 }
 
@@ -381,7 +414,7 @@ input.slot:focus,
 
 .btn-shine:hover::after {
   transform: translateX(120%);
-  transition: transform 0.6s ease;
+  transition: transform 0.4s ease;
 }
 
 /* 알림: 아래에서 튀어 오르듯 */
@@ -413,7 +446,8 @@ input.slot:focus,
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    animation: none !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

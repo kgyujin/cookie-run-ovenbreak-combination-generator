@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import clsx from 'clsx';
-import { CSSProperties, KeyboardEvent, PointerEvent, useState } from 'react';
+import { CSSProperties, KeyboardEvent, PointerEvent, memo, useState } from 'react';
 import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
 import { cardStyle, fontFamilyOf, textGlow, u, withOpacity } from '@/lib/board';
@@ -16,7 +16,7 @@ const MAX_RATIO = 70;
  * 아레나 1개의 조합표. 배치(위치·크기)는 기존 디자인 그대로이며,
  * 모든 px 값은 u()로 감싸 보드 배율에 맞춰 함께 커지고 작아진다.
  */
-export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
+export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const arena = useAppStore((s) => s.arenas[arenaIndex]);
   const fontSettings = useAppStore((s) => s.fontSettings);
   const boardStyle = useAppStore((s) => s.boardStyle);
@@ -61,9 +61,9 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
     fontWeight: fontSettings.scoreFontWeight ?? 400,
     textAlign: fontSettings.scoreAlign ?? 'center',
     fontFamily: fontFamilyOf(fontSettings.fontFamily),
-    WebkitTextStroke: fontSettings.scoreStrokeWidth ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}` : undefined,
     paintOrder: 'stroke fill',
   };
+  const scoreStroke = fontSettings.scoreStrokeWidth ? `${u(fontSettings.scoreStrokeWidth)} ${fontSettings.scoreStrokeColor}` : undefined;
 
   return (
     <section
@@ -71,6 +71,44 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       className="relative w-full"
       style={{ height: u(425), ...(boardStyle.card ? cardStyle(boardStyle) : {}) }}
     >
+      {/* ===== TOP LAYER (Tab 순서상 먼저: 번호 → 요리 → 나머지) ===== */}
+      {/* 아레나 번호 (유튜브 링크) */}
+      <button
+        type="button"
+        onClick={() => setYoutubeOpen(true)}
+        aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
+        title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
+        className="slot slot-overlay absolute flex items-center justify-center font-bold"
+        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18) }}
+      >
+        {boardStyle.numberBg ? (
+          <span className="absolute inset-0 rounded-[8px]" style={{ backgroundColor: boardStyle.numberBgColor }} aria-hidden="true" />
+        ) : (
+          <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
+        )}
+        <span
+          className="relative"
+          style={{
+            color: arena.youtubeUrl ? '#dc2626' : numberColor,
+            textShadow: textGlow(arena.youtubeUrl ? '#dc2626' : numberColor),
+          }}
+        >
+          {arena.youtubeUrl && '▶ '}
+          {n}
+        </span>
+      </button>
+
+      {/* 요리 */}
+      <Slot
+        image={arena.dish}
+        label={`${n}번 요리`}
+        text="요리"
+        onSelect={pick('dishes', '요리', arena.dish, (image) => setArenaDish(arenaIndex, image))}
+        emptyClassName="badge"
+        className="slot-overlay"
+        style={{ zIndex: 30, width: u(60), height: u(60), top: u(12), right: u(12) }}
+      />
+
       {/* ===== BASE LAYER ===== */}
       <Slot
         {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
@@ -79,7 +117,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
       />
       <RatioHandle
-        label="메인 조합 선달·이달 쿠키 크기 비율"
+        label="메인 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
+        tabbable={arenaIndex === 0}
         value={arena.mainCookieRatio}
         space={56}
         onChange={(r) => setCookieRatio('mainCookieRatio', r)}
@@ -106,8 +145,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         arenaIndex={arenaIndex}
         field="score"
         label="최고점"
-        placeholder="최고점 (숫자만 입력)"
-        style={{ ...scoreStyle, zIndex: 20, width: '35%', height: '10%', top: '9%', right: '3%' }}
+        placeholder="최고점"
+        stroke={scoreStroke}
+        // 오른쪽 끝은 요리 칸에 가려지므로 오른쪽 정렬일 때 글자를 그만큼 안쪽에서 끝낸다
+        style={{ ...scoreStyle, zIndex: 20, width: '35%', height: '10%', top: '9%', right: '3%', ...(fontSettings.scoreAlign === 'right' && { paddingRight: u(60) }) }}
       />
 
       {/* 마법사탕 + 축복 (축복은 사탕 우측 하단 1/4에 겹침) */}
@@ -129,6 +170,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             text="축복"
             labelSize={8}
             emptyClassName="badge"
+            className="slot-overlay"
             style={{ zIndex: 30, bottom: -2, right: -2, width: '50%', height: '50%' }}
           />
         </div>
@@ -141,7 +183,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
           arenaIndex={arenaIndex}
           field="subScore"
           label="대체 최고점"
-          placeholder="대체 최고점 (숫자만 입력)"
+          placeholder="대체 최고점"
+          stroke={scoreStroke}
           style={{ ...scoreStyle, top: '2%', left: `calc(2% + 50 * var(--u))`, right: '2%', height: u(40) }}
         />
         <div className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
@@ -154,7 +197,8 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
             style={{ width: `${subCookie1Width}%` }}
           />
           <RatioHandle
-            label="대체 조합 선달·이달 쿠키 크기 비율"
+            label="대체 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
+            tabbable={arenaIndex === 0}
             value={arena.subCookieRatio}
             space={96}
             onChange={(r) => setCookieRatio('subCookieRatio', r)}
@@ -180,47 +224,10 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         />
       ))}
 
-      {/* ===== TOP LAYER ===== */}
-      {/* 아레나 번호 (유튜브 링크) */}
-      <button
-        type="button"
-        onClick={() => setYoutubeOpen(true)}
-        aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
-        title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
-        className="slot absolute flex items-center justify-center font-bold"
-        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18) }}
-      >
-        {boardStyle.numberBg ? (
-          <span className="absolute inset-0 rounded-[8px]" style={{ backgroundColor: boardStyle.numberBgColor }} aria-hidden="true" />
-        ) : (
-          <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
-        )}
-        <span
-          className="relative"
-          style={{
-            color: arena.youtubeUrl ? '#ef4444' : numberColor,
-            textShadow: textGlow(arena.youtubeUrl ? '#ef4444' : numberColor),
-          }}
-        >
-          {arena.youtubeUrl && '▶ '}
-          {n}
-        </span>
-      </button>
-
-      {/* 요리 */}
-      <Slot
-        image={arena.dish}
-        label={`${n}번 요리`}
-        text="요리"
-        onSelect={pick('dishes', '요리', arena.dish, (image) => setArenaDish(arenaIndex, image))}
-        emptyClassName="badge"
-        style={{ zIndex: 30, width: u(60), height: u(60), top: u(12), right: u(12) }}
-      />
-
       {youtubeOpen && <YoutubeDialog arenaIndex={arenaIndex} onClose={() => setYoutubeOpen(false)} />}
     </section>
   );
-}
+});
 
 /** 최고점 입력. 입력 중에는 숫자 그대로, 그 외에는 설정한 표기 방식으로 보여준다. */
 function ScoreInput({
@@ -228,12 +235,14 @@ function ScoreInput({
   field,
   label,
   placeholder,
+  stroke,
   style,
 }: {
   arenaIndex: number;
   field: 'score' | 'subScore';
   label: string;
   placeholder: string;
+  stroke?: string;
   style: CSSProperties;
 }) {
   const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
@@ -248,16 +257,22 @@ function ScoreInput({
       inputMode="numeric"
       aria-label={`${arenaIndex + 1}번 ${label}`}
       value={editing || !value ? value : formatScore(value, displayType)}
-      onFocus={() => setEditing(true)}
+      onFocus={(e) => {
+        setEditing(true);
+        // 표시 형식 → 숫자로 바뀌면서 선택이 풀리므로, 다시 전체 선택해 바로 덮어쓸 수 있게
+        const input = e.currentTarget;
+        requestAnimationFrame(() => input.select());
+      }}
       onBlur={() => setEditing(false)}
       onChange={(e) => setArenaScore(arenaIndex, field, e.target.value)}
       placeholder={placeholder}
       className={clsx('slot absolute min-w-0 bg-transparent px-2 py-1 placeholder:text-ink-subtle', !value && 'slot-empty')}
-      style={
-        value && boardStyle.scoreBg
-          ? { ...style, backgroundColor: withOpacity(boardStyle.scoreBgColor, boardStyle.scoreBgOpacity), borderRadius: u(boardStyle.scoreBgRadius) }
-          : style
-      }
+      style={{
+        ...style,
+        // 외곽선은 입력한 점수에만 (빈 칸 안내 글자에는 그리지 않음)
+        WebkitTextStroke: value ? stroke : undefined,
+        ...(value && boardStyle.scoreBg && { backgroundColor: withOpacity(boardStyle.scoreBgColor, boardStyle.scoreBgOpacity), borderRadius: u(boardStyle.scoreBgRadius) }),
+      }}
     />
   );
 }
@@ -269,8 +284,11 @@ function RatioHandle({
   space,
   onChange,
   style,
+  tabbable,
 }: {
   label: string;
+  /** 12개 아레나에 함께 적용되므로 키보드로는 첫 아레나 것만 고를 수 있게 */
+  tabbable: boolean;
   value: number;
   /** 두 쿠키가 나눠 쓰는 전체 폭 (부모 폭 대비 %) */
   space: number;
@@ -311,7 +329,7 @@ function RatioHandle({
     <div
       data-edit-only
       role="slider"
-      tabIndex={0}
+      tabIndex={tabbable ? 0 : -1}
       aria-label={label}
       aria-valuemin={MIN_RATIO}
       aria-valuemax={MAX_RATIO}

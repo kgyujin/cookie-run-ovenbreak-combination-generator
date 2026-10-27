@@ -40,13 +40,13 @@ export default function Slot({
     <button
       type="button"
       onClick={onSelect}
-      aria-label={image ? `${label}: ${name ?? '선택됨'} — 변경` : `${label} 선택`}
+      aria-label={image ? `${label}: ${name ?? '선택됨'}, 변경` : `${label} 선택`}
       title={item?.description ?? name}
       className={clsx('slot absolute overflow-hidden', !image && emptyClassName, className)}
       style={style}
     >
       {image ? (
-        <img src={image} alt="" crossOrigin="anonymous" draggable={false} className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
+        <img src={image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
       ) : (
         <span
           data-edit-only

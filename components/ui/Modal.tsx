@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useId, useRef } from 'react';
 import { CloseIcon } from './icons';
+import { focusInitial, useScrollArea } from './useScrollArea';
 
 /**
  * 네이티브 <dialog> 기반 창. 포커스 가두기·Esc 닫기·배경 비활성화를 브라우저가 처리하고,
@@ -24,12 +25,15 @@ export default function Modal({
   drawer?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const scrollArea = useScrollArea(bodyRef);
 
   useEffect(() => {
     const dialog = ref.current;
     const previous = document.activeElement as HTMLElement | null;
     dialog?.showModal();
+    focusInitial(dialog);
     return () => previous?.focus?.();
   }, []);
 
@@ -63,8 +67,7 @@ export default function Modal({
             </button>
           </div>
         </div>
-        {/* tabIndex: 안에 누를 것이 없어도 키보드로 스크롤할 수 있게 */}
-        <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-offset-[-3px]">
+        <div ref={bodyRef} {...scrollArea} aria-labelledby={titleId} className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-offset-[-3px]">
           {children}
         </div>
         {footer && <div className="flex shrink-0 flex-wrap gap-2 border-t border-line bg-surface-cream px-5 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">{footer}</div>}

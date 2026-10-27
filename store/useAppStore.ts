@@ -32,11 +32,11 @@ export const initialBoard = (): BoardState => ({
     offsetY: 0,
     lineHeight: 1.2,
     letterSpacing: 0,
-    fontColor: '#111827',
+    fontColor: '#1c1917',
     fontWeight: 700,
     seasonStrokeColor: '#ffffff',
     seasonStrokeWidth: 0,
-    scoreColor: '#111827',
+    scoreColor: '#1c1917',
     scoreFontSize: 14,
     scoreFontWeight: 400,
     scoreAlign: 'center',
@@ -66,23 +66,43 @@ export const initialBoard = (): BoardState => ({
 });
 
 // ----- 저장·공유된 데이터 검증 (공유 링크는 누구나 만들 수 있으므로 알려진 필드·형식만 받는다) -----
-const str = (v: unknown) => (typeof v === 'string' ? v : '');
+/** 문자열만, 최대 길이까지 (아주 긴 문자열로 화면이 멈추는 것 방지) */
+const str = (v: unknown, max = 300) => (typeof v === 'string' ? v.slice(0, max) : '');
 const clamp = (v: unknown, min: number, max: number, fallback: number) =>
   Number.isFinite(Number(v)) && v !== null && v !== '' ? Math.min(max, Math.max(min, Number(v))) : fallback;
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T => (options.includes(v as T) ? (v as T) : fallback);
 const color = (v: unknown, fallback?: string) => (/^#[0-9a-f]{3,8}$/i.test(str(v)) ? str(v) : fallback);
 const weight = (v: unknown, fallback: number) => ([400, 700, 900].includes(Number(v)) ? Number(v) : fallback);
 /** 아이템 이미지는 항상 사이트 내부 경로 */
-const itemImage = (v: unknown) => (str(v).startsWith('/images/') ? str(v) : '');
-/** http(s) 주소 또는 지정한 종류의 data: URL만 허용 (javascript: 등 차단) */
-export const safeUrl = (v: unknown, dataPrefix?: string) => {
-  const url = str(v).trim();
-  if (dataPrefix && url.startsWith(dataPrefix)) return url;
+const itemImage = (v: unknown) => (/^\/images\/[^?#]+$/.test(str(v)) && !str(v).includes('..') ? str(v) : '');
+
+const DATA_URL = {
+  image: /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/,
+  font: /^data:(?:font\/(?:ttf|otf|woff2?|sfnt)|application\/(?:octet-stream|x-font-[a-z]+|font-[a-z]+|vnd\.ms-opentype));base64,[A-Za-z0-9+/=]+$/,
+};
+
+/**
+ * https 주소 또는 형식이 확실한 data: URL만 허용.
+ * URL 객체로 다시 써서 따옴표·괄호가 인코딩되므로 CSS url("...") 안에서 빠져나갈 수 없다.
+ */
+export const safeUrl = (v: unknown, dataKind?: keyof typeof DATA_URL) => {
+  if (typeof v !== 'string') return '';
+  const raw = v.trim();
+  if (dataKind && raw.length <= 7_000_000 && DATA_URL[dataKind].test(raw)) return raw;
   try {
-    return ['http:', 'https:'].includes(new URL(url).protocol) ? url : '';
+    const url = new URL(raw.slice(0, 2048));
+    return url.protocol === 'https:' ? url.href : '';
   } catch {
     return '';
   }
+};
+
+const YOUTUBE_HOSTS = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'];
+/** 유튜브 주소만 허용 (공유 링크로 다른 사이트 링크를 심는 것 방지) */
+export const safeYoutubeUrl = (v: unknown) => {
+  const url = safeUrl(v);
+  if (!url) return '';
+  return YOUTUBE_HOSTS.includes(new URL(url).hostname) ? url : '';
 };
 
 /** 저장/공유된 데이터에서 알려진 필드만 골라 현재 구조로 맞춘다 (옛 버전 데이터 호환). */
@@ -97,12 +117,12 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       color: color(bg.color),
       gradient: Array.isArray(bg.gradient) ? [color(bg.gradient[0], '#667eea')!, color(bg.gradient[1], '#764ba2')!] : undefined,
       angle: clamp(bg.angle, 0, 360, 135),
-      imageUrl: safeUrl(bg.imageUrl, 'data:image/'),
+      imageUrl: safeUrl(bg.imageUrl, 'image'),
       imageFit: oneOf(bg.imageFit, ['cover', 'contain', 'repeat'] as const, 'cover'),
       dim: clamp(bg.dim, 0, 0.6, 0),
     };
   }
-  if (typeof raw.seasonName === 'string') out.seasonName = raw.seasonName;
+  if (typeof raw.seasonName === 'string') out.seasonName = str(raw.seasonName, 120);
   if ('seasonDish' in raw) out.seasonDish = itemImage(raw.seasonDish);
   if (Array.isArray(raw.seasonIngredients)) {
     out.seasonIngredients = [0, 1, 2].map((i) => itemImage(raw.seasonIngredients[i])) as [string, string, string];
@@ -117,7 +137,7 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
         treasures: [0, 1, 2].map((t) => itemImage(c?.treasures?.[t])) as [string, string, string],
       });
       return {
-        youtubeUrl: safeUrl(a.youtubeUrl) || null,
+        youtubeUrl: safeYoutubeUrl(a.youtubeUrl) || null,
         mainCombo: combo(a.mainCombo),
         magicCandy: {
           cookie1Candy: itemImage(a.magicCandy?.cookie1Candy),
@@ -125,10 +145,10 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
           cookie2Candy: itemImage(a.magicCandy?.cookie2Candy),
           cookie2Blessing: itemImage(a.magicCandy?.cookie2Blessing),
         },
-        score: { value: str(a.score?.value) },
+        score: { value: str(a.score?.value, 30) },
         dish: itemImage(a.dish),
         subCombo: combo(a.subCombo),
-        subScore: { value: str(a.subScore?.value) },
+        subScore: { value: str(a.subScore?.value, 30) },
         mainCookieRatio: clamp(a.mainCookieRatio, 30, 70, empty.mainCookieRatio),
         subCookieRatio: clamp(a.subCookieRatio, 30, 70, empty.subCookieRatio),
       };
@@ -146,8 +166,8 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       offsetY: clamp(f.offsetY, -150, 150, 0),
       lineHeight: clamp(f.lineHeight, 0.8, 2, 1.2),
       letterSpacing: clamp(f.letterSpacing, -5, 20, 0),
-      customFontUrl: safeUrl(f.customFontUrl, 'data:font/'),
-      customFontName: str(f.customFontName),
+      customFontUrl: safeUrl(f.customFontUrl, 'font'),
+      customFontName: str(f.customFontName, 100),
       fontColor: color(f.fontColor, d.fontColor),
       fontWeight: weight(f.fontWeight, 700),
       seasonStrokeColor: color(f.seasonStrokeColor, d.seasonStrokeColor),
@@ -191,6 +211,25 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
     };
   }
   return out;
+}
+
+/** 아무것도 입력하지 않은 조합표인지 (공유 링크를 열 때 덮어쓰기 확인용) */
+export function isBoardEmpty(board: BoardState) {
+  const filled = (v: string) => !!v;
+  return (
+    !board.seasonName &&
+    !board.seasonDish &&
+    !board.seasonIngredients.some(filled) &&
+    board.arenas.every(
+      (a) =>
+        !a.youtubeUrl &&
+        !a.dish &&
+        !a.score.value &&
+        !a.subScore.value &&
+        ![a.mainCombo, a.subCombo].some((c) => [c.pet, c.cookie1, c.cookie2, ...c.treasures].some(filled)) &&
+        !Object.values(a.magicCandy).some(filled)
+    )
+  );
 }
 
 export function pickBoard(state: BoardState): BoardState {

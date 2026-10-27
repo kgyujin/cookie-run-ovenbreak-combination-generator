@@ -23,7 +23,8 @@ export function backgroundCss(background: BackgroundData) {
     const dim = background.dim ? `linear-gradient(rgb(0 0 0 / ${background.dim}), rgb(0 0 0 / ${background.dim})), ` : '';
     return `${dim}url("${background.imageUrl}") ${fit}, #1c1917`;
   }
-  return '';
+  // 이미지 주소를 아직 넣지 않은 경우 등: 저장 이미지가 투명해지지 않게 기본 바탕
+  return '#fffbf5';
 }
 
 /** 화면 위·아래 끝(당겼을 때 드러나는 곳)에 칠할 단색 */
@@ -34,7 +35,7 @@ export function backgroundEdgeColor(background: BackgroundData) {
 }
 
 /** 글자색이 밝으면 어두운 테두리 빛, 어두우면 흰 테두리 빛 (어떤 배경에서도 번호가 읽히게) */
-export function textGlow(color = '#111827') {
+export function textGlow(color = '#1c1917') {
   const hex = color.replace('#', '');
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.length === 3 ? hex[i / 2].repeat(2) : hex.slice(i, i + 2), 16));
   const light = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;

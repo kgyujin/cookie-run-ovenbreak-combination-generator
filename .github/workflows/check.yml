@@ -6,6 +6,9 @@ on:
     branches-ignore:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   content:
     name: 아이템 이미지·메타데이터 검사

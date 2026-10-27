@@ -1,5 +1,24 @@
 import { ScoreDisplayType } from '@/types';
 
+const UNIT_VALUES: Record<string, number> = { K: 1e3, M: 1e6, B: 1e9, T: 1e12, 만: 1e4, 억: 1e8, 조: 1e12 };
+
+/**
+ * 입력한 점수를 숫자로 읽는다.
+ * '331000000', '331,000,000' 같은 숫자뿐 아니라 '3억 3100만', '1.5억', '331M'처럼 단위를 붙여 써도 된다.
+ * 읽을 수 없으면 null (입력한 글자를 그대로 보여준다).
+ */
+function parseScore(value: string): number | null {
+  const s = value.replace(/[,\s]/g, '').replace(/점$/, '').toUpperCase();
+  if (!s) return null;
+  if (/^\d+$/.test(s)) return Number(s);
+  const parts = s.match(/\d+(?:\.\d+)?(?:조|억|만|K|M|B|T)?/g);
+  if (!parts || parts.join('') !== s) return null;
+  return parts.reduce((sum, part) => {
+    const unit = part.match(/(조|억|만|K|M|B|T)$/)?.[1];
+    return sum + parseFloat(part) * (unit ? UNIT_VALUES[unit] : 1);
+  }, 0);
+}
+
 /**
  * 점수를 지정된 형식으로 포맷팅합니다.
  * @param value 점수 문자열
@@ -8,13 +27,13 @@ import { ScoreDisplayType } from '@/types';
  */
 export function formatScore(value: string, displayType: ScoreDisplayType): string {
   if (!value || value.trim() === '') return value;
-  
-  // 숫자만 추출
-  const numericValue = value.replace(/[^0-9]/g, '');
-  if (!numericValue) return value;
-  
-  const num = parseInt(numericValue, 10);
-  if (isNaN(num)) return value;
+
+  // 숫자만 쓴 경우 콤마 표기는 문자열 그대로 처리 (아주 큰 수도 자릿수가 틀어지지 않게)
+  const digits = value.replace(/[,\s]/g, '');
+  if (displayType === 'comma' && /^\d+$/.test(digits)) return digits.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  const num = parseScore(value);
+  if (num === null || !Number.isFinite(num)) return value;
 
   switch (displayType) {
     case 'abbreviated':
@@ -29,40 +48,36 @@ export function formatScore(value: string, displayType: ScoreDisplayType): strin
 }
 
 /**
- * 숫자를 M/B 단위로 축약 (331M = 3억 3100만)
+ * 숫자를 K/M/B/T 단위로 축약 (331M = 3억 3100만)
+ * 반올림해서 1000이 되면 다음 단위로 올린다 (999,950 → 1M)
  */
 function formatAbbreviated(num: number): string {
-  if (num >= 1_000_000_000_000) {
-    // 1조 이상
-    const value = num / 1_000_000_000_000;
-    return value % 1 === 0 ? `${value}T` : `${value.toFixed(1)}T`;
-  } else if (num >= 1_000_000_000) {
-    // 10억 이상
-    const value = num / 1_000_000_000;
-    return value % 1 === 0 ? `${value}B` : `${value.toFixed(1)}B`;
-  } else if (num >= 1_000_000) {
-    // 100만 이상
-    const value = num / 1_000_000;
-    return value % 1 === 0 ? `${value}M` : `${value.toFixed(1)}M`;
-  } else if (num >= 1_000) {
-    // 1천 이상
-    const value = num / 1_000;
-    return value % 1 === 0 ? `${value}K` : `${value.toFixed(1)}K`;
-  }
-  return num.toString();
+  const units: [number, string][] = [
+    [1e3, 'K'],
+    [1e6, 'M'],
+    [1e9, 'B'],
+    [1e12, 'T'],
+  ];
+  if (num < 1000) return Math.round(num).toString();
+  const round1 = (v: number) => Math.round(v * 10) / 10;
+  let i = units.filter(([unit]) => num >= unit).length - 1;
+  let value = round1(num / units[i][0]);
+  if (value >= 1000 && i < units.length - 1) value = round1(num / units[++i][0]);
+  return `${value % 1 === 0 ? value : value.toFixed(1)}${units[i][1]}`;
 }
 
 /**
  * 숫자에 콤마 추가 (1,234,567)
  */
 function formatComma(num: number): string {
-  return num.toLocaleString('en-US');
+  return Math.round(num).toLocaleString('en-US');
 }
 
 /**
  * 한글 단위로 표기 (3억 3100만)
  */
 function formatKorean(num: number): string {
+  num = Math.round(num);
   if (num === 0) return '0';
 
   const units = [

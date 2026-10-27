@@ -15,10 +15,10 @@ type Filter = 'all' | 'new' | Rarity;
 
 // 등급 색 점 (글자와 함께 쓰므로 색만으로 구분하지 않음)
 const RARITY_DOT: Record<string, string> = {
-  legendary: 'bg-amber-500',
-  epic: 'bg-fuchsia-500',
-  rare: 'bg-sky-500',
-  common: 'bg-stone-400',
+  legendary: 'bg-amber-600',
+  epic: 'bg-fuchsia-600',
+  rare: 'bg-sky-600',
+  common: 'bg-stone-500',
 };
 
 const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, '');
@@ -75,16 +75,14 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
       onClose={onClose}
       className="modal-wide"
       footer={
-        <>
-          {request.current && (
-            <Button variant="ghost" className="ml-auto" onClick={() => select('')}>
-              선택 해제
-            </Button>
-          )}
-        </>
+        request.current ? (
+          <Button variant="ghost" className="ml-auto" onClick={() => select('')}>
+            선택 해제
+          </Button>
+        ) : undefined
       }
     >
-      <div className="sticky top-0 z-10 space-y-3 border-b border-line bg-surface/95 px-5 py-3 backdrop-blur">
+      <div className="picker-head sticky top-0 z-10 space-y-3 border-b border-line bg-surface px-5 py-3">
         <div className="relative">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle">
             <SearchIcon />
@@ -95,6 +93,7 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
             onChange={(e) => setQuery(e.target.value)}
             placeholder="이름으로 검색"
             aria-label={`${CATEGORY_LABELS[request.category]} 이름 검색`}
+            data-autofocus="fine-pointer"
             className="field pl-9"
           />
         </div>
@@ -111,7 +110,11 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
                   isOn(key) ? 'bg-primary text-on-primary shadow-e1' : 'bg-surface-sunken text-ink-muted hover:text-ink'
                 )}
               >
-                {key in RARITY_DOT && <span className={clsx('h-2 w-2 rounded-full', RARITY_DOT[key], isOn(key) && 'ring-2 ring-white/70')} aria-hidden="true" />}
+                {isOn(key) && key !== 'all' ? (
+                  <CheckIcon className="h-3.5 w-3.5" />
+                ) : (
+                  key in RARITY_DOT && <span className={clsx('h-2 w-2 rounded-full', RARITY_DOT[key])} aria-hidden="true" />
+                )}
                 {label}
               </button>
             ))}
@@ -126,11 +129,16 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
           ))}
         </ul>
       ) : (
-        <ul key={`${selectedRarities.join()}-${newOnly}`} className="grid grid-cols-3 gap-2 p-4 sm:grid-cols-4 md:grid-cols-5">
+        <ul className="grid grid-cols-3 gap-2 p-4 sm:grid-cols-4 md:grid-cols-5">
           {filtered.map((item, i) => {
             const selected = item.image === request.current;
             return (
-              <li key={item.id} className="blur-fade" style={{ ['--i' as string]: i }}>
+              <li
+                key={item.id}
+                // 처음 보이는 카드만 차례로 나타나게 하고, 화면 밖 카드는 그리기를 미룬다
+                className={clsx(i < 24 && 'blur-fade', '[contain-intrinsic-size:auto_170px] [content-visibility:auto]')}
+                style={{ ['--i' as string]: i }}
+              >
                 <button
                   type="button"
                   onClick={() => select(item.image)}
@@ -152,7 +160,10 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
                     />
                     {/* 이미지 칸 모서리에 고정: 왼쪽 위 = 등급, 오른쪽 위 = NEW·선택 */}
                     {item.rarity && (
-                      <span className={clsx('absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white', RARITY_DOT[item.rarity])}>
+                      <span
+                        title={RARITY_LABELS[item.rarity as Rarity]}
+                        className={clsx('absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white', RARITY_DOT[item.rarity])}
+                      >
                         <span className="sr-only">{RARITY_LABELS[item.rarity as keyof typeof RARITY_LABELS]}</span>
                       </span>
                     )}

@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ButtonHTMLAttributes } from 'react';
+import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
@@ -11,20 +11,22 @@ const VARIANTS: Record<Variant, string> = {
   danger: 'bg-danger text-on-danger hover:brightness-110',
 };
 
-export default function Button({
-  variant = 'secondary',
-  className,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
+const Button = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }>(function Button(
+  { variant = 'secondary', className, ...props },
+  ref
+) {
   return (
     <button
+      ref={ref}
       type="button"
       className={clsx(
-        'relative inline-flex h-touch shrink-0 items-center justify-center gap-2 overflow-hidden rounded-md px-4 text-label-md transition-[background-color,color,transform,filter] duration-150 active:scale-[.97] disabled:pointer-events-none disabled:opacity-50',
+        'relative inline-flex h-touch shrink-0 items-center justify-center gap-2 overflow-hidden rounded-md px-4 text-label-md transition-[background-color,color,transform,filter] duration-150 active:scale-[.97] disabled:pointer-events-none disabled:opacity-50 aria-disabled:opacity-60',
         VARIANTS[variant],
         className
       )}
       {...props}
     />
   );
-}
+});
+
+export default Button;

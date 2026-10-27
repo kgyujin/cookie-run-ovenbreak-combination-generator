@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { cardStyle, fontFamilyOf, u } from '@/lib/board';
 import Slot from './Slot';
@@ -9,7 +9,7 @@ import Slot from './Slot';
 const MAX_LINES = 3;
 
 /** 조합표 상단: 시즌명(80%) + 시즌 요리·재료(20%) */
-export default function Header() {
+export default memo(function Header() {
   const seasonName = useAppStore((s) => s.seasonName);
   const seasonDish = useAppStore((s) => s.seasonDish);
   const seasonIngredients = useAppStore((s) => s.seasonIngredients);
@@ -57,18 +57,16 @@ export default function Header() {
           value={seasonName}
           rows={1}
           aria-label="시즌명 (최대 3줄)"
-          onChange={(e) => {
-            if (e.target.value.split('\n').length <= MAX_LINES) setSeasonName(e.target.value);
-          }}
+          onChange={(e) => setSeasonName(e.target.value.split('\n').slice(0, MAX_LINES).join('\n'))}
           placeholder="시즌명"
           className="title-input scrollbar-hide w-full resize-none overflow-hidden border-none bg-transparent p-0 placeholder:text-ink-subtle"
           style={{
             fontSize: u(fontSettings.fontSize),
             fontFamily: fontFamilyOf(fontSettings.fontFamily),
             textAlign: fontSettings.textAlign,
-            color: fontSettings.fontColor || '#1f2937',
+            color: fontSettings.fontColor || '#1c1917',
             fontWeight: fontSettings.fontWeight ?? 700,
-            WebkitTextStroke: fontSettings.seasonStrokeWidth ? `${fontSettings.seasonStrokeWidth}px ${fontSettings.seasonStrokeColor}` : undefined,
+            WebkitTextStroke: fontSettings.seasonStrokeWidth && seasonName ? `${u(fontSettings.seasonStrokeWidth)} ${fontSettings.seasonStrokeColor}` : undefined,
             paintOrder: 'stroke fill',
             lineHeight: fontSettings.lineHeight ?? 1.2,
             letterSpacing: u(fontSettings.letterSpacing ?? 0),
@@ -114,4 +112,4 @@ export default function Header() {
       </div>
     </div>
   );
-}
+});
