@@ -14,6 +14,7 @@ export interface GameItem {
   aliases?: string[];
   addedAt?: string; // YYYY-MM-DD, 신규 배지 표시용
   pinned?: boolean;
+  thumb?: string; // 선택 창용 작은 이미지
 }
 
 export interface ComboData {
@@ -52,7 +53,10 @@ export interface BackgroundData {
   type: BackgroundType;
   color?: string;
   gradient?: [string, string];
+  angle?: number; // 그라데이션 방향 (기본 135)
   imageUrl?: string;
+  imageFit?: 'cover' | 'contain' | 'repeat';
+  dim?: number; // 이미지 어둡게 0~0.6
 }
 
 export type ScoreDisplayType = 'abbreviated' | 'comma' | 'korean';
@@ -64,10 +68,16 @@ export interface FontSettings {
   customFontUrl?: string;
   customFontName?: string;
   fontColor?: string;
+  fontWeight?: number; // 시즌명 굵기 (기본 700)
+  seasonStrokeColor?: string;
+  seasonStrokeWidth?: number;
   scoreColor?: string;
   scoreFontSize?: number;
+  scoreFontWeight?: number; // 점수 굵기 (기본 400)
   scoreStrokeColor?: string;
   scoreStrokeWidth?: number;
+  numberColor?: string; // 아레나 번호 색 (없으면 시즌명 색)
+  numberSize?: number; // 아레나 번호 크기 (기본 18)
 }
 
 export interface DisplaySettings {

@@ -17,7 +17,7 @@ const createEmptyArena = (): ArenaData => ({
   subCookieRatio: 56, // 대체 조합 선달 쿠키 비율 (기본 56%, 이달 44%)
 });
 
-const initialBoard = (): BoardState => ({
+export const initialBoard = (): BoardState => ({
   background: DEFAULT_BACKGROUND,
   seasonName: '',
   seasonDish: '',
@@ -28,10 +28,15 @@ const initialBoard = (): BoardState => ({
     fontFamily: 'Pretendard',
     textAlign: 'center',
     fontColor: '#111827',
+    fontWeight: 700,
+    seasonStrokeColor: '#ffffff',
+    seasonStrokeWidth: 0,
     scoreColor: '#111827',
     scoreFontSize: 14,
+    scoreFontWeight: 400,
     scoreStrokeColor: '#ffffff',
     scoreStrokeWidth: 0,
+    numberSize: 18,
   },
   displaySettings: { scoreDisplayType: 'comma' },
 });
@@ -42,6 +47,7 @@ const clamp = (v: unknown, min: number, max: number, fallback: number) =>
   Number.isFinite(Number(v)) && v !== null && v !== '' ? Math.min(max, Math.max(min, Number(v))) : fallback;
 const oneOf = <T extends string>(v: unknown, options: readonly T[], fallback: T): T => (options.includes(v as T) ? (v as T) : fallback);
 const color = (v: unknown, fallback?: string) => (/^#[0-9a-f]{3,8}$/i.test(str(v)) ? str(v) : fallback);
+const weight = (v: unknown, fallback: number) => ([400, 700, 900].includes(Number(v)) ? Number(v) : fallback);
 /** 아이템 이미지는 항상 사이트 내부 경로 */
 const itemImage = (v: unknown) => (str(v).startsWith('/images/') ? str(v) : '');
 /** http(s) 주소 또는 지정한 종류의 data: URL만 허용 (javascript: 등 차단) */
@@ -66,7 +72,10 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       type: oneOf(bg.type, ['color', 'gradient', 'image'] as const, 'gradient'),
       color: color(bg.color),
       gradient: Array.isArray(bg.gradient) ? [color(bg.gradient[0], '#667eea')!, color(bg.gradient[1], '#764ba2')!] : undefined,
+      angle: clamp(bg.angle, 0, 360, 135),
       imageUrl: safeUrl(bg.imageUrl, 'data:image/'),
+      imageFit: oneOf(bg.imageFit, ['cover', 'contain', 'repeat'] as const, 'cover'),
+      dim: clamp(bg.dim, 0, 0.6, 0),
     };
   }
   if (typeof raw.seasonName === 'string') out.seasonName = raw.seasonName;
@@ -111,10 +120,16 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       customFontUrl: safeUrl(f.customFontUrl, 'data:font/'),
       customFontName: str(f.customFontName),
       fontColor: color(f.fontColor, d.fontColor),
+      fontWeight: weight(f.fontWeight, 700),
+      seasonStrokeColor: color(f.seasonStrokeColor, d.seasonStrokeColor),
+      seasonStrokeWidth: clamp(f.seasonStrokeWidth, 0, 8, 0),
       scoreColor: color(f.scoreColor, d.scoreColor),
       scoreFontSize: clamp(f.scoreFontSize, 10, 48, d.scoreFontSize!),
+      scoreFontWeight: weight(f.scoreFontWeight, 400),
       scoreStrokeColor: color(f.scoreStrokeColor, d.scoreStrokeColor),
       scoreStrokeWidth: clamp(f.scoreStrokeWidth, 0, 5, d.scoreStrokeWidth!),
+      numberColor: color(f.numberColor),
+      numberSize: clamp(f.numberSize, 12, 32, 18),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {
@@ -143,9 +158,11 @@ export interface PickerRequest {
 export interface AppStore extends BoardState {
   gameData: GameData | null;
   picker: PickerRequest | null;
+  settingsOpen: boolean;
   toast: { id: number; message: string; tone: 'success' | 'error' } | null;
   openPicker: (request: PickerRequest) => void;
   closePicker: () => void;
+  setSettingsOpen: (open: boolean) => void;
   showToast: (message: string, tone?: 'success' | 'error') => void;
   setBackground: (background: BackgroundData) => void;
   setSeasonName: (name: string) => void;
@@ -177,6 +194,8 @@ export const useAppStore = create<AppStore>((set) => {
     toast: null,
     openPicker: (picker) => set({ picker }),
     closePicker: () => set({ picker: null }),
+    settingsOpen: false,
+    setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
     showToast: (message, tone = 'success') => set({ toast: { id: Date.now(), message, tone } }),
 
     setBackground: (background) => set({ background }),

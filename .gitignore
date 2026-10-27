@@ -36,3 +36,4 @@ next-env.d.ts
 
 # 빌드 때 scripts/generateImageData.js 가 자동 생성 (직접 수정·커밋하지 않음)
 /public/data/gameData.json
+/public/thumbs/

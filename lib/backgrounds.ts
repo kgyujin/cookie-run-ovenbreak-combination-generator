@@ -36,5 +36,5 @@ export const isSameBackground = (a: BackgroundData, b: BackgroundData) =>
   (a.type === 'color'
     ? a.color?.toLowerCase() === b.color?.toLowerCase()
     : a.type === 'gradient'
-      ? a.gradient?.join().toLowerCase() === b.gradient?.join().toLowerCase()
+      ? a.gradient?.join().toLowerCase() === b.gradient?.join().toLowerCase() && (a.angle ?? 135) === (b.angle ?? 135)
       : a.imageUrl === b.imageUrl);

@@ -16,9 +16,20 @@ export const fontFamilyOf = (family: FontSettings['fontFamily']) =>
 export function backgroundCss(background: BackgroundData) {
   if (background.type === 'color' && background.color) return background.color;
   if (background.type === 'gradient' && background.gradient)
-    return `linear-gradient(135deg, ${background.gradient[0]}, ${background.gradient[1]})`;
-  if (background.type === 'image' && background.imageUrl) return `url("${background.imageUrl}") center/cover`;
+    return `linear-gradient(${background.angle ?? 135}deg, ${background.gradient[0]}, ${background.gradient[1]})`;
+  if (background.type === 'image' && background.imageUrl) {
+    const fit = { cover: 'center/cover no-repeat', contain: 'center/contain no-repeat', repeat: 'top left repeat' }[background.imageFit ?? 'cover'];
+    const dim = background.dim ? `linear-gradient(rgb(0 0 0 / ${background.dim}), rgb(0 0 0 / ${background.dim})), ` : '';
+    return `${dim}url("${background.imageUrl}") ${fit}, #1c1917`;
+  }
   return '';
+}
+
+/** 화면 위·아래 끝(당겼을 때 드러나는 곳)에 칠할 단색 */
+export function backgroundEdgeColor(background: BackgroundData) {
+  if (background.type === 'color') return background.color ?? '#fffbf5';
+  if (background.type === 'gradient') return background.gradient?.[0] ?? '#fffbf5';
+  return '#1c1917';
 }
 
 /** 글자색이 밝으면 어두운 테두리 빛, 어두우면 흰 테두리 빛 (어떤 배경에서도 번호가 읽히게) */

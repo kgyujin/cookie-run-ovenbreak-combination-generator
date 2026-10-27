@@ -5,18 +5,26 @@ import { isReturningVisitor, pickBoard, useAppStore } from '@/store/useAppStore'
 import { markUpdatesSeen, unseenCount } from '@/lib/updates';
 import Button from './ui/Button';
 import { BellIcon, CookieLogo, DownloadIcon, LinkIcon, SettingsIcon } from './ui/icons';
-import SettingsModal from './SettingsModal';
+import SettingsPanel from './SettingsPanel';
 import ShareDialog from './ShareDialog';
 import UpdatesDialog from './UpdatesDialog';
 
 /** 화면 상단 고정 도구 막대 (이미지 저장 대상이 아님) */
 export default function Toolbar() {
   const showToast = useAppStore((s) => s.showToast);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpen = useAppStore((s) => s.settingsOpen);
+  const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
   const [shareOpen, setShareOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newUpdates, setNewUpdates] = useState(0);
   const [updatesOpen, setUpdatesOpen] = useState(false);
+
+  // 이미지 저장용 라이브러리를 한가할 때 미리 받아 두어, 처음 저장할 때 기다리지 않게 한다
+  useEffect(() => {
+    const load = () => import('@/lib/exportImage');
+    if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 5000 });
+    else setTimeout(load, 3000);
+  }, []);
 
   // 확인하지 않은 업데이트가 있으면 바로 보여준다 (처음 온 사람은 확인한 것으로 처리)
   useEffect(() => {
@@ -61,7 +69,13 @@ export default function Toolbar() {
             <BellIcon />
             {newUpdates > 0 && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-surface-cream" aria-hidden="true" />}
           </Button>
-          <Button variant="ghost" onClick={() => setSettingsOpen(true)} aria-label="설정" className="w-touch px-0 sm:w-auto sm:px-3">
+          <Button
+            variant="ghost"
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            aria-label="설정"
+            aria-expanded={settingsOpen}
+            className={'w-touch px-0 sm:w-auto sm:px-3' + (settingsOpen ? ' bg-surface-sunken !text-ink' : '')}
+          >
             <SettingsIcon />
             <span className="hidden sm:inline">설정</span>
           </Button>
@@ -84,7 +98,7 @@ export default function Toolbar() {
           </div>
         </div>
       )}
-      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       {shareOpen && <ShareDialog onClose={() => setShareOpen(false)} />}
       {updatesOpen && <UpdatesDialog newCount={newUpdates} onClose={closeUpdates} />}
     </>

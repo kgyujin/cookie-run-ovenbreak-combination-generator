@@ -49,12 +49,15 @@ export default function Header() {
             if (e.target.value.split('\n').length <= MAX_LINES) setSeasonName(e.target.value);
           }}
           placeholder="시즌명"
-          className="scrollbar-hide w-full resize-none overflow-hidden border-none bg-transparent p-0 font-bold placeholder:text-ink-subtle"
+          className="title-input scrollbar-hide w-full resize-none overflow-hidden border-none bg-transparent p-0 placeholder:text-ink-subtle"
           style={{
             fontSize: u(fontSettings.fontSize),
             fontFamily: fontFamilyOf(fontSettings.fontFamily),
             textAlign: fontSettings.textAlign,
             color: fontSettings.fontColor || '#1f2937',
+            fontWeight: fontSettings.fontWeight ?? 700,
+            WebkitTextStroke: fontSettings.seasonStrokeWidth ? `${fontSettings.seasonStrokeWidth}px ${fontSettings.seasonStrokeColor}` : undefined,
+            paintOrder: 'stroke fill',
             lineHeight: 1.2,
             maxHeight: `calc(${fontSettings.fontSize} * var(--u) * 1.2 * ${MAX_LINES})`,
             whiteSpace: 'pre-wrap',

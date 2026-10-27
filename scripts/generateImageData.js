@@ -15,6 +15,8 @@ const IMAGES_DIR = path.join(ROOT, 'public', 'images');
 const META_PATH = path.join(ROOT, 'data', 'item-meta.json');
 const UPDATES_PATH = path.join(ROOT, 'data', 'updates.json');
 const OUTPUT_PATH = path.join(ROOT, 'public', 'data', 'gameData.json');
+const THUMBS_DIR = path.join(ROOT, 'public', 'thumbs'); // 선택 창용 작은 이미지 (빌드 때 생성, 커밋 안 함)
+const THUMB_SIZE = 160;
 
 // 카테고리 → 폴더
 const CATEGORY_FOLDERS = {
@@ -173,9 +175,45 @@ function checkUpdates() {
   });
 }
 
-function main() {
+/** 선택 창에 쓸 작은 webp 이미지를 만든다. 원본보다 새로우면 건너뛴다. */
+async function makeThumbnails(data) {
+  let sharp;
+  try {
+    sharp = require('sharp');
+  } catch {
+    warnings.push('sharp가 없어 선택 창용 작은 이미지를 만들지 못했습니다 (원본 이미지로 표시)');
+    return;
+  }
+  const items = Object.entries(data)
+    .filter(([k]) => k !== 'renamed')
+    .flatMap(([, list]) => list);
+  let made = 0;
+  for (let i = 0; i < items.length; i += 16) {
+    await Promise.all(
+      items.slice(i, i + 16).map(async (item) => {
+        const src = path.join(ROOT, 'public', item.image);
+        const thumb = `/thumbs${item.image.replace(/^\/images/, '').replace(IMAGE_RE, '.webp')}`;
+        const dest = path.join(ROOT, 'public', thumb);
+        try {
+          if (!fs.existsSync(dest) || fs.statSync(dest).mtimeMs < fs.statSync(src).mtimeMs) {
+            fs.mkdirSync(path.dirname(dest), { recursive: true });
+            await sharp(src).resize(THUMB_SIZE, THUMB_SIZE, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toFile(dest);
+            made++;
+          }
+          item.thumb = thumb;
+        } catch (e) {
+          warnings.push(`${item.image}: 작은 이미지 생성 실패 (${e.message})`);
+        }
+      })
+    );
+  }
+  if (made) console.log(`[작은 이미지] ${made}개 생성`);
+}
+
+async function main() {
   const checkOnly = process.argv.includes('--check');
   const data = build();
+  if (!checkOnly && errors.length === 0) await makeThumbnails(data);
   checkUpdates();
 
   const counts = Object.entries(data)
@@ -202,4 +240,7 @@ function main() {
   }
 }
 
-main();
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

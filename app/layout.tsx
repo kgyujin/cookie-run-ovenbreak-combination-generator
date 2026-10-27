@@ -20,6 +20,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
+      <head>
+        {/* 아이템 목록을 화면 코드와 동시에 받기 시작 */}
+        <link rel="preload" href="/data/gameData.json" as="fetch" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-dvh font-sans">{children}</body>
     </html>
   );

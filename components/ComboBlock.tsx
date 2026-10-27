@@ -27,6 +27,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const [youtubeOpen, setYoutubeOpen] = useState(false);
 
   const n = arenaIndex + 1;
+  const numberColor = fontSettings.numberColor ?? fontSettings.fontColor;
   const pick = (category: Category, label: string, current: string, apply: (image: string) => void) => () =>
     openPicker({ category, label: `${n}번 ${label}`, current, apply });
 
@@ -56,6 +57,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
   const scoreStyle: CSSProperties = {
     color: fontSettings.scoreColor,
     fontSize: u(fontSettings.scoreFontSize ?? 14),
+    fontWeight: fontSettings.scoreFontWeight ?? 400,
     fontFamily: fontFamilyOf(fontSettings.fontFamily),
     WebkitTextStroke: fontSettings.scoreStrokeWidth ? `${fontSettings.scoreStrokeWidth}px ${fontSettings.scoreStrokeColor}` : undefined,
     paintOrder: 'stroke fill',
@@ -106,7 +108,7 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
       {([1, 2] as const).map((c) => (
         <div
           key={c}
-          className={clsx('absolute overflow-hidden', !arena.magicCandy[`cookie${c}Candy`] && 'slot-empty')}
+          className={clsx('absolute', !arena.magicCandy[`cookie${c}Candy`] && 'slot-empty')}
           style={{ zIndex: 20, width: u(72), height: u(72), top: '9%', left: c === 1 ? '38%' : '49%' }}
         >
           <Slot
@@ -180,14 +182,14 @@ export default function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
         aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
         title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
         className="slot absolute flex items-center justify-center font-bold"
-        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(18) }}
+        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18) }}
       >
         <span data-edit-only className="badge absolute inset-0" aria-hidden="true" />
         <span
           className="relative"
           style={{
-            color: arena.youtubeUrl ? '#ef4444' : fontSettings.fontColor,
-            textShadow: textGlow(arena.youtubeUrl ? '#ef4444' : fontSettings.fontColor),
+            color: arena.youtubeUrl ? '#ef4444' : numberColor,
+            textShadow: textGlow(arena.youtubeUrl ? '#ef4444' : numberColor),
           }}
         >
           {arena.youtubeUrl && '▶ '}

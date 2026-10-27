@@ -18,6 +18,33 @@ const waitForImages = (root: HTMLElement) =>
   );
 
 /**
+ * html2canvas는 object-fit을 지원하지 않아 이미지를 칸 크기대로 늘려 그린다(쿠키가 눌려 보임).
+ * 그래서 복제본의 각 이미지를 원래 비율대로 계산한 크기·위치로 바꿔 둔다.
+ */
+function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[]) {
+  originals.forEach((img, i) => {
+    const clone = clones[i];
+    const { naturalWidth: nw, naturalHeight: nh, offsetWidth: w, offsetHeight: h } = img;
+    if (!clone || !nw || !nh || !w || !h) return;
+    const style = getComputedStyle(img);
+    if (style.objectFit !== 'contain') return;
+    const scale = Math.min(w / nw, h / nh);
+    const dw = nw * scale;
+    const dh = nh * scale;
+    const [px, py] = style.objectPosition.split(' ').map((v) => parseFloat(v) / 100);
+    Object.assign(clone.style, {
+      position: 'absolute',
+      inset: 'auto',
+      left: `${img.offsetLeft + (w - dw) * (isNaN(px) ? 0.5 : px)}px`,
+      top: `${img.offsetTop + (h - dh) * (isNaN(py) ? 0.5 : py)}px`,
+      width: `${dw}px`,
+      height: `${dh}px`,
+      objectFit: 'fill',
+    });
+  });
+}
+
+/**
  * 조합표를 PNG로 저장한다. 화면 크기와 관계없이 항상 같은 폭(2열 배치)으로 만든다.
  * 저장하는 동안 .is-exporting 클래스로 빈 칸 표시·편집용 요소를 숨긴다.
  */
@@ -41,6 +68,8 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       windowWidth: EXPORT_WIDTH,
       onclone: (doc) => {
         doc.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => (el.placeholder = ''));
+        const clonedArea = doc.getElementById(captureArea.id);
+        if (clonedArea) applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
       },
     });
 

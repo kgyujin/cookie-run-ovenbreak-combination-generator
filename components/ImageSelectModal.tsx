@@ -127,24 +127,33 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
                     selected ? 'border-primary bg-primary-soft ring-1 ring-primary' : 'border-line bg-surface hover:border-ink-subtle/40'
                   )}
                 >
-                  <span className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-surface-cream">
-                    <img src={item.image} alt="" loading="lazy" className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105" />
+                  <span className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-md bg-surface-cream">
+                    <img
+                      src={item.thumb ?? item.image}
+                      alt=""
+                      loading={i < 20 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      className="h-full w-full object-contain transition-transform duration-150 group-hover:scale-105"
+                    />
+                    {/* 이미지 칸 모서리에 고정: 왼쪽 위 = 등급, 오른쪽 위 = NEW·선택 */}
+                    {item.rarity && (
+                      <span className={clsx('absolute left-1.5 top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-white', RARITY_DOT[item.rarity])}>
+                        <span className="sr-only">{RARITY_LABELS[item.rarity as keyof typeof RARITY_LABELS]}</span>
+                      </span>
+                    )}
+                    <span className="absolute right-1 top-1 flex items-center gap-1">
+                      {isNew(item, now) && (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-on-primary shadow-e1">NEW</span>
+                      )}
+                      {selected && (
+                        <span className="grid h-5 w-5 place-items-center rounded-full bg-primary text-on-primary shadow-e1">
+                          <CheckIcon className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                    </span>
                   </span>
                   <span className="line-clamp-2 w-full text-caption font-semibold leading-tight text-ink">{item.name}</span>
                   {item.description && <span className="line-clamp-2 text-[11px] leading-tight text-ink-subtle">{item.description}</span>}
-                  {item.rarity && (
-                    <span className={clsx('absolute bottom-2 right-2 h-2 w-2 rounded-full', RARITY_DOT[item.rarity])}>
-                      <span className="sr-only">{RARITY_LABELS[item.rarity as keyof typeof RARITY_LABELS]}</span>
-                    </span>
-                  )}
-                  {isNew(item, now) && (
-                    <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-on-primary shadow-e1">NEW</span>
-                  )}
-                  {selected && (
-                    <span className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-primary text-on-primary shadow-e1">
-                      <CheckIcon />
-                    </span>
-                  )}
                 </button>
               </li>
             );

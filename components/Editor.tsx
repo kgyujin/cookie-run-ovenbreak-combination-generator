@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { useAppStore } from '@/store/useAppStore';
 import { loadShortLink } from '@/lib/share';
-import { backgroundCss } from '@/lib/board';
+import { backgroundCss, backgroundEdgeColor } from '@/lib/board';
 import Toolbar from './Toolbar';
 import Header from './Header';
 import ComboBlock from './ComboBlock';
@@ -18,6 +18,7 @@ export default function Editor({ shareId }: { shareId?: string }) {
   const fontSettings = useAppStore((s) => s.fontSettings);
   const picker = useAppStore((s) => s.picker);
   const closePicker = useAppStore((s) => s.closePicker);
+  const settingsOpen = useAppStore((s) => s.settingsOpen);
 
   // 게임 데이터 (빌드 때 생성된 JSON)
   useEffect(() => {
@@ -58,7 +59,8 @@ export default function Editor({ shareId }: { shareId?: string }) {
 
   useEffect(() => {
     document.body.style.background = backgroundCss(background);
-    if (background.type === 'image') document.body.style.backgroundAttachment = 'fixed';
+    if (background.type === 'image' && background.imageFit !== 'repeat') document.body.style.backgroundAttachment = 'fixed';
+    document.documentElement.style.setProperty('--page-edge', backgroundEdgeColor(background));
   }, [background]);
 
   // 직접 올린 글꼴 적용 (FontFace API — 주소가 CSS로 해석되지 않음)
@@ -80,7 +82,7 @@ export default function Editor({ shareId }: { shareId?: string }) {
   return (
     <>
       <Toolbar />
-      <main id="capture-area" className="board-wrap px-3 py-4 sm:px-8 sm:py-8 lg:p-16">
+      <main id="capture-area" className={'board-wrap px-3 py-4 sm:px-8 sm:py-8 lg:p-16' + (settingsOpen ? ' panel-open' : '')}>
         <div className="board">
           <Header />
           <div className="board-grid">
