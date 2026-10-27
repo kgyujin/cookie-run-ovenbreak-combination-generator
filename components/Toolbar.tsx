@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { isReturningVisitor, pickBoard, useAppStore } from '@/store/useAppStore';
 import { markUpdatesSeen, unseenCount } from '@/lib/updates';
 import Button from './ui/Button';
-import { BellIcon, DownloadIcon, LinkIcon, SettingsIcon } from './ui/icons';
+import { BellIcon, CookieLogo, DownloadIcon, LinkIcon, SettingsIcon } from './ui/icons';
 import SettingsPanel from './SettingsPanel';
 import ShareDialog from './ShareDialog';
 import UpdatesDialog from './UpdatesDialog';
@@ -65,7 +65,7 @@ export default function Toolbar() {
       <header className="sticky top-0 z-40 px-2 pt-2 sm:px-3 sm:pt-3">
         <div className="mx-auto flex h-14 max-w-[1680px] items-center gap-1 rounded-xl border border-white/70 bg-surface-cream/85 pl-2 pr-1.5 shadow-e2 backdrop-blur-md sm:gap-2 sm:pl-3">
           <h1 className="mr-auto flex min-w-0 items-center gap-2">
-            <img src="/logo.webp" alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-[10px] shadow-e1" />
+            <CookieLogo />
             <span className="truncate text-title-md text-ink">쿠키런 조합표</span>
           </h1>
           <Button variant="ghost" onClick={() => setUpdatesOpen(true)} aria-label={newUpdates ? '업데이트 (새 소식 있음)' : '업데이트'} className="w-touch px-0">

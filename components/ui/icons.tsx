@@ -17,3 +17,16 @@ export const PlayIcon = () => <Icon d="M7 5v14l11-7L7 5Z" className="h-4 w-4" />
 export const CheckIcon = ({ className = 'h-4 w-4' }: { className?: string }) => <Icon d="m5 12 5 5L20 7" className={className} />;
 export const CopyIcon = () => <Icon d="M9 9h10v10H9zM5 15V5h10" className="h-4 w-4" />;
 export const ShareIcon = () => <Icon d="M12 3v12m0-12 4 4m-4-4L8 7M5 13v6h14v-6" className="h-4 w-4" />;
+
+/** 앱 로고: 초코칩 쿠키 */
+export const CookieLogo = () => (
+  <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
+    <circle cx="16" cy="16" r="14" fill="#F3B562" />
+    <circle cx="16" cy="16" r="14" fill="none" stroke="#C2410C" strokeWidth="2" />
+    <circle cx="11" cy="11" r="2.2" fill="#5B3418" />
+    <circle cx="20" cy="10" r="1.6" fill="#5B3418" />
+    <circle cx="21" cy="19" r="2.4" fill="#5B3418" />
+    <circle cx="12" cy="20" r="1.8" fill="#5B3418" />
+    <circle cx="16" cy="15" r="1.2" fill="#5B3418" />
+  </svg>
+);
