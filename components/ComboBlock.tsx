@@ -64,6 +64,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
   const at = (key: LayoutKey) => moved(boardStyle.layout[key]);
 
   const n = arenaIndex + 1;
+  const hasVideo = arena.youtubeLinks.length > 0;
   const numberColor = fontSettings.numberColor ?? fontSettings.fontColor;
   const pick = (category: Category, label: string, current: string, apply: (image: string) => void) => () =>
     openPicker({ category, label: `${n}번 ${label}`, current, apply });
@@ -145,8 +146,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       <button
         type="button"
         onClick={() => setYoutubeOpen(true)}
-        aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
-        title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
+        aria-label={`${n}번 아레나 유튜브 링크 ${hasVideo ? `${arena.youtubeLinks.length}개, 보기와 수정` : '추가'}`}
+        title={`유튜브 링크 ${hasVideo ? `${arena.youtubeLinks.length}개` : '추가'}`}
         className="slot slot-overlay absolute flex items-center justify-center font-bold"
         data-move="number"
         style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18), ...at('number') }}
@@ -159,11 +160,11 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         <span
           className="relative"
           style={{
-            color: arena.youtubeUrl ? '#dc2626' : numberColor,
-            textShadow: textGlow(arena.youtubeUrl ? '#dc2626' : numberColor),
+            color: hasVideo ? '#dc2626' : numberColor,
+            textShadow: textGlow(hasVideo ? '#dc2626' : numberColor),
           }}
         >
-          {arena.youtubeUrl && '▶ '}
+          {hasVideo && '▶ '}
           {n}
         </span>
       </button>
@@ -371,7 +372,6 @@ function ScoreInput({
   return (
     <input
       type="text"
-      inputMode="numeric"
       spellCheck={false}
       aria-label={`${arenaIndex + 1}번 ${label}`}
       value={editing || !value ? value : formatScore(value, displayType)}

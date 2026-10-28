@@ -38,8 +38,14 @@ export interface ScoreData {
   value: string;
 }
 
+/** 아레나 번호에 거는 유튜브 영상 (이름은 비워도 됨) */
+export interface YoutubeLink {
+  title: string;
+  url: string;
+}
+
 export interface ArenaData {
-  youtubeUrl: string | null;
+  youtubeLinks: YoutubeLink[]; // 최대 MAX_YOUTUBE_LINKS개
   mainCombo: ComboData;
   magicCandy: MagicCandyData;
   score: ScoreData;

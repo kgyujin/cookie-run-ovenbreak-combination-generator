@@ -1,13 +1,17 @@
 import { create } from 'zustand';
-import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, LayoutKey, MagicCandyData } from '@/types';
+import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, LayoutKey, MagicCandyData, YoutubeLink } from '@/types';
 import { resolveBoardItems } from '@/lib/items';
 import { DEFAULT_BACKGROUND } from '@/lib/backgrounds';
 import { ARENA_HEIGHT, LAYOUT_KEYS } from '@/lib/board';
 
 const emptyCombo = (): ComboData => ({ pet: '', cookie1: '', cookie2: '', treasures: ['', '', ''] });
 
+/** 아레나 하나에 걸 수 있는 유튜브 영상 수와 이름 길이 */
+export const MAX_YOUTUBE_LINKS = 5;
+export const MAX_YOUTUBE_TITLE = 30;
+
 const createEmptyArena = (): ArenaData => ({
-  youtubeUrl: null,
+  youtubeLinks: [],
   mainCombo: emptyCombo(),
   magicCandy: { cookie1Candy: '', cookie1Blessing: '', cookie2Candy: '', cookie2Blessing: '' },
   score: { value: '' },
@@ -159,7 +163,11 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
         treasures: [0, 1, 2].map((t) => itemImage(c?.treasures?.[t])) as [string, string, string],
       });
       return {
-        youtubeUrl: safeYoutubeUrl(a.youtubeUrl) || null,
+        // 예전에는 영상 하나(youtubeUrl)만 걸 수 있었다
+        youtubeLinks: (Array.isArray(a.youtubeLinks) ? a.youtubeLinks : [{ url: a.youtubeUrl }])
+          .map((l: any): YoutubeLink => ({ title: str(l?.title, MAX_YOUTUBE_TITLE).trim(), url: safeYoutubeUrl(l?.url) }))
+          .filter((l: YoutubeLink) => l.url)
+          .slice(0, MAX_YOUTUBE_LINKS),
         mainCombo: combo(a.mainCombo),
         magicCandy: {
           cookie1Candy: itemImage(a.magicCandy?.cookie1Candy),
@@ -254,7 +262,7 @@ export function isBoardEmpty(board: BoardState) {
     !board.seasonIngredients.some(filled) &&
     board.arenas.every(
       (a) =>
-        !a.youtubeUrl &&
+        !a.youtubeLinks.length &&
         !a.dish &&
         !a.score.value &&
         !a.subScore.value &&
@@ -294,7 +302,7 @@ export interface AppStore extends BoardState {
   setSeasonName: (name: string) => void;
   setSeasonDish: (image: string) => void;
   setSeasonIngredient: (index: 0 | 1 | 2, image: string) => void;
-  setArenaYoutubeUrl: (arenaIndex: number, url: string | null) => void;
+  setArenaYoutubeLinks: (arenaIndex: number, links: YoutubeLink[]) => void;
   setArenaCombo: (arenaIndex: number, combo: 'mainCombo' | 'subCombo', field: ComboField, image: string) => void;
   setArenaMagicCandy: (arenaIndex: number, field: keyof MagicCandyData, image: string) => void;
   setArenaScore: (arenaIndex: number, score: 'score' | 'subScore', value: string) => void;
@@ -371,7 +379,7 @@ export const useAppStore = create<AppStore>((set, get) => {
         return { seasonIngredients };
       }),
 
-    setArenaYoutubeUrl: (arenaIndex, url) => updateArena(arenaIndex, () => ({ youtubeUrl: url })),
+    setArenaYoutubeLinks: (arenaIndex, links) => updateArena(arenaIndex, () => ({ youtubeLinks: links })),
 
     setArenaCombo: (arenaIndex, combo, field, image) =>
       updateArena(arenaIndex, (arena) => {
