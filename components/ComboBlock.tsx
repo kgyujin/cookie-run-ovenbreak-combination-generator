@@ -45,6 +45,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       cardShadow: s.boardStyle.cardShadow,
       numberBg: s.boardStyle.numberBg,
       numberBgColor: s.boardStyle.numberBgColor,
+      cookieFit: s.boardStyle.cookieFit,
     }))
   );
   const openPicker = useAppStore((s) => s.openPicker);
@@ -81,6 +82,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
   // 대체 조합 쿠키 크기 (총 96% 공간을 비율에 따라 분배)
   const subCookie1Width = (arena.subCookieRatio / 100) * 96;
   const subCookie2Width = ((100 - arena.subCookieRatio) / 100) * 96;
+  // 크기 자동 맞춤: 칸 폭 비율대로 그림 크기도 맞춘다 (칸 높이가 같아 정사각형에 가까운 그림은 비율을 바꿔도 같은 크기로 보이던 문제)
+  const fitOf = (width: number, other: number) => (boardStyle.cookieFit ? { scale: width / Math.max(width, other) } : undefined);
 
   const scoreStyle: CSSProperties = {
     color: fontSettings.scoreColor,
@@ -140,6 +143,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       <Slot
         {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
         full
+        fit={fitOf(mainCookie1Width, mainCookie2Width)}
         labelSize={18}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
@@ -155,6 +159,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       <Slot
         {...comboSlot('mainCombo', 'cookie2', 'cookies', '이달 쿠키')}
         full
+        fit={fitOf(mainCookie2Width, mainCookie1Width)}
         labelSize={16}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%` }}
@@ -223,6 +228,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
             text={'대체\n선달\n쿠키'}
             labelSize={10}
             className="!relative h-full"
+            fit={fitOf(subCookie1Width, subCookie2Width)}
             imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie1Width}%` }}
           />
@@ -239,6 +245,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
             text={'대체\n이달\n쿠키'}
             labelSize={10}
             className="!relative h-full"
+            fit={fitOf(subCookie2Width, subCookie1Width)}
             imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie2Width}%` }}
           />
@@ -292,6 +299,7 @@ function ScoreInput({
     <input
       type="text"
       inputMode="numeric"
+      spellCheck={false}
       aria-label={`${arenaIndex + 1}번 ${label}`}
       value={editing || !value ? value : formatScore(value, displayType)}
       onFocus={(e) => {

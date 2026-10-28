@@ -61,6 +61,7 @@ const SECTIONS = [
   ['season', '시즌명'],
   ['score', '점수'],
   ['number', '번호'],
+  ['cookie', '쿠키 크기'],
   ['style', '카드와 여백'],
 ] as const;
 
@@ -70,23 +71,44 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   const font = useAppStore((s) => s.fontSettings);
   const scoreDisplayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
   const style = useAppStore((s) => s.boardStyle);
-  const { setBackground, setFontSettings: setF, setDisplaySettings, setBoardStyle: setS, reset, showToast } = useAppStore.getState();
+  // 선달/이달 쿠키 비율은 12개 아레나에 함께 적용되므로 첫 아레나 값을 보여 준다
+  const mainRatio = useAppStore((s) => s.arenas[0].mainCookieRatio);
+  const subRatio = useAppStore((s) => s.arenas[0].subCookieRatio);
+  const { setBackground, setFontSettings: setF, setDisplaySettings, setBoardStyle: setS, setCookieRatio, reset, showToast } = useAppStore.getState();
   const [snapshot] = useState(() => {
     const s = useAppStore.getState();
     return { background: s.background, fontSettings: s.fontSettings, displaySettings: s.displaySettings, boardStyle: s.boardStyle };
   });
+  const [ratioSnapshot] = useState(() => ({ main: mainRatio, sub: subRatio }));
   const changed =
     background !== snapshot.background ||
     font !== snapshot.fontSettings ||
     style !== snapshot.boardStyle ||
-    scoreDisplayType !== snapshot.displaySettings.scoreDisplayType;
+    scoreDisplayType !== snapshot.displaySettings.scoreDisplayType ||
+    mainRatio !== ratioSnapshot.main ||
+    subRatio !== ratioSnapshot.sub;
   const [confirm, setConfirm] = useState<'style' | 'all' | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // 합치기(merge)가 아니라 통째로 바꿔야 나중에 추가된 값(번호 색, 글꼴 파일 등)까지 되돌아간다
-  const revert = () => useAppStore.setState(snapshot);
+  const revert = () => {
+    useAppStore.setState(snapshot);
+    setCookieRatio('mainCookieRatio', ratioSnapshot.main);
+    setCookieRatio('subCookieRatio', ratioSnapshot.sub);
+  };
   const setBg = (patch: Partial<BackgroundData>) => setBackground({ ...background, ...patch });
   const [active, setActive] = useState<string>('bg');
+  const navRef = useRef<HTMLElement>(null);
+  // 목차가 넘쳐 가로로 밀리면, 지금 보고 있는 항목이 목차에서 보이게 (목차 안에서만 가로로 민다)
+  useEffect(() => {
+    const nav = navRef.current;
+    const chip = nav?.querySelector<HTMLElement>('[aria-current]');
+    if (!nav || !chip) return;
+    const left = chip.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+    const right = left + chip.offsetWidth;
+    if (left < nav.scrollLeft) nav.scrollLeft = left - 12;
+    else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth + 12;
+  }, [active]);
 
   // 패널 안쪽 목록만 스크롤한다 (scrollIntoView는 패널 전체를 밀어 올림)
   const jump = (id: string) => {
@@ -115,8 +137,10 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   }, []);
 
   const resetStyle = () => {
-    const { background: bg, fontSettings, displaySettings, boardStyle } = initialBoard();
+    const { background: bg, fontSettings, displaySettings, boardStyle, arenas } = initialBoard();
     useAppStore.setState({ background: bg, fontSettings, displaySettings, boardStyle });
+    setCookieRatio('mainCookieRatio', arenas[0].mainCookieRatio);
+    setCookieRatio('subCookieRatio', arenas[0].subCookieRatio);
   };
 
   return (
@@ -125,7 +149,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
         title="설정"
         onClose={onClose}
         header={
-          <nav aria-label="설정 항목" className="scrollbar-hide flex gap-1 overflow-x-auto px-3 pb-2">
+          <nav ref={navRef} aria-label="설정 항목" className="scrollbar-hide flex gap-1 overflow-x-auto px-3 pb-2">
             {SECTIONS.map(([id, label]) => (
               <button
                 key={id}
@@ -344,6 +368,18 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <Section id="number" title="아레나 번호">
             <Range label="크기" value={font.numberSize ?? 18} min={12} max={32} onChange={(numberSize) => setF({ numberSize })} />
             <ColorField label="색" value={font.numberColor ?? font.fontColor ?? '#1c1917'} onChange={(numberColor) => setF({ numberColor })} />
+          </Section>
+
+          <Section id="cookie" title="쿠키 크기">
+            <div>
+              <Toggle label="크기 자동 맞춤" checked={style.cookieFit} onChange={(cookieFit) => setS({ cookieFit })} />
+              <p className="mt-1 text-caption text-ink-subtle">
+                이미지마다 다른 빈 여백을 빼고, 아래 비율대로 선달 쿠키를 크게, 이달 쿠키를 작게 보여 줘요.
+              </p>
+            </div>
+            <Range label="메인 조합 선달 쿠키 비율" unit="%" value={mainRatio} min={30} max={70} onChange={(r) => setCookieRatio('mainCookieRatio', r)} />
+            <Range label="대체 조합 선달 쿠키 비율" unit="%" value={subRatio} min={30} max={70} onChange={(r) => setCookieRatio('subCookieRatio', r)} />
+            <p className="text-caption text-ink-subtle">나머지는 이달 쿠키 몫이에요. 조합표에서 두 쿠키 사이를 끌어서 바꿀 수도 있어요. 12개 아레나에 함께 적용돼요.</p>
           </Section>
 
           <Section id="style" title="카드와 여백">

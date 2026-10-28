@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useId, useRef } from 'react';
 import { CloseIcon } from './icons';
+import { restoreFocus } from './restoreFocus';
 import { useScrollArea } from './useScrollArea';
 
 /**
@@ -24,6 +25,7 @@ export default function SidePanel({
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const opener = useRef<HTMLElement | null>(null);
   const scrollArea = useScrollArea(bodyRef);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
@@ -39,9 +41,10 @@ export default function SidePanel({
 
   useEffect(() => {
     const dialog = ref.current;
-    const previous = document.activeElement as HTMLElement | null;
+    // 열기 전 포커스는 처음 한 번만 기억한다 (개발 모드에서 효과가 두 번 돌면 창 안의 요소를 기억해 버림)
+    const previous = (opener.current ??= document.activeElement as HTMLElement | null);
     dialog?.show();
-    return () => previous?.focus?.();
+    return () => restoreFocus(previous);
   }, []);
 
   return (

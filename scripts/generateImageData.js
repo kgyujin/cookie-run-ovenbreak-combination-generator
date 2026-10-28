@@ -401,10 +401,54 @@ async function makeThumbnails(data) {
   if (made) console.log(`[작은 이미지] ${made}개 생성`);
 }
 
+/**
+ * 쿠키 이미지에서 그림이 있는 영역(투명 여백 제외)을 잰다. 이미지 파일은 그대로 두고, 화면에서 이 영역만 보이게 한다.
+ * 이미지마다 여백이 달라(그림 높이가 이미지의 72~100%) 같은 칸에 넣어도 크기가 들쭉날쭉해 보이는 것을 맞춘다.
+ * 여백이 거의 없으면 기록하지 않는다 (원본 그대로 표시).
+ */
+async function measureCrops(data) {
+  let sharp;
+  try {
+    sharp = require('sharp');
+  } catch {
+    return;
+  }
+  const round = (n) => Math.round(n * 10000) / 10000;
+  await Promise.all(
+    data.cookies.map(async (item) => {
+      try {
+        const { data: alpha, info } = await sharp(path.join(ROOT, 'public', item.image)).ensureAlpha().extractChannel('alpha').raw().toBuffer({ resolveWithObject: true });
+        // 거의 투명한 점(희미한 그림자 끝 등)은 여백으로 본다
+        let top = info.height, bottom = -1, left = info.width, right = -1;
+        for (let y = 0; y < info.height; y++) {
+          for (let x = 0; x < info.width; x++) {
+            if (alpha[y * info.width + x] > 12) {
+              if (y < top) top = y;
+              if (y > bottom) bottom = y;
+              if (x < left) left = x;
+              if (x > right) right = x;
+            }
+          }
+        }
+        const width = right - left + 1;
+        const height = bottom - top + 1;
+        if (bottom < 0 || (width >= info.width * 0.97 && height >= info.height * 0.97)) return;
+        // 그림 영역의 위치와 크기(이미지 대비 비율), 그림 영역의 가로세로 비
+        item.crop = [left / info.width, top / info.height, width / info.width, height / info.height, width / height].map(round);
+      } catch (e) {
+        warnings.push(`${item.image}: 그림 영역을 재지 못했습니다 (${e.message})`);
+      }
+    })
+  );
+}
+
 async function main() {
   const checkOnly = process.argv.includes('--check');
   const data = build();
-  if (!checkOnly && errors.length === 0) await makeThumbnails(data);
+  if (!checkOnly && errors.length === 0) {
+    await makeThumbnails(data);
+    await measureCrops(data);
+  }
 
   const counts = Object.entries(data)
     .filter(([k]) => !['renamed', 'updates'].includes(k))

@@ -17,6 +17,7 @@ export interface GameItem {
   addedAt?: string; // YYYY-MM-DD, 신규 배지 표시용
   pinned?: boolean;
   thumb?: string; // 선택 창용 작은 이미지
+  crop?: [x: number, y: number, w: number, h: number, ratio: number]; // 쿠키: 투명 여백을 뺀 그림 영역 (이미지 대비 비율, 크기 자동 맞춤)
 }
 
 export interface ComboData {
@@ -110,6 +111,7 @@ export interface BoardStyle {
   numberBgColor: string;
   gap: number; // 아레나 사이 간격 (보드 px)
   exportPadding: number; // 저장 이미지 바깥 여백 (px)
+  cookieFit: boolean; // 쿠키 크기 자동 맞춤 (이미지 여백 무시, 선달/이달 비율대로 크기)
 }
 
 /** 저장·공유되는 조합표 상태 */

@@ -62,6 +62,7 @@ export const initialBoard = (): BoardState => ({
     numberBgColor: '#ffffff',
     gap: 24,
     exportPadding: 64,
+    cookieFit: true,
   },
 });
 
@@ -220,6 +221,7 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       numberBgColor: color(b.numberBgColor, d.numberBgColor)!,
       gap: clamp(b.gap, 0, 80, d.gap),
       exportPadding: clamp(b.exportPadding, 0, 160, d.exportPadding),
+      cookieFit: bool(b.cookieFit, d.cookieFit),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {

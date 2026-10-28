@@ -36,9 +36,15 @@ export default memo(function Header() {
     const observer = new ResizeObserver(fit);
     observer.observe(el.parentElement!);
     return () => observer.disconnect();
-  }, [seasonName, fontSettings.fontSize, fontSettings.fontFamily, fontSettings.lineHeight, fontSettings.letterSpacing, fontSettings.fontWeight]);
+  }, [seasonName, fontSettings.fontSize, fontSettings.fontFamily, fontSettings.lineHeight, fontSettings.letterSpacing, fontSettings.fontWeight, fontSettings.seasonStrokeWidth]);
 
   const ingredientsEmpty = !seasonIngredients.some(Boolean);
+  // 시즌명 칸 안쪽 여백: 외곽선 두께만큼, 줄 간격이 글자 높이(글꼴에 따라 약 1.3배)보다 좁으면 넘치는 만큼 더
+  const stroke = fontSettings.seasonStrokeWidth ?? 0; // 첫 글자를 칠 때 칸이 움직이지 않게 비어 있어도 둔다
+  const titlePad = {
+    block: stroke + (fontSettings.fontSize * Math.max(0, 1.3 - (fontSettings.lineHeight ?? 1.2))) / 2,
+    inline: stroke,
+  };
   // 1열 화면(휴대폰·태블릿)의 시즌명 칸은 저장 이미지(2열)보다 좁다. 글자 크기·간격도 같은 비율로 줄여
   // 줄바꿈이 저장 이미지와 똑같게 한다 (칸 폭 = 80% × (보드 폭 − 카드 안쪽 여백 − 간격) − 좌우 여백)
   const pad = boardStyle.card && boardStyle.headerCard ? 24 : 0;
@@ -65,6 +71,10 @@ export default memo(function Header() {
           rows={1}
           maxLength={300}
           aria-label="시즌명 (최대 3줄)"
+          // 맞춤법 검사 표시(빨간 밑줄)가 붙은 낱말은 브라우저가 외곽선 없이 다시 그려서 끈다
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
           onChange={(e) => {
             const field = e.target;
             let next = field.value.split('\n').slice(0, MAX_LINES).join('\n');
@@ -102,7 +112,10 @@ export default memo(function Header() {
             lineHeight: fontSettings.lineHeight ?? 1.2,
             letterSpacing: tu(fontSettings.letterSpacing ?? 0),
             transform: `translate(${tu(fontSettings.offsetX ?? 0)}, ${tu(fontSettings.offsetY ?? 0)})`,
-            maxHeight: `calc(${fontSettings.fontSize} * var(--title-u) * ${fontSettings.lineHeight ?? 1.2} * ${MAX_LINES})`,
+            // 외곽선과 (줄 간격을 좁혔을 때) 줄 밖으로 나오는 글자 끝이 칸 가장자리에서 잘리지 않게 안쪽 여백을 둔다
+            paddingBlock: tu(titlePad.block),
+            paddingInline: tu(titlePad.inline),
+            maxHeight: `calc(${fontSettings.fontSize} * var(--title-u) * ${fontSettings.lineHeight ?? 1.2} * ${MAX_LINES} + 2 * ${tu(titlePad.block)})`,
             whiteSpace: 'pre-wrap',
           }}
         />
