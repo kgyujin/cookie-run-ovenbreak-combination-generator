@@ -110,6 +110,17 @@ export function nameTaken(
   );
 }
 
+/**
+ * 지우기로 담아 둔 아이템과 같은 자리·같은 이름인지.
+ * 한 번에 지우고 같은 이름으로 새로 올리면 그림만 바꾼 것과 구별되지 않아(처음 추가된 날짜를 이어받음) 막는다
+ */
+export function pendingDelete(items: StudioItem[], q: Queue, target: { category: StudioCategory; rarity?: string; name: string }) {
+  const key = dirKey(target.category, target.rarity);
+  return items.some((i) => q.deletes.includes(i.image) && dirKey(i.category, i.rarity) === key && i.name.toLowerCase() === target.name.toLowerCase());
+}
+
+export const PENDING_DELETE_MESSAGE = '지우기로 담아 둔 아이템과 같은 이름이에요. 그림만 바꾸려면 그 아이템의 \'이미지 바꾸기\'를, 다른 아이템이라면 삭제를 먼저 저장한 뒤 추가해 주세요';
+
 const extOf = (image: string) => image.split('.').pop();
 
 /** 서로 이름을 맞바꾸는 것처럼 순서를 정할 수 없는 변경 */

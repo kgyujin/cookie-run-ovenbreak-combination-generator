@@ -23,8 +23,10 @@ import {
   nameTaken,
   queueBytes,
   OrderError,
+  PENDING_DELETE_MESSAGE,
   extOfBase64,
   pathOf,
+  pendingDelete,
   queueSize,
   savedPreviews,
   toOps,
@@ -883,6 +885,7 @@ function AddDialog({
       if (!name) problems.push(`${d.name || '이름 없음'}: 이름을 확인해 주세요 (${NAME_RULE})`);
       else if (nameTaken(data.items, queue, target) || result.some((r) => r.name.toLowerCase() === name.toLowerCase()))
         problems.push(`${name}: 같은 자리에 같은 이름이 이미 있어요`);
+      else if (pendingDelete(data.items, queue, target)) problems.push(`${name}: ${PENDING_DELETE_MESSAGE}`);
       else result.push({ ...d, ...target, name });
     }
     if (problems.length) return setErrors(problems);
@@ -978,6 +981,7 @@ function PendingAddDialog({
     if (!clean) return setErrors([`이름을 확인해 주세요 (${NAME_RULE})`]);
     if (nameTaken(data.items, queue, { category: draft.category, rarity, name: clean }, { addKey: draft.key }))
       return setErrors([`${clean}: 같은 자리에 같은 이름이 이미 있어요`]);
+    if (pendingDelete(data.items, queue, { category: draft.category, rarity, name: clean })) return setErrors([`${clean}: ${PENDING_DELETE_MESSAGE}`]);
     onSubmit({ ...draft, name: clean, rarity });
   };
 
