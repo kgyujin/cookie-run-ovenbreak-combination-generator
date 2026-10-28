@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { BRANCH, CATEGORY_FOLDERS, REPO, studioConfigured } from '@/lib/studio/config';
 import { OpError, buildChanges } from '@/lib/studio/apply';
-import { ConflictError, GitHubError, canWrite, commitChanges, listImages, readFile, revokeToken } from '@/lib/studio/github';
+import { ConflictError, GitHubError, canWrite, commitChanges, githubSource, revokeToken } from '@/lib/studio/github';
+import { GenerateError, applyLocal, fromLocalhost, localMode, localSource } from '@/lib/studio/local';
 import { CATEGORY_LABELS, StudioOp, describeOp, nameOf } from '@/lib/studio/ops';
 import { SESSION_COOKIE, getSession, sameOrigin } from '@/lib/studio/session';
 
@@ -10,8 +11,12 @@ export const maxDuration = 60; // 이미지 여러 장을 올리는 저장도 �
 
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
-/** 로그인 확인 + 매 요청마다 저장소 쓰기 권한을 다시 확인 (관리자에서 빠지면 바로 막힘) */
+/**
+ * 로그인 확인 + 매 요청마다 저장소 쓰기 권한을 다시 확인 (관리자에서 빠지면 바로 막힘).
+ * 로컬 모드에서는 로그인 없이 이 컴퓨터에서 연 요청만 받는다 (session: null)
+ */
 async function authorize() {
+  if (localMode()) return fromLocalhost() ? { session: null } : { error: new NextResponse(null, { status: 404 }) };
   if (!studioConfigured()) return { error: new NextResponse(null, { status: 404 }) };
   const session = getSession();
   if (!session) return { error: json({ error: '로그인이 필요해요' }, 401) };
@@ -36,16 +41,15 @@ const FOLDER_TO_CATEGORY = Object.fromEntries(Object.entries(CATEGORY_FOLDERS).m
 
 /** 관리 화면에 필요한 데이터 (숨긴 아이템까지 포함한 저장소의 현재 상태) */
 export async function GET() {
-  const { session, error } = await authorize();
-  if (error) return error;
+  const auth = await authorize();
+  if ('error' in auth) return auth.error;
+  const { session } = auth;
+  const source = session ? githubSource(session.token, BRANCH) : localSource;
   let files, meta, updates;
   try {
-    [files, meta, updates] = await Promise.all([
-      listImages(session.token, BRANCH),
-      readFile(session.token, 'data/item-meta.json', BRANCH),
-      readFile(session.token, 'data/updates.json', BRANCH),
-    ]);
-  } catch {
+    [files, meta, updates] = await Promise.all([source.listImages(), source.readFile('data/item-meta.json'), source.readFile('data/updates.json')]);
+  } catch (e) {
+    if (!session) throw e;
     return json({ error: GITHUB_DOWN }, 502);
   }
   const items = Array.from(files.entries()).flatMap(([path, sha]) => {
@@ -55,7 +59,8 @@ export async function GET() {
     return [{ category, rarity: rest.length > 1 ? rest[0] : undefined, name: rest[rest.length - 1].replace(/\.[^.]+$/, '').normalize('NFC'), image: path.slice('public'.length), sha }];
   });
   return json({
-    user: { login: session.login, avatar: session.avatar },
+    user: session && { login: session.login, avatar: session.avatar },
+    local: !session,
     repo: REPO,
     items,
     meta: JSON.parse(meta?.text || '{}'),
@@ -63,21 +68,32 @@ export async function GET() {
   });
 }
 
-/** 모아 둔 변경을 커밋 1개로 main에 바로 올린다 */
+/** 모아 둔 변경을 커밋 1개로 main에 바로 올린다 (로컬 모드에서는 프로젝트 폴더에 바로 쓴다) */
 export async function POST(req: Request) {
   if (!sameOrigin(req)) return new NextResponse(null, { status: 403 });
-  const { session, error } = await authorize();
-  if (error) return error;
+  const auth = await authorize();
+  if ('error' in auth) return auth.error;
+  const { session } = auth;
   let ops: StudioOp[];
   try {
     ops = (await req.json()).ops;
   } catch {
     return json({ error: '요청을 읽을 수 없어요' }, 400);
   }
+  if (!session) {
+    try {
+      await applyLocal(await buildChanges(localSource, ops));
+      return json({ local: true });
+    } catch (e) {
+      if (e instanceof OpError) return json({ error: e.message }, 400);
+      if (e instanceof GenerateError) return json({ error: `파일은 저장했지만 사이트 데이터를 만들지 못했어요. 터미널에서 npm run check:content 로 확인해 주세요\n${e.message}` }, 500);
+      throw e;
+    }
+  }
   try {
     const commit = await commitChanges(
       session.token,
-      (head) => buildChanges(session.token, ops, head),
+      (head) => buildChanges(githubSource(session.token, head), ops),
       () => {
         // 같은 이름을 지우고 바로 다시 올린 건 '이미지 바꿈' 한 줄로
         const lines: string[] = [];

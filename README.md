@@ -88,6 +88,17 @@
 
 </details>
 
+#### 내 컴퓨터에서 쓰기 (로컬 모드)
+
+GitHub 로그인 없이, 저장하면 **프로젝트 폴더의 파일이 바로 바뀌는** 방식입니다. 바뀐 파일을 확인한 뒤 직접 커밋하고 푸시하면 사이트에 반영됩니다.
+
+1. 프로젝트 폴더의 `.env.local`에 `STUDIO_LOCAL=1`을 적습니다.
+2. `npm run dev`로 띄운 뒤 `http://localhost:3000/studio-local`을 엽니다.
+3. 저장하면 `public/images/`, `data/item-meta.json`, `data/updates.json`이 바뀌고, 아이템 목록과 작은 이미지도 바로 다시 만들어져 `http://localhost:3000`에서 확인할 수 있습니다.
+
+> [!NOTE]
+> 로컬 모드는 `npm run dev`(개발 서버)에서만 켜지고, 이 컴퓨터에서 연 요청(`localhost`)만 받습니다. 배포된 사이트에서는 `STUDIO_LOCAL`이 있어도 꺼져 있습니다.
+
 ### 저장소에 직접 올리기
 
 이미지를 아래 폴더에 넣고 main에 올립니다.
@@ -199,8 +210,8 @@ npm run design:lint    # DESIGN.md 형식과 명도 대비 검사
 ```
 app/
   page.tsx                 편집 화면 (/s/:id 짧은 링크도 같은 화면)
-  [slug]/page.tsx          데이터 관리 페이지 (STUDIO_PATH 주소로만 열림, 그 밖의 주소는 404)
-  api/studio/              로그인, 데이터 조회, 저장(커밋)
+  [slug]/page.tsx          데이터 관리 페이지 (STUDIO_PATH 주소, 로컬 모드면 /studio-local. 그 밖의 주소는 404)
+  api/studio/              로그인, 데이터 조회, 저장(커밋, 로컬 모드면 프로젝트 폴더에 쓰기)
 components/
   Editor.tsx               화면 전체 (데이터와 공유 링크 불러오기)
   Toolbar.tsx              도구 막대 (업데이트, 설정, 이미지 저장, 링크 공유)
@@ -214,7 +225,7 @@ lib/
   items.ts                 아이템 조회, 예전 경로를 현재 아이템으로 연결
   share.ts                 짧은 링크
   exportImage.ts           이미지 저장 (html2canvas, 필요할 때만 불러옴)
-  studio/                  데이터 관리 서버 로직 (GitHub 커밋, 검사)
+  studio/                  데이터 관리 서버 로직 (GitHub 커밋, 로컬 모드, 검사)
 store/useAppStore.ts       편집 상태 (브라우저에 자동 저장)
 scripts/generateImageData.js   이미지 폴더 → 아이템 목록, 검사, 업데이트 소식
 data/                      item-meta.json, updates.json

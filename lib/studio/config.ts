@@ -3,6 +3,7 @@
  * - STUDIO_PATH: 관리자 페이지 주소 (영문·숫자·-·_ 8자 이상, 예: 'k3x-room-81' → https://사이트/k3x-room-81). 없으면 관리자 페이지가 꺼진다.
  * - GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET: GitHub OAuth 앱
  * - STUDIO_SESSION_SECRET: 로그인 쿠키 암호화 키 (32자 이상 무작위 문자열)
+ * - STUDIO_LOCAL=1: 로컬 모드 (npm run dev 에서만, lib/studio/local.ts)
  */
 export const REPO = 'kgyujin/cookie-run-ovenbreak-combination-generator';
 export const BRANCH = 'main';

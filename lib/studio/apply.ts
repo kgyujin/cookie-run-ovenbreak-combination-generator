@@ -1,9 +1,15 @@
 import { createHash } from 'crypto';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES } from './config';
 import { CATEGORY_LABELS, MAX_IMAGE_BYTES, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
-import { TreeChange, listImages, readFile } from './github';
+import type { TreeChange } from './github';
 
 export class OpError extends Error {}
+
+/** 현재 파일을 읽는 곳 (GitHub 저장소 또는 내 컴퓨터의 프로젝트 폴더) */
+export interface Source {
+  listImages(): Promise<Map<string, string>>; // 'public/images/...' → git 파일 sha
+  readFile(path: string): Promise<{ text: string } | null>;
+}
 
 const META_PATH = 'data/item-meta.json';
 const UPDATES_PATH = 'data/updates.json';
@@ -20,7 +26,7 @@ const strList = (v: unknown, max: number, len: number) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, len)).filter(Boolean).slice(0, max) : [];
 
 /** git이 파일 내용에 붙이는 이름 (같은 그림인지 비교) */
-const gitBlobSha = (bytes: Buffer) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+export const gitBlobSha = (bytes: Buffer) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 const dirName = (path: string) => path.slice(0, path.lastIndexOf('/'));
 const hasOwn = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k);
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase(); // 대소문자만 다른 이름은 윈도우·맥에서 같은 파일
@@ -30,11 +36,11 @@ const isRealDate = (d: string) => {
 };
 
 /** 요청을 하나하나 검사해서, 저장소에 쓸 파일 변경 목록으로 바꾼다 */
-export async function buildChanges(token: string, ops: unknown, headSha: string): Promise<TreeChange[]> {
+export async function buildChanges(source: Source, ops: unknown): Promise<TreeChange[]> {
   if (!Array.isArray(ops) || ops.length === 0) throw new OpError('변경할 내용이 없어요');
   if (ops.length > MAX_OPS) throw new OpError('한 번에 저장하기에는 변경이 너무 많아요. 나눠서 저장해 주세요');
 
-  const files = await listImages(token, headSha); // 작업하면서 함께 갱신한다
+  const files = await source.listImages(); // 작업하면서 함께 갱신한다
   const headPaths = new Set(files.keys());
   const headFiles = new Map(files);
   let changes: TreeChange[] = [];
@@ -43,7 +49,7 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
     changes = changes.filter((c) => c.path !== change.path);
     if (!('delete' in change) || headPaths.has(change.path)) changes.push(change);
   };
-  const meta = JSON.parse((await readFile(token, META_PATH, headSha))?.text || '{}');
+  const meta = JSON.parse((await source.readFile(META_PATH))?.text || '{}');
   for (const k of ['pinned', 'hidden']) meta[k] ??= [];
   for (const k of ['added', 'aliases', 'descriptions', 'renamed']) meta[k] ??= {};
   const metaBefore = JSON.stringify(meta);
@@ -169,7 +175,7 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         const title = String(raw.title ?? '').trim().slice(0, 40);
         const items = strList(raw.items, 20, 100);
         if (!isRealDate(date) || !title || items.length === 0) throw new OpError('업데이트 소식의 날짜, 제목, 내용을 확인해 주세요');
-        notes ??= JSON.parse((await readFile(token, UPDATES_PATH, headSha))?.text || '[]');
+        notes ??= JSON.parse((await source.readFile(UPDATES_PATH))?.text || '[]');
         // 저장이 끝났는데 응답만 늦어 다시 저장한 경우 같은 소식이 두 번 들어가지 않게
         if (notes!.some((n) => n.date === date && n.title === title && JSON.stringify(n.items) === JSON.stringify(items))) break;
         notes!.push({ date, title, items });

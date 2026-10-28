@@ -33,7 +33,8 @@ import {
 } from './queue';
 
 interface StudioData {
-  user: { login: string; avatar: string };
+  user: { login: string; avatar: string } | null; // 로컬 모드면 null
+  local: boolean;
   repo: string;
   items: StudioItem[];
   meta: Meta;
@@ -49,6 +50,7 @@ const LOGIN_ERRORS: Record<string, string> = {
 };
 const NAME_RULE = '40자 이내, / : * ? " < > | # % 같은 기호 제외';
 const SAVED_QUEUE = 'studio-queue';
+const LOCAL_SAVED = '프로젝트 폴더에 저장했어요. 확인한 뒤 커밋하고 푸시하면 사이트에 반영돼요.';
 
 const encodePath = (path: string) => path.split('/').map(encodeURIComponent).join('/');
 const today = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
@@ -223,16 +225,16 @@ export default function Studio() {
     const body = await res?.json().catch(() => ({}));
     setSaving(false);
     if (res?.ok) {
-      setPreviews((p) => ({ ...p, ...savedPreviews(queue, data.items) }));
+      if (!data.local) setPreviews((p) => ({ ...p, ...savedPreviews(queue, data.items) }));
       setQueue(emptyQueue());
       setReviewing(false);
-      setNotice({ tone: 'ok', text: '저장했어요. 1~3분 뒤 사이트에 반영돼요.', url: body.url });
+      setNotice({ tone: 'ok', text: data.local ? LOCAL_SAVED : '저장했어요. 1~3분 뒤 사이트에 반영돼요.', url: body.url });
       load();
     } else if (res?.status === 400 && body?.error === '바뀐 내용이 없어요') {
       // 앞서 응답만 못 받고 실제로는 저장된 경우
       setQueue(emptyQueue());
       setReviewing(false);
-      setNotice({ tone: 'ok', text: '이미 저장된 내용이에요. 1~3분 뒤 사이트에 반영돼요.' });
+      setNotice({ tone: 'ok', text: data.local ? '이미 저장된 내용이에요.' : '이미 저장된 내용이에요. 1~3분 뒤 사이트에 반영돼요.' });
       load();
     } else if (body?.error) {
       setSaveError({ text: body.error, relogin: res?.status === 401 });
@@ -304,14 +306,18 @@ export default function Studio() {
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2">
           <CookieLogo />
           <h1 className="text-title-md text-ink">데이터 관리</h1>
-          <div className="ml-auto flex items-center gap-1">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.user.avatar} alt="" className="h-7 w-7 rounded-full" />
-            <span className="hidden px-1 text-label-md text-ink-muted sm:inline">{data.user.login}</span>
-            <Button variant="ghost" onClick={logout}>
-              로그아웃
-            </Button>
-          </div>
+          {data.user ? (
+            <div className="ml-auto flex items-center gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={data.user.avatar} alt="" className="h-7 w-7 rounded-full" />
+              <span className="hidden px-1 text-label-md text-ink-muted sm:inline">{data.user.login}</span>
+              <Button variant="ghost" onClick={logout}>
+                로그아웃
+              </Button>
+            </div>
+          ) : (
+            <span className="ml-auto rounded-full bg-primary-soft px-3 py-1 text-label-md text-primary-ink">로컬 모드</span>
+          )}
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 px-4" aria-label="관리 메뉴">
           {(
@@ -1083,7 +1089,7 @@ function ReviewDialog({
             모두 버리기
           </Button>
           <Button variant="primary" className="ml-auto" disabled={saving || rows.length === 0} onClick={onSave}>
-            {saving ? '저장하는 중' : '저장하고 사이트에 반영'}
+            {saving ? '저장하는 중' : data.local ? '프로젝트 폴더에 저장' : '저장하고 사이트에 반영'}
           </Button>
         </>
       }
@@ -1102,7 +1108,7 @@ function ReviewDialog({
       <div className="space-y-3 px-5 pb-5">
         {error && (
           <div role="alert" className="rounded-md bg-danger/10 p-3 text-body-md text-danger">
-            <p>{error.text}</p>
+            <p className="whitespace-pre-line">{error.text}</p>
             {error.relogin && (
               <p className="mt-2 text-ink">
                 변경은 그대로 있어요.{' '}
@@ -1114,7 +1120,11 @@ function ReviewDialog({
             )}
           </div>
         )}
-        <p className="text-caption text-ink-subtle">저장하면 {data.repo} 저장소에 바로 올라가고, 1~3분 뒤 사이트에 반영돼요.</p>
+        <p className="text-caption text-ink-subtle">
+          {data.local
+            ? '저장하면 내 컴퓨터의 프로젝트 폴더에 바로 파일이 바뀌어요. 커밋하고 푸시해야 사이트에 반영돼요.'
+            : `저장하면 ${data.repo} 저장소에 바로 올라가고, 1~3분 뒤 사이트에 반영돼요.`}
+        </p>
       </div>
     </Modal>
   );

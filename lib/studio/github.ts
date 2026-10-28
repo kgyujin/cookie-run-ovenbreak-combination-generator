@@ -84,6 +84,12 @@ export async function listImages(token: string, ref: string) {
   );
 }
 
+/** 정해진 커밋 기준으로 저장소 파일을 읽는다 */
+export const githubSource = (token: string, ref: string) => ({
+  listImages: () => listImages(token, ref),
+  readFile: (path: string) => readFile(token, path, ref),
+});
+
 export type TreeChange =
   | { path: string; content: string; encoding: 'utf-8' | 'base64' } // 새 파일 또는 내용 변경
   | { path: string; sha: string } // 기존 파일 옮기기 (같은 내용)
