@@ -54,7 +54,10 @@ export async function buildChanges(source: Source, ops: unknown): Promise<TreeCh
   for (const k of ['added', 'aliases', 'descriptions', 'renamed']) meta[k] ??= {};
   const metaBefore = JSON.stringify(meta);
   let notes: any[] | null = null;
-  let notesAdded = false;
+  let notesChanged = false;
+  const loadNotes = async () => (notes ??= JSON.parse((await source.readFile(UPDATES_PATH))?.text || '[]') as any[]);
+  const sameNote = (a: any, b: any) =>
+    a?.date === b?.date && a?.title === b?.title && JSON.stringify(a?.items) === JSON.stringify(b?.items);
   let totalBytes = 0;
 
   const dirOf = (category: string, rarity?: string) => {
@@ -175,12 +178,35 @@ export async function buildChanges(source: Source, ops: unknown): Promise<TreeCh
         const title = String(raw.title ?? '').trim().slice(0, 40);
         const items = strList(raw.items, 20, 100);
         if (!isRealDate(date) || !title || items.length === 0) throw new OpError('업데이트 소식의 날짜, 제목, 내용을 확인해 주세요');
-        notes ??= JSON.parse((await source.readFile(UPDATES_PATH))?.text || '[]');
-        // 저장이 끝났는데 응답만 늦어 다시 저장한 경우 같은 소식이 두 번 들어가지 않게
-        if (notes!.some((n) => n.date === date && n.title === title && JSON.stringify(n.items) === JSON.stringify(items))) break;
-        notes!.push({ date, title, items });
-        notesAdded = true;
-        notes!.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+        const list = await loadNotes();
+        const note = { date, title, items };
+        const exists = list.some((n) => sameNote(n, note));
+        if (raw.from) {
+          // 고치기: 담을 때의 소식이 그대로 있어야 한다 (다른 관리자가 그사이 고치거나 지웠으면 거절)
+          const index = list.findIndex((n) => sameNote(n, raw.from));
+          if (index < 0) {
+            if (exists) break; // 이미 고쳐짐 (응답만 늦어 다시 저장한 경우)
+            throw new OpError(`${title}: 소식이 그사이 바뀌었어요. 새로고침해서 목록을 다시 불러온 뒤 해 주세요`);
+          }
+          if (sameNote(list[index], note)) break;
+          // 고친 결과가 다른 소식과 똑같아지면 둘을 하나로 (같은 소식이 두 번 보이지 않게)
+          if (exists) list.splice(index, 1);
+          else list[index] = note;
+        } else {
+          // 저장이 끝났는데 응답만 늦어 다시 저장한 경우 같은 소식이 두 번 들어가지 않게
+          if (exists) break;
+          list.push(note);
+        }
+        notesChanged = true;
+        list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+        break;
+      }
+      case 'note-delete': {
+        const list = await loadNotes();
+        const index = list.findIndex((n) => sameNote(n, raw));
+        if (index < 0) break; // 이미 지워짐 (응답만 늦어 다시 저장한 경우 등)
+        list.splice(index, 1);
+        notesChanged = true;
         break;
       }
       default:
@@ -206,7 +232,7 @@ export async function buildChanges(source: Source, ops: unknown): Promise<TreeCh
 
   const metaText = JSON.stringify(meta, null, 2) + '\n';
   if (JSON.stringify(JSON.parse(metaText)) !== metaBefore) setChange({ path: META_PATH, content: metaText, encoding: 'utf-8' });
-  if (notes && notesAdded) setChange({ path: UPDATES_PATH, content: JSON.stringify(notes, null, 2) + '\n', encoding: 'utf-8' });
+  if (notes && notesChanged) setChange({ path: UPDATES_PATH, content: JSON.stringify(notes, null, 2) + '\n', encoding: 'utf-8' });
   if (changes.length === 0) throw new OpError('바뀐 내용이 없어요');
   return changes;
 }

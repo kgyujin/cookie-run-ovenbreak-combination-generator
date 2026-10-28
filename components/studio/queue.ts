@@ -1,5 +1,5 @@
 import { CATEGORY_FOLDERS, RARITY_CATEGORIES, Rarity, StudioCategory } from '@/lib/studio/config';
-import { CATEGORY_LABELS, RARITY_LABELS, StudioOp } from '@/lib/studio/ops';
+import { CATEGORY_LABELS, Note, RARITY_LABELS, StudioOp } from '@/lib/studio/ops';
 
 /** 저장 전 변경 목록. 아이템마다 한 줄로 모아서, 다시 고치면 덮어쓰고 하나씩 되돌릴 수 있게 한다 */
 
@@ -46,6 +46,8 @@ export interface NoteDraft {
   date: string;
   title: string;
   items: string[];
+  from?: Note; // 저장된 소식을 고치거나 지울 때 그 원래 내용
+  remove?: boolean; // 지우기 (from을 지운다)
 }
 
 export interface Queue {
@@ -87,6 +89,54 @@ export function effective(item: StudioItem, q: Queue, meta: Meta, patches: Map<s
     meta: { ...baseMeta(meta, item.name), ...patches.get(name) },
     edit,
     deleted: q.deletes.includes(item.image),
+  };
+}
+
+/**
+ * 아이템 하나에 바뀐 내용을 담는다 (수정 창, 여러 개 한꺼번에, 바로 버튼이 함께 쓴다).
+ * next.meta는 바꾼 뒤의 전체 값: 저장 전 변경까지 반영한 지금 값과 다른 것만 담고, 저장된 값과 같아진 것은 뺀다.
+ * 이름에 붙은 정보는 같은 이름의 다른 아이템과 함께 쓰므로, 그 아이템들에 담아 둔 같은 정보 변경은 이번 값이 대신한다.
+ */
+export function applyItemEdit(
+  q: Queue,
+  items: StudioItem[],
+  savedMeta: Meta,
+  item: StudioItem,
+  next: { name: string; rarity?: Rarity; meta: MetaFields; replace?: ItemEdit['replace'] }
+): Queue {
+  const original = baseMeta(savedMeta, item.name);
+  const current = effective(item, q, savedMeta, metaPatchesByName(q));
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const touched = (Object.keys(next.meta) as (keyof MetaFields)[]).filter((k) => !same(next.meta[k], current.meta[k]));
+  const meta: ItemEdit['meta'] = { ...current.edit?.meta };
+  for (const k of touched) (meta as Record<string, unknown>)[k] = next.meta[k];
+  for (const k of Object.keys(meta) as (keyof MetaFields)[]) if (same(meta[k], original[k])) delete meta[k];
+  const changed = next.name !== item.name || next.rarity !== item.rarity || next.replace || Object.keys(meta).length > 0;
+
+  const edits = { ...q.edits };
+  if (changed) edits[item.image] = { name: next.name, rarity: next.rarity, meta, ...(next.replace && { replace: next.replace }) };
+  else delete edits[item.image];
+  for (const [image, other] of Object.entries(edits)) {
+    if (image === item.image || other.name !== next.name || !touched.some((k) => k in other.meta)) continue;
+    const otherMeta = { ...other.meta };
+    for (const k of touched) delete otherMeta[k];
+    const otherItem = items.find((i) => i.image === image);
+    const empty = !Object.keys(otherMeta).length && !other.replace && otherItem && other.name === otherItem.name && other.rarity === otherItem.rarity;
+    if (empty) delete edits[image];
+    else edits[image] = { ...other, meta: otherMeta };
+  }
+  return { ...q, edits, shas: { ...q.shas, ...(item.sha && { [item.image]: item.sha }) } };
+}
+
+/** 아이템 지우기로 담기 (담아 둔 다른 변경은 버린다) */
+export function deleteItem(q: Queue, item: StudioItem): Queue {
+  const edits = { ...q.edits };
+  delete edits[item.image];
+  return {
+    ...q,
+    edits,
+    deletes: q.deletes.includes(item.image) ? q.deletes : [...q.deletes, item.image],
+    shas: { ...q.shas, ...(item.sha && { [item.image]: item.sha }) },
   };
 }
 
@@ -168,11 +218,16 @@ export function toOps(q: Queue, items: StudioItem[]): StudioOp[] {
     groups = groups.filter((g) => !ready.includes(g));
   }
   for (const a of q.adds) ops.push({ type: 'add', category: a.category, ...(a.rarity && { rarity: a.rarity }), name: a.name, image: a.image });
-  for (const { date, title, items: lines } of q.notes) metaOps.push({ type: 'note', date, title, items: lines });
+  for (const { date, title, items: lines, from, remove } of q.notes)
+    metaOps.push(remove && from ? { type: 'note-delete', ...from } : { type: 'note', date, title, items: lines, ...(from && { from }) });
   return [...ops, ...metaOps];
 }
 
 /** 확인 목록에 보여줄 한 줄 설명 */
+export function describeNote(n: NoteDraft) {
+  return `업데이트 소식 ${n.remove ? '삭제' : n.from ? '고침' : '추가'}: ${n.remove && n.from ? n.from.title : n.title}`;
+}
+
 export function describeEdit(item: StudioItem, e: ItemEdit) {
   const parts = [
     e.name !== item.name && `새 이름 ${e.name}`,

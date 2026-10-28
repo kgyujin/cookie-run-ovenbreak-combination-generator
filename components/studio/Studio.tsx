@@ -1,12 +1,13 @@
 'use client';
 
 import clsx from 'clsx';
-import { cloneElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { cloneElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES, Rarity, StudioCategory } from '@/lib/studio/config';
-import { CATEGORY_LABELS, MAX_CHANGES, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
+import { CATEGORY_LABELS, MAX_CHANGES, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
-import { CookieLogo, SearchIcon } from '../ui/icons';
+import { CheckIcon, CookieLogo, EyeIcon, EyeOffIcon, ImageIcon, PinIcon, SearchIcon } from '../ui/icons';
 import {
   AddDraft,
   ItemEdit,
@@ -15,8 +16,10 @@ import {
   NoteDraft,
   Queue,
   StudioItem,
-  baseMeta,
+  applyItemEdit,
+  deleteItem,
   describeEdit,
+  describeNote,
   effective,
   emptyQueue,
   metaPatchesByName,
@@ -68,7 +71,7 @@ const readBase64 = (file: File) =>
   });
 
 /** 고른 이미지 파일 검사 → 통과한 것과 오류 목록 */
-async function readImages(files: FileList | null) {
+async function readImages(files: ArrayLike<File> | null) {
   const ok: { name: string; image: string; size: number }[] = [];
   const errors: string[] = [];
   for (const file of Array.from(files ?? [])) {
@@ -118,9 +121,10 @@ export default function Studio() {
   const [tab, setTab] = useState<'items' | 'notes'>('items');
   const [category, setCategory] = useState<StudioCategory>('cookies');
   const [query, setQuery] = useState('');
-  const [editing, setEditing] = useState<StudioItem | null>(null);
+  const [editing, setEditing] = useState<{ item: StudioItem; list: StudioItem[] } | null>(null); // list: 이전/다음으로 넘길 목록
   const [editingAdd, setEditingAdd] = useState<AddDraft | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<File[] | null>(null); // 추가 창 (처음 넣을 이미지)
+  const [bottomSlot, setBottomSlot] = useState<HTMLDivElement | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<{ text: string; relogin?: boolean } | null>(null);
@@ -189,6 +193,45 @@ export default function Studio() {
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
   }, [size, status]);
+
+  // Ctrl+S (맥은 ⌘S): 저장 확인 창 (브라우저의 '페이지 저장'은 막는다)
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const onKey = (e: KeyboardEvent) => {
+      // 한글 자판에서는 e.key가 'ㄴ'이라 키 위치(code)로도 본다
+      if (!(e.ctrlKey || e.metaKey) || (e.code !== 'KeyS' && e.key.toLowerCase() !== 's')) return;
+      e.preventDefault();
+      if (size && !document.querySelector('dialog[open]')) {
+        setSaveError(null);
+        setReviewing(true);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [status, size]);
+
+  // 이미지 파일을 화면 아무 데나 끌어다 놓으면 추가 창을 연다
+  // (브라우저가 그 파일을 열어 이 페이지를 떠나며 담아 둔 변경이 사라지지 않게 기본 동작은 막는다)
+  useEffect(() => {
+    if (status !== 'ready') return;
+    const hasFiles = (e: DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
+    const over = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = document.querySelector('dialog[open]') ? 'none' : 'copy';
+    };
+    const drop = (e: DragEvent) => {
+      if (!hasFiles(e)) return;
+      e.preventDefault();
+      if (!document.querySelector('dialog[open]')) setAdding(Array.from(e.dataTransfer?.files ?? []));
+    };
+    window.addEventListener('dragover', over);
+    window.addEventListener('drop', drop);
+    return () => {
+      window.removeEventListener('dragover', over);
+      window.removeEventListener('drop', drop);
+    };
+  }, [status]);
 
   // 알림은 잠시 뒤 사라진다 (오류는 직접 닫을 때까지)
   useEffect(() => {
@@ -301,7 +344,7 @@ export default function Studio() {
   }
 
   return (
-    <div className="min-h-dvh bg-surface-cream pb-32">
+    <div className="min-h-dvh bg-surface-cream pb-48">
       <header className="sticky top-0 z-20 border-b border-line bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-2">
           <CookieLogo />
@@ -351,18 +394,20 @@ export default function Studio() {
             onCategory={setCategory}
             query={query}
             onQuery={setQuery}
-            onEdit={setEditing}
+            onEdit={(item, list) => setEditing({ item, list })}
             onEditAdd={setEditingAdd}
-            onAdd={() => setAdding(true)}
+            onAdd={() => setAdding([])}
             onUndoDelete={(image) => update((q) => ({ ...q, deletes: q.deletes.filter((d) => d !== image) }))}
+            onApply={update}
+            onError={(text) => setNotice({ tone: 'error', text })}
+            bottomSlot={bottomSlot}
             previews={previews}
           />
         ) : (
           <NotesTab
             updates={data.updates}
             queued={queue.notes}
-            onQueue={(note) => update((q) => ({ ...q, notes: [...q.notes, note] }))}
-            onRemove={(key) => update((q) => ({ ...q, notes: q.notes.filter((n) => n.key !== key) }))}
+            onNotes={(next) => update((q) => ({ ...q, notes: next(q.notes) }))}
           />
         )}
       </main>
@@ -389,6 +434,7 @@ export default function Studio() {
             </p>
           </div>
         )}
+        <div ref={setBottomSlot} />
         {size > 0 && (
           <div className="border-t border-line bg-surface/95 backdrop-blur">
             <div className="mx-auto flex max-w-5xl items-center gap-2 px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
@@ -405,38 +451,20 @@ export default function Studio() {
 
       {editing && (
         <EditDialog
-          item={editing}
+          key={editing.item.image}
+          item={editing.item}
           data={data}
           queue={queue}
           onClose={() => setEditing(null)}
           previews={previews}
-          onSubmit={(edit, touched) => {
-            const error = update((q) => {
-              const edits = { ...q.edits };
-              if (edit) edits[editing.image] = edit;
-              else delete edits[editing.image];
-              // 같은 이름을 쓰는 다른 아이템에 담아 둔 같은 정보 변경은 이번 값이 대신한다 (서로 엇갈리지 않게)
-              const name = edit?.name ?? editing.name;
-              for (const [image, other] of Object.entries(edits)) {
-                if (image === editing.image || other.name !== name || !touched.some((k) => k in other.meta)) continue;
-                const meta = { ...other.meta };
-                for (const k of touched) delete meta[k];
-                const item = data.items.find((i) => i.image === image);
-                const empty = !Object.keys(meta).length && !other.replace && item && other.name === item.name && other.rarity === item.rarity;
-                if (empty) delete edits[image];
-                else edits[image] = { ...other, meta };
-              }
-              return { ...q, edits, shas: { ...q.shas, ...(editing.sha && { [editing.image]: editing.sha }) } };
-            });
-            if (!error) setEditing(null);
-            return error;
+          position={{ index: editing.list.findIndex((i) => i.image === editing.item.image), total: editing.list.length }}
+          onNavigate={(dir) => {
+            const next = editing.list[editing.list.findIndex((i) => i.image === editing.item.image) + dir];
+            if (next) setEditing({ ...editing, item: next });
           }}
+          onSubmit={(next) => update((q) => applyItemEdit(q, data.items, data.meta, editing.item, next))}
           onDelete={() => {
-            const error = update((q) => {
-              const edits = { ...q.edits };
-              delete edits[editing.image];
-              return { ...q, edits, deletes: [...q.deletes, editing.image], shas: { ...q.shas, ...(editing.sha && { [editing.image]: editing.sha }) } };
-            });
+            const error = update((q) => deleteItem(q, editing.item));
             if (!error) setEditing(null);
             return error;
           }}
@@ -457,12 +485,13 @@ export default function Studio() {
       {adding && (
         <AddDialog
           initialCategory={category}
+          initialFiles={adding}
           data={data}
           queue={queue}
-          onClose={() => setAdding(false)}
+          onClose={() => setAdding(null)}
           onSubmit={(drafts) => {
             const error = update((q) => ({ ...q, adds: [...q.adds, ...drafts] }));
-            if (!error) setAdding(false);
+            if (!error) setAdding(null);
             return error;
           }}
         />
@@ -483,6 +512,14 @@ export default function Studio() {
   );
 }
 
+type ItemFilter = 'all' | 'hidden' | 'pinned' | 'changed';
+const FILTERS: [ItemFilter, string][] = [
+  ['all', '모두'],
+  ['hidden', '숨김'],
+  ['pinned', '맨 앞'],
+  ['changed', '저장 전 변경'],
+];
+
 function ItemsTab({
   data,
   queue,
@@ -494,6 +531,9 @@ function ItemsTab({
   onEditAdd,
   onAdd,
   onUndoDelete,
+  onApply,
+  onError,
+  bottomSlot,
   previews,
 }: {
   data: StudioData;
@@ -502,15 +542,23 @@ function ItemsTab({
   onCategory: (c: StudioCategory) => void;
   query: string;
   onQuery: (q: string) => void;
-  onEdit: (item: StudioItem) => void;
+  onEdit: (item: StudioItem, list: StudioItem[]) => void;
   onEditAdd: (draft: AddDraft) => void;
   onAdd: () => void;
   onUndoDelete: (image: string) => void;
+  /** 변경 담기 (한도를 넘으면 이유를 돌려준다) */
+  onApply: (next: (q: Queue) => Queue) => string | null;
+  onError: (text: string) => void;
+  /** 화면 아래 고정 영역 (여러 개 선택 막대를 넣는다) */
+  bottomSlot: HTMLElement | null;
   previews: Record<string, string>;
 }) {
   const patches = useMemo(() => metaPatchesByName(queue), [queue]);
   const q = query.trim().normalize('NFC').toLowerCase();
   const searching = q.length > 0;
+  const [filter, setFilter] = useState<ItemFilter>('all');
+  const [selected, setSelected] = useState<Set<string> | null>(null); // null: 선택 모드가 아님
+  const lastPicked = useRef<string | null>(null); // Shift 범위 선택의 기준 칸 (목록이 바뀌어도 같은 아이템을 가리키게 경로로)
 
   const counts = useMemo(() => {
     const map = new Map<StudioCategory, number>();
@@ -519,20 +567,29 @@ function ItemsTab({
   }, [data.items]);
 
   // 검색할 때는 모든 종류에서 찾는다
-  const groups = useMemo(() => {
-    const view = data.items
+  const { groups, filterCounts } = useMemo(() => {
+    const inScope = data.items
       .map((item) => ({ item, ...effective(item, queue, data.meta, patches) }))
       .filter(({ item, name, meta }) =>
-        searching
-          ? [item.name, name, ...meta.aliases].some((n) => n.toLowerCase().includes(q))
-          : item.category === category
+        searching ? [item.name, name, ...meta.aliases].some((n) => n.toLowerCase().includes(q)) : item.category === category
       );
-    const adds = queue.adds.filter((a) => (searching ? a.name.toLowerCase().includes(q) : a.category === category));
+    const addsInScope = queue.adds.filter((a) => (searching ? a.name.toLowerCase().includes(q) : a.category === category));
+    const test: Record<ItemFilter, (v: (typeof inScope)[number]) => boolean> = {
+      all: () => true,
+      hidden: (v) => !v.deleted && v.meta.hidden,
+      pinned: (v) => !v.deleted && v.meta.pinned,
+      changed: (v) => v.deleted || !!v.edit,
+    };
+    const filterCounts = Object.fromEntries(
+      FILTERS.map(([f]) => [f, inScope.filter(test[f]).length + (f === 'all' || f === 'changed' ? addsInScope.length : 0)])
+    ) as Record<ItemFilter, number>;
+    const view = inScope.filter(test[filter]);
+    const adds = filter === 'all' || filter === 'changed' ? addsInScope : [];
     const keyOf = (c: StudioCategory, r?: string) => (searching ? c : RARITY_CATEGORIES.includes(c) ? r ?? '' : '');
     const labelOf = (key: string) =>
       searching ? CATEGORY_LABELS[key as StudioCategory] : key ? RARITY_LABELS[key as Rarity] : CATEGORY_LABELS[category];
     const order = searching ? CATEGORIES : [...RARITIES, ''];
-    return order
+    const groups = order
       .map((key) => ({
         key,
         label: labelOf(key),
@@ -542,7 +599,88 @@ function ItemsTab({
           .sort((a, b) => Number(b.meta.pinned) - Number(a.meta.pinned) || a.name.localeCompare(b.name, 'ko')),
       }))
       .filter((g) => g.items.length || g.adds.length);
-  }, [data, queue, patches, category, searching, q]);
+    return { groups, filterCounts };
+  }, [data, queue, patches, category, searching, q, filter]);
+
+  // 화면에 보이는 순서대로 (이전/다음, 범위 선택). 지우기로 담은 아이템은 뺀다
+  const visible = useMemo(() => groups.flatMap((g) => g.items.filter((v) => !v.deleted).map((v) => v.item)), [groups]);
+
+  // 종류나 검색, 필터를 바꾸면 선택은 화면에 남은 것만
+  useEffect(() => {
+    setSelected((sel) => {
+      if (!sel) return sel;
+      const shown = new Set(visible.map((i) => i.image));
+      const kept = new Set(Array.from(sel).filter((i) => shown.has(i)));
+      return kept.size === sel.size ? sel : kept;
+    });
+  }, [visible]);
+
+  // Esc: 선택 모드 끝내기 (창이 열려 있으면 창이 먼저)
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !document.querySelector('dialog[open]')) setSelected(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected]);
+
+  const toggle = (item: StudioItem, shift: boolean) => {
+    const index = visible.findIndex((i) => i.image === item.image);
+    // 상태 갱신은 나중에 실행되므로 미리 잡아 둔다. 기준 칸이 지금 목록에 없으면 그냥 하나만 고른다
+    const anchor = lastPicked.current ? visible.findIndex((i) => i.image === lastPicked.current) : -1;
+    setSelected((sel) => {
+      const next = new Set(sel);
+      if (shift && anchor >= 0) {
+        // Shift: 마지막으로 누른 칸부터 여기까지 모두 선택
+        const [from, to] = [Math.min(anchor, index), Math.max(anchor, index)];
+        for (const i of visible.slice(from, to + 1)) next.add(i.image);
+      } else if (next.has(item.image)) next.delete(item.image);
+      else next.add(item.image);
+      return next;
+    });
+    lastPicked.current = item.image;
+  };
+
+  /** 아이템 하나의 지금 모습에서 일부만 바꾼 값 */
+  const nextOf = (q2: Queue, item: StudioItem, patch: { rarity?: Rarity; meta?: Partial<MetaFields> }) => {
+    const cur = effective(item, q2, data.meta, metaPatchesByName(q2));
+    return { name: cur.name, rarity: 'rarity' in patch ? patch.rarity : cur.rarity, meta: { ...cur.meta, ...patch.meta }, replace: cur.edit?.replace };
+  };
+  const apply = (next: (q: Queue) => Queue, count = 1) => {
+    const error = onApply(next);
+    // 한도를 넘은 까닭이 고른 개수 자체라면 나눠서 하라고 알린다
+    if (error) onError(count > MAX_CHANGES ? `한 번에 ${MAX_CHANGES}건까지 저장할 수 있어요. 지금 ${count}개를 골랐으니 ${MAX_CHANGES}개 이하로 나눠서 해 주세요` : error);
+    return !error;
+  };
+  const quickMeta = (item: StudioItem, meta: Partial<MetaFields>) =>
+    apply((q2) => applyItemEdit(q2, data.items, data.meta, item, nextOf(q2, item, { meta })));
+
+  const picked = data.items.filter((i) => selected?.has(i.image));
+  const bulkMeta = (meta: Partial<MetaFields>) =>
+    apply((q2) => picked.reduce((acc, item) => applyItemEdit(acc, data.items, data.meta, item, nextOf(acc, item, { meta })), q2), picked.length);
+  const bulkRarity = (rarity: Rarity) => {
+    const problems: string[] = [];
+    const ok = apply((q2) =>
+      picked.reduce((acc, item) => {
+        if (!RARITY_CATEGORIES.includes(item.category)) return acc;
+        const next = nextOf(acc, item, { rarity });
+        if (nameTaken(data.items, acc, { category: item.category, rarity, name: next.name }, { image: item.image })) {
+          problems.push(next.name);
+          return acc;
+        }
+        return applyItemEdit(acc, data.items, data.meta, item, next);
+      }, q2),
+      picked.length
+    );
+    if (ok && problems.length) onError(`같은 등급에 같은 이름이 있어 옮기지 않았어요: ${problems.join(', ')}`);
+  };
+  const bulkDelete = () => {
+    if (!confirm(`${picked.length}개를 지울까요? 저장하기 전에는 되돌릴 수 있어요.`)) return;
+    if (apply((q2) => picked.reduce(deleteItem, q2), picked.length)) setSelected(new Set());
+  };
+  const pickedRarity = picked.some((i) => RARITY_CATEGORIES.includes(i.category));
+  const [rarityTarget, setRarityTarget] = useState<Rarity | ''>('');
 
   return (
     <>
@@ -578,6 +716,43 @@ function ItemsTab({
         </div>
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap gap-1" role="group" aria-label="보기">
+          {FILTERS.map(([f, label]) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={filter === f}
+              onClick={() => setFilter(f)}
+              className={clsx(
+                'flex h-8 items-center gap-1 rounded-full px-3 text-caption font-semibold transition-colors',
+                filter === f ? 'bg-primary text-on-primary' : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
+              )}
+            >
+              {label}
+              <span className="tabular-nums opacity-70">{filterCounts[f]}</span>
+            </button>
+          ))}
+        </div>
+        <Button
+          variant={selected ? 'secondary' : 'ghost'}
+          className="ml-auto"
+          aria-pressed={!!selected}
+          onClick={() => {
+            setSelected(selected ? null : new Set());
+            lastPicked.current = null;
+          }}
+        >
+          {selected ? '선택 끝내기' : '여러 개 선택'}
+        </Button>
+      </div>
+      {selected && (
+        <p className="mt-2 text-caption text-ink-subtle">
+          칸을 눌러 고르세요.
+          <span className="[@media(hover:none)]:hidden"> Shift를 누른 채 누르면 사이의 칸까지 한 번에 골라져요. Esc로 끝내요.</span>
+        </p>
+      )}
+
       {groups.map((g) => (
         <section key={g.key} className="mt-6" aria-label={g.label}>
           <h2 className="mb-2 flex items-baseline gap-2 text-label-md text-ink">
@@ -589,8 +764,9 @@ function ItemsTab({
               <li key={a.key} className="flex">
                 <button
                   type="button"
+                  disabled={!!selected}
                   onClick={() => onEditAdd(a)}
-                  className="flex h-full w-full flex-col items-center gap-1 rounded-lg border border-dashed border-primary-ink/60 bg-primary-soft/50 p-2 text-center transition-colors hover:bg-primary-soft"
+                  className="flex h-full w-full flex-col items-center gap-1 rounded-lg border border-dashed border-primary-ink/60 bg-primary-soft/50 p-2 text-center transition-colors hover:bg-primary-soft disabled:opacity-50"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={`data:image;base64,${a.image}`} alt="" className="aspect-square w-full object-contain" />
@@ -599,45 +775,164 @@ function ItemsTab({
                 </button>
               </li>
             ))}
-            {g.items.map(({ item, name, meta, edit, deleted }) => (
-              <li key={item.image} className="flex">
-                <button
-                  type="button"
-                  onClick={() => (deleted ? confirm(`${item.name} 삭제를 취소할까요?`) && onUndoDelete(item.image) : onEdit(item))}
-                  className={clsx(
-                    'flex h-full w-full flex-col items-center gap-1 rounded-lg border bg-surface p-2 text-center transition-[border-color,box-shadow] hover:shadow-e1',
-                    deleted ? 'border-danger/50 bg-danger/5' : edit ? 'border-primary-ink' : 'border-line hover:border-ink-subtle/50'
-                  )}
-                >
-                  <span className={clsx('relative w-full', (deleted || meta.hidden) && 'opacity-40')}>
-                    {edit?.replace ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={`data:image;base64,${edit.replace.image}`} alt="" className="aspect-square w-full object-contain" />
-                    ) : (
-                      <ItemImage image={item.image} repo={data.repo} version={item.sha} preview={previews[item.image]} className="aspect-square w-full object-contain" />
+            {g.items.map(({ item, name, meta, edit, deleted }) => {
+              const isPicked = !!selected?.has(item.image);
+              return (
+                <li key={item.image} className="group relative flex">
+                  <button
+                    type="button"
+                    aria-pressed={selected && !deleted ? isPicked : undefined}
+                    disabled={!!selected && deleted}
+                    onClick={(e) => {
+                      if (selected) return toggle(item, e.shiftKey);
+                      if (deleted) return confirm(`${item.name} 삭제를 취소할까요?`) && onUndoDelete(item.image);
+                      onEdit(item, visible);
+                    }}
+                    className={clsx(
+                      'flex h-full w-full flex-col items-center gap-1 rounded-lg border bg-surface p-2 text-center transition-[border-color,box-shadow] hover:shadow-e1 disabled:opacity-50',
+                      isPicked
+                        ? 'border-primary-ink bg-primary-soft ring-2 ring-primary-ink'
+                        : deleted
+                          ? 'border-danger/50 bg-danger/5'
+                          : edit
+                            ? 'border-primary-ink'
+                            : 'border-line hover:border-ink-subtle/50'
                     )}
-                  </span>
-                  <TileName name={name} strike={deleted} />
-                  <TileBadges
-                    labels={[
-                      searching && CATEGORY_LABELS[item.category],
-                      deleted ? '삭제 예정' : edit && '변경 예정',
-                      !deleted && meta.hidden && '숨김',
-                      !deleted && meta.pinned && '맨 앞',
-                    ]}
-                    accent={!!edit || deleted}
-                    danger={deleted}
-                  />
-                </button>
-              </li>
-            ))}
+                  >
+                    {selected && !deleted && (
+                      <span
+                        aria-hidden="true"
+                        className={clsx(
+                          'absolute left-1.5 top-1.5 z-10 grid h-6 w-6 place-items-center rounded-full border-[1.5px]',
+                          isPicked ? 'border-primary-ink bg-primary-ink text-white' : 'border-ink-subtle bg-surface'
+                        )}
+                      >
+                        {isPicked && <CheckIcon />}
+                      </span>
+                    )}
+                    <span className={clsx('relative w-full', (deleted || meta.hidden) && 'opacity-40')}>
+                      {edit?.replace ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`data:image;base64,${edit.replace.image}`} alt="" className="aspect-square w-full object-contain" />
+                      ) : (
+                        <ItemImage image={item.image} repo={data.repo} version={item.sha} preview={previews[item.image]} className="aspect-square w-full object-contain" />
+                      )}
+                    </span>
+                    <TileName name={name} strike={deleted} />
+                    <TileBadges
+                      labels={[
+                        searching && CATEGORY_LABELS[item.category],
+                        deleted ? '삭제 예정' : edit && '변경 예정',
+                        !deleted && meta.hidden && '숨김',
+                        !deleted && meta.pinned && '맨 앞',
+                      ]}
+                      accent={!!edit || deleted}
+                      danger={deleted}
+                    />
+                  </button>
+                  {!selected && !deleted && (
+                    // 창을 열지 않고 바로 숨기기, 맨 앞 고정 (가리키거나 키보드로 오면 보인다)
+                    <span className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:hidden">
+                      <QuickToggle label={`${name} ${meta.hidden ? '숨김 해제' : '숨기기'}`} on={meta.hidden} onClick={() => quickMeta(item, { hidden: !meta.hidden })}>
+                        {meta.hidden ? <EyeOffIcon /> : <EyeIcon />}
+                      </QuickToggle>
+                      <QuickToggle label={`${name} ${meta.pinned ? '맨 앞 고정 해제' : '맨 앞에 고정'}`} on={meta.pinned} onClick={() => quickMeta(item, { pinned: !meta.pinned })}>
+                        <PinIcon />
+                      </QuickToggle>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </section>
       ))}
       {groups.length === 0 && (
-        <p className="py-16 text-center text-body-md text-ink-subtle">{searching ? `‘${query}’ 검색 결과가 없어요` : '아직 아이템이 없어요'}</p>
+        <p className="py-16 text-center text-body-md text-ink-subtle">
+          {searching ? `‘${query}’ 검색 결과가 없어요` : filter !== 'all' ? '해당하는 아이템이 없어요' : '아직 아이템이 없어요'}
+        </p>
       )}
+
+      {selected &&
+        bottomSlot &&
+        createPortal(
+          <div className="border-t border-line bg-surface/95 backdrop-blur">
+            {/* 휴대폰: 두 줄 (아래 줄은 옆으로 밀기), 넓은 화면: 한 줄 */}
+            <div className="mx-auto max-w-5xl px-4 py-2 sm:flex sm:flex-wrap sm:items-center sm:gap-1" role="toolbar" aria-label="고른 아이템에 한꺼번에">
+              <div className="flex items-center gap-1 sm:contents">
+                <p className="mr-1 text-label-md text-ink" aria-live="polite">
+                  <span className="tabular-nums">{picked.length}</span>개 고름
+                </p>
+                <Button variant="ghost" onClick={() => setSelected(new Set(visible.map((i) => i.image)))}>
+                  모두 고르기
+                </Button>
+                <Button variant="ghost" disabled={!picked.length} onClick={() => setSelected(new Set())}>
+                  고르기 취소
+                </Button>
+                <Button variant="danger" className="ml-auto sm:order-last" disabled={!picked.length} onClick={bulkDelete}>
+                  삭제
+                </Button>
+              </div>
+              <div className="scrollbar-hide -mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:contents">
+                <span className="mx-1 hidden h-6 w-px bg-line sm:block" aria-hidden="true" />
+                <Button variant="ghost" className="shrink-0" disabled={!picked.length} onClick={() => bulkMeta({ hidden: true })}>
+                  숨기기
+                </Button>
+                <Button variant="ghost" className="shrink-0" disabled={!picked.length} onClick={() => bulkMeta({ hidden: false })}>
+                  숨김 해제
+                </Button>
+                <Button variant="ghost" className="shrink-0" disabled={!picked.length} onClick={() => bulkMeta({ pinned: true })}>
+                  맨 앞 고정
+                </Button>
+                <Button variant="ghost" className="shrink-0" disabled={!picked.length} onClick={() => bulkMeta({ pinned: false })}>
+                  고정 해제
+                </Button>
+                {pickedRarity && (
+                  <span className="flex shrink-0 items-center gap-1">
+                    <label>
+                      <span className="sr-only">옮길 등급</span>
+                      <select
+                        className="field h-9 w-auto py-0 text-label-md"
+                        value={rarityTarget}
+                        disabled={!picked.length}
+                        onChange={(e) => setRarityTarget(e.target.value as Rarity | '')}
+                      >
+                        <option value="">등급 고르기</option>
+                        {RARITIES.map((r) => (
+                          <option key={r} value={r}>
+                            {RARITY_LABELS[r]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <Button variant="ghost" disabled={!picked.length || !rarityTarget} onClick={() => rarityTarget && bulkRarity(rarityTarget)}>
+                      등급 옮기기
+                    </Button>
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>,
+          bottomSlot
+        )}
     </>
+  );
+}
+
+function QuickToggle({ label, on, onClick, children }: { label: string; on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className={clsx(
+        'grid h-7 w-7 place-items-center rounded-full border shadow-e1 transition-colors',
+        on ? 'border-primary-ink bg-primary text-primary-ink' : 'border-line bg-surface text-ink-muted hover:text-ink'
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -726,6 +1021,8 @@ function EditDialog({
   queue,
   onClose,
   previews,
+  position,
+  onNavigate,
   onSubmit,
   onDelete,
 }: {
@@ -734,10 +1031,12 @@ function EditDialog({
   queue: Queue;
   onClose: () => void;
   previews: Record<string, string>;
-  onSubmit: (edit: ItemEdit | null, touched: (keyof MetaFields)[]) => string | null;
+  /** 목록에서 몇 번째인지 (이전/다음 버튼) */
+  position: { index: number; total: number };
+  onNavigate: (dir: -1 | 1) => void;
+  onSubmit: (next: { name: string; rarity?: Rarity; meta: MetaFields; replace?: ItemEdit['replace'] }) => string | null;
   onDelete: () => string | null;
 }) {
-  const original = baseMeta(data.meta, item.name);
   const current = effective(item, queue, data.meta, metaPatchesByName(queue));
   const initial = {
     name: current.name,
@@ -756,24 +1055,45 @@ function EditDialog({
   const sharedWith = data.items.filter((i) => i.name === item.name && i.image !== item.image).map((i) => CATEGORY_LABELS[i.category]);
   const sharedHint = sharedWith.length ? ` 같은 이름의 ${Array.from(new Set(sharedWith)).join(', ')}에도 함께 적용돼요.` : '';
 
-  const submit = () => {
+  /** 담기. 이전/다음으로 넘길 때는 바꾼 것이 있으면 담고 넘긴다 */
+  const submit = (go?: -1 | 1) => {
+    if (go && !dirty) return onNavigate(go);
     const name = cleanName(form.name);
     if (!name) return setErrors([`이름을 확인해 주세요 (${NAME_RULE})`]);
     if (nameTaken(data.items, queue, { category: item.category, rarity: form.rarity, name }, { image: item.image }))
       return setErrors([`${name}: 같은 자리에 같은 이름이 이미 있어요`]);
     const aliases = splitAliases(form.aliases);
     if (aliases.length > 10 || aliases.some((a) => a.length > 30)) return setErrors(['다른 이름은 10개까지, 하나에 30자까지 쓸 수 있어요']);
-    // 이번에 바꾼 정보(저장 전 변경까지 반영한 값과 비교). 같은 이름을 함께 쓰는 아이템의 변경도 이 값으로 맞춘다
-    const next: MetaFields = { hidden: form.hidden, pinned: form.pinned, aliases, description: form.description.trim() };
-    const touched = (Object.keys(next) as (keyof MetaFields)[]).filter((k) => JSON.stringify(next[k]) !== JSON.stringify(current.meta[k]));
-    const meta: ItemEdit['meta'] = { ...current.edit?.meta };
-    for (const k of touched) (meta as Record<string, unknown>)[k] = next[k];
-    // 저장된 값과 같아진 것은 변경에서 뺀다
-    for (const k of Object.keys(meta) as (keyof MetaFields)[]) if (JSON.stringify(meta[k]) === JSON.stringify(original[k])) delete meta[k];
-    const changed = name !== item.name || form.rarity !== item.rarity || form.replace || Object.keys(meta).length > 0;
-    const error = onSubmit(changed ? { name, rarity: form.rarity, meta, ...(form.replace && { replace: form.replace }) } : null, touched);
-    if (error) setErrors([error]);
+    const meta: MetaFields = { hidden: form.hidden, pinned: form.pinned, aliases, description: form.description.trim() };
+    const error = onSubmit({ name, rarity: form.rarity, meta, replace: form.replace });
+    if (error) return setErrors([error]);
+    if (go) onNavigate(go);
+    else onClose();
   };
+  const replaceWith = async (files: ArrayLike<File> | null) => {
+    const { ok, errors } = await readImages(files);
+    setErrors(errors);
+    if (ok[0]) set('replace', { image: ok[0].image, size: ok[0].size });
+  };
+  const [dropping, setDropping] = useState(false);
+
+  // Alt + ←/→ : 이전/다음 아이템. 창 어디에 포커스가 있어도 받고, 끝에서도 브라우저 '뒤로 가기'로 페이지를 떠나지 않게 막는다
+  // (맥의 Option + ←/→ 는 입력칸에서 낱말 단위 이동이라 입력칸 안에서는 그대로 둔다)
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+      if (mac && (e.target as HTMLElement).matches?.('input, textarea')) return;
+      e.preventDefault();
+      const go = e.key === 'ArrowLeft' ? -1 : 1;
+      const target = position.index + go;
+      if (position.index >= 0 && target >= 0 && target < position.total) submitRef.current(go);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [position.index, position.total]);
 
   return (
     <Modal
@@ -791,12 +1111,25 @@ function EditDialog({
           >
             삭제
           </Button>
-          <Button variant="primary" className="ml-auto" onClick={submit}>
+          <Button variant="primary" className="ml-auto" onClick={() => submit()}>
             {current.edit ? '변경 고치기' : '변경 담기'}
           </Button>
         </>
       }
     >
+      {position.total > 1 && position.index >= 0 && (
+        <div className="flex items-center gap-2 border-b border-line px-5 py-2">
+          <Button variant="ghost" disabled={position.index === 0} onClick={() => submit(-1)} aria-label="이전 아이템 (바꾼 내용은 담고 넘어가요)">
+            ‹ 이전
+          </Button>
+          <span className="flex-1 text-center text-caption tabular-nums text-ink-subtle">
+            {position.index + 1} / {position.total}
+          </span>
+          <Button variant="ghost" disabled={position.index === position.total - 1} onClick={() => submit(1)} aria-label="다음 아이템 (바꾼 내용은 담고 넘어가요)">
+            다음 ›
+          </Button>
+        </div>
+      )}
       <form
         className="space-y-4 p-5"
         onSubmit={(e) => {
@@ -804,7 +1137,22 @@ function EditDialog({
           submit();
         }}
       >
-        <div className="flex items-center gap-4">
+        <div
+          className={clsx('-m-2 flex items-center gap-4 rounded-lg p-2 transition-colors', dropping && 'bg-primary-soft ring-2 ring-primary-ink')}
+          onDragOver={(e) => {
+            if (!e.dataTransfer.types.includes('Files')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            setDropping(true);
+          }}
+          onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setDropping(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDropping(false);
+            replaceWith(e.dataTransfer.files);
+          }}
+        >
           {form.replace ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`data:image;base64,${form.replace.image}`} alt="새 이미지" className="h-24 w-24 shrink-0 object-contain" />
@@ -819,13 +1167,12 @@ function EditDialog({
                 accept="image/png,image/jpeg,image/webp"
                 className="sr-only"
                 onChange={async (e) => {
-                  const { ok, errors } = await readImages(e.target.files);
+                  await replaceWith(e.target.files);
                   e.target.value = '';
-                  setErrors(errors);
-                  if (ok[0]) set('replace', { image: ok[0].image, size: ok[0].size });
                 }}
               />
             </label>
+            <p className="text-caption text-ink-subtle [@media(hover:none)]:hidden">새 이미지를 여기에 끌어다 놓아도 돼요</p>
             {form.replace && (
               <button type="button" className="block text-caption text-ink-subtle underline underline-offset-2" onClick={() => set('replace', undefined)}>
                 원래 이미지로
@@ -837,7 +1184,7 @@ function EditDialog({
           label="이름"
           hint={`이름을 바꿔도 예전 이름으로 저장하거나 공유한 조합표는 그대로 열려요.${sharedWith.length ? ` 같은 이름의 ${Array.from(new Set(sharedWith)).join(', ')}은(는) 따로 바꿔 주세요.` : ''}`}
         >
-          <input className="field" value={form.name} maxLength={40} onChange={(e) => set('name', e.target.value)} />
+          <input className="field" value={form.name} maxLength={40} onChange={(e) => set('name', e.target.value)} data-autofocus="fine-pointer" />
         </Field>
         {hasRarity && <RaritySelect value={form.rarity} onChange={(r) => set('rarity', r)} />}
         <Field label="다른 이름" hint={`쉼표로 구분해요. 검색할 때 함께 찾아져요.${sharedHint}`}>
@@ -857,60 +1204,97 @@ function EditDialog({
 
 function AddDialog({
   initialCategory,
+  initialFiles,
   data,
   queue,
   onClose,
   onSubmit,
 }: {
   initialCategory: StudioCategory;
+  initialFiles: File[];
   data: StudioData;
   queue: Queue;
   onClose: () => void;
   onSubmit: (drafts: AddDraft[]) => string | null;
 }) {
+  // 새로 넣는 이미지에 붙일 종류와 등급 (넣은 뒤에는 이미지마다 바꿀 수 있다)
   const [category, setCategory] = useState(initialCategory);
   const [rarity, setRarity] = useState<Rarity | undefined>();
   const [drafts, setDrafts] = useState<AddDraft[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
-  const hasRarity = RARITY_CATEGORIES.includes(category);
+  const hasRarity = (c: StudioCategory) => RARITY_CATEGORIES.includes(c);
 
-  const pick = async (files: FileList | null) => {
+  const pick = async (files: ArrayLike<File> | null) => {
     const { ok, errors } = await readImages(files);
     setErrors(errors);
-    setDrafts((d) => [...d, ...ok.map((f) => ({ ...f, key: newKey(), category, rarity }))]);
+    setDrafts((d) => [...d, ...ok.map((f) => ({ ...f, key: newKey(), category, rarity: hasRarity(category) ? rarity : undefined }))]);
   };
+  const change = (key: string, patch: Partial<AddDraft>) =>
+    setDrafts((list) =>
+      list.map((x) => {
+        if (x.key !== key) return x;
+        const next = { ...x, ...patch };
+        return hasRarity(next.category) ? next : { ...next, rarity: undefined };
+      })
+    );
+
+  // 화면에 놓아서 연 경우 그 이미지부터 (한 번만)
+  const first = useRef<File[] | null>(initialFiles);
+  useEffect(() => {
+    const files = first.current;
+    first.current = null;
+    if (files?.length) pick(files);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submit = () => {
     if (drafts.length === 0) return setErrors(['이미지를 골라 주세요']);
-    if (hasRarity && !rarity) return setErrors(['등급을 골라 주세요']);
     const result: AddDraft[] = [];
     const problems: string[] = [];
     for (const d of drafts) {
       const name = cleanName(d.name);
-      const target = { category, rarity: hasRarity ? rarity : undefined, name: name ?? '' };
+      const target = { category: d.category, rarity: d.rarity, name: name ?? '' };
+      const same = (r: AddDraft) => r.category === d.category && r.rarity === d.rarity && r.name.toLowerCase() === name?.toLowerCase();
       if (!name) problems.push(`${d.name || '이름 없음'}: 이름을 확인해 주세요 (${NAME_RULE})`);
-      else if (nameTaken(data.items, queue, target) || result.some((r) => r.name.toLowerCase() === name.toLowerCase()))
-        problems.push(`${name}: 같은 자리에 같은 이름이 이미 있어요`);
+      else if (hasRarity(d.category) && !d.rarity) problems.push(`${name}: 등급을 골라 주세요`);
+      else if (nameTaken(data.items, queue, target) || result.some(same)) problems.push(`${name}: 같은 자리에 같은 이름이 이미 있어요`);
       else if (pendingDelete(data.items, queue, target)) problems.push(`${name}: ${PENDING_DELETE_MESSAGE}`);
-      else result.push({ ...d, ...target, name });
+      else result.push({ ...d, name });
     }
     if (problems.length) return setErrors(problems);
     const error = onSubmit(result);
     if (error) setErrors([error]);
   };
 
+  const totalBytes = drafts.reduce((sum, d) => sum + d.size, 0);
+
   return (
     <Modal
       title="아이템 추가"
       onClose={closeIfConfirmed(drafts.length > 0, onClose)}
       footer={
-        <Button variant="primary" className="ml-auto" onClick={submit}>
-          {drafts.length > 1 ? `${drafts.length}개 담기` : '담기'}
-        </Button>
+        <>
+          {drafts.length > 0 && (
+            <p className="text-caption text-ink-subtle">
+              {drafts.length}장, {totalBytes < 1024 * 1024 ? `${Math.ceil(totalBytes / 1024)}KB` : `${(totalBytes / 1024 / 1024).toFixed(1)}MB`} (한 번에 3MB까지)
+            </p>
+          )}
+          <Button variant="primary" className="ml-auto" onClick={submit}>
+            {drafts.length > 1 ? `${drafts.length}개 담기` : '담기'}
+          </Button>
+        </>
       }
     >
-      <div className="space-y-4 p-5">
-        <div className={clsx('grid gap-3', hasRarity && 'grid-cols-2')}>
+      <div
+        className="space-y-4 p-5"
+        onPaste={(e) => {
+          if (e.clipboardData.files.length) {
+            e.preventDefault();
+            pick(e.clipboardData.files);
+          }
+        }}
+      >
+        <div className={clsx('grid gap-3', hasRarity(category) && 'grid-cols-2')}>
           <Field label="종류">
             <select className="field" value={category} onChange={(e) => setCategory(e.target.value as StudioCategory)}>
               {CATEGORIES.map((c) => (
@@ -920,37 +1304,49 @@ function AddDialog({
               ))}
             </select>
           </Field>
-          {hasRarity && <RaritySelect value={rarity} onChange={setRarity} />}
+          {hasRarity(category) && <RaritySelect value={rarity} onChange={setRarity} />}
         </div>
-        <Field label="이미지" hint="PNG, JPG, WEBP (1장 1.5MB 이하). 여러 장을 한 번에 골라도 돼요. 파일 이름이 아이템 이름이 되고, 아래에서 고칠 수 있어요">
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            multiple
-            className="field h-auto py-2"
-            onChange={async (e) => {
-              const files = e.target.files;
-              await pick(files);
-              e.target.value = '';
-            }}
-          />
-        </Field>
+        <DropZone onFiles={pick} />
         {drafts.length > 0 && (
           <ul className="space-y-2" aria-label="올릴 이미지">
             {drafts.map((d) => (
-              <li key={d.key} className="flex items-center gap-3 rounded-md border border-line p-2">
+              <li key={d.key} className="flex gap-3 rounded-md border border-line p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`data:image;base64,${d.image}`} alt="" className="h-14 w-14 shrink-0 object-contain" />
-                <label className="min-w-0 flex-1">
-                  <span className="sr-only">이름</span>
-                  <input
-                    className="field"
-                    value={d.name}
-                    maxLength={40}
-                    onChange={(e) => setDrafts((list) => list.map((x) => (x.key === d.key ? { ...x, name: e.target.value } : x)))}
-                  />
-                </label>
-                <Button variant="ghost" onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-label={`${d.name} 빼기`}>
+                <img src={`data:image;base64,${d.image}`} alt="" className="h-16 w-16 shrink-0 self-center rounded bg-surface-sunken/60 object-contain" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <label className="block">
+                    <span className="sr-only">이름</span>
+                    <input className="field" value={d.name} maxLength={40} onChange={(e) => change(d.key, { name: e.target.value })} />
+                  </label>
+                  <div className="flex gap-2">
+                    <label className="min-w-0 flex-1">
+                      <span className="sr-only">{d.name} 종류</span>
+                      <select className="field" value={d.category} onChange={(e) => change(d.key, { category: e.target.value as StudioCategory })}>
+                        {CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {CATEGORY_LABELS[c]}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {hasRarity(d.category) && (
+                      <label className="min-w-0 flex-1">
+                        <span className="sr-only">{d.name} 등급</span>
+                        <select className="field" value={d.rarity ?? ''} onChange={(e) => change(d.key, { rarity: e.target.value as Rarity })}>
+                          <option value="" disabled>
+                            등급 고르기
+                          </option>
+                          {RARITIES.map((r) => (
+                            <option key={r} value={r}>
+                              {RARITY_LABELS[r]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                </div>
+                <Button variant="ghost" className="self-center" onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-label={`${d.name} 빼기`}>
                   빼기
                 </Button>
               </li>
@@ -960,6 +1356,61 @@ function AddDialog({
         <ErrorText errors={errors} />
       </div>
     </Modal>
+  );
+}
+
+/** 이미지 고르기: 누르거나, 끌어다 놓거나 (여러 장) */
+function DropZone({ onFiles }: { onFiles: (files: FileList) => void }) {
+  const [over, setOver] = useState(false);
+  return (
+    <label
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes('Files')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'copy';
+        setOver(true);
+      }}
+      onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOver(false);
+        onFiles(e.dataTransfer.files);
+      }}
+      className={clsx(
+        'flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-[1.5px] border-dashed px-4 py-6 text-center transition-colors focus-within:ring-4 focus-within:ring-primary-ink/15',
+        over ? 'border-primary-ink bg-primary-soft' : 'border-line bg-surface-cream hover:border-primary-ink hover:bg-primary-soft/60'
+      )}
+    >
+      <span className="text-primary-ink">
+        <ImageIcon />
+      </span>
+      <span className="text-label-md text-ink">
+        {over ? (
+          '여기에 놓으세요'
+        ) : (
+          <>
+            <span className="[@media(hover:none)]:hidden">이미지를 끌어다 놓거나 눌러서 고르기</span>
+            <span className="hidden [@media(hover:none)]:inline">눌러서 이미지 고르기</span>
+          </>
+        )}
+      </span>
+      <span className="text-caption text-ink-subtle">
+        PNG, JPG, WEBP (1장 1.5MB 이하). 여러 장을 한 번에 넣을 수 있어요.
+        <span className="[@media(hover:none)]:hidden"> 복사한 이미지는 붙여넣기(Ctrl+V)로도 돼요.</span> 파일 이름이 아이템 이름이 돼요.
+      </span>
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        multiple
+        className="sr-only"
+        onChange={(e) => {
+          if (e.target.files) onFiles(e.target.files);
+          e.target.value = '';
+        }}
+      />
+    </label>
   );
 }
 
@@ -1074,7 +1525,7 @@ function ReviewDialog({
     })),
     ...queue.notes.map((n) => ({
       key: `n:${n.key}`,
-      text: `업데이트 소식: ${n.title}`,
+      text: describeNote(n),
       undo: () => ({ ...queue, notes: queue.notes.filter((x) => x.key !== n.key) }),
     })),
   ];
@@ -1130,21 +1581,42 @@ function ReviewDialog({
   );
 }
 
+const sameNote = (a: Note, b: Note) => a.date === b.date && a.title === b.title && sameList(a.items, b.items);
+
 function NotesTab({
   updates,
   queued,
-  onQueue,
-  onRemove,
+  onNotes,
 }: {
   updates: StudioData['updates'];
   queued: NoteDraft[];
-  onQueue: (note: NoteDraft) => string | null;
-  onRemove: (key: string) => void;
+  /** 담아 둔 소식 바꾸기 (한도를 넘으면 이유를 돌려준다) */
+  onNotes: (next: (notes: NoteDraft[]) => NoteDraft[]) => string | null;
 }) {
   const [date, setDate] = useState(today);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
+  // 고치는 중인 것: 담아 둔 소식(key) 또는 저장된 소식(from)
+  const [target, setTarget] = useState<{ key?: string; from?: Note } | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const fill = (note: Note, next: typeof target) => {
+    setDate(note.date);
+    setTitle(note.title);
+    setBody(note.items.join('\n'));
+    setErrors([]);
+    setTarget(next);
+    formRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    formRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  };
+  const clear = () => {
+    setDate(today());
+    setTitle('');
+    setBody('');
+    setErrors([]);
+    setTarget(null);
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1152,17 +1624,35 @@ function NotesTab({
     if (!date || !title.trim() || items.length === 0) return setErrors(['날짜, 제목, 내용을 모두 적어 주세요']);
     if (items.some((l) => /[·ㅡ]/.test(l) || /[·ㅡ]/.test(title))) return setErrors(['· 나 ㅡ 같은 기호 대신 쉼표나 문장으로 써 주세요']);
     if (items.length > 20 || items.some((l) => l.length > 100)) return setErrors(['내용은 20줄까지, 한 줄에 100자까지 쓸 수 있어요']);
-    const error = onQueue({ key: newKey(), date, title: title.trim(), items });
+    const note = { date, title: title.trim(), items };
+    let error: string | null = null;
+    if (target?.key) {
+      // 담아 둔 소식 고치기: 고친 결과가 저장된 원래 소식과 같아지면 고칠 것이 없다
+      const key = target.key;
+      error = onNotes((list) =>
+        list.flatMap((n) => (n.key !== key ? [n] : n.from && sameNote(n.from, note) ? [] : [{ ...n, ...note, remove: undefined }]))
+      );
+    } else if (target?.from) {
+      const from = target.from;
+      // 같은 소식에 담아 둔 다른 변경(고치기, 지우기)은 이번 것으로 바꾼다 (한 소식에 변경은 하나만)
+      if (!sameNote(from, note)) error = onNotes((list) => [...list.filter((n) => !(n.from && sameNote(n.from, from))), { key: newKey(), ...note, from }]);
+    } else {
+      error = onNotes((list) => [...list, { key: newKey(), ...note }]);
+    }
     if (error) return setErrors([error]);
-    setTitle('');
-    setBody('');
-    setErrors([]);
+    clear();
+  };
+
+  const pendingFor = (note: Note) => queued.find((n) => n.from && sameNote(n.from, note));
+  const undo = (key: string) => {
+    onNotes((list) => list.filter((n) => n.key !== key));
+    if (target?.key === key) clear();
   };
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <form onSubmit={submit} className="space-y-4 self-start rounded-xl border border-line bg-surface p-5">
-        <h2 className="text-title-md text-ink">소식 쓰기</h2>
+      <form ref={formRef} onSubmit={submit} className="scroll-mt-32 space-y-4 self-start rounded-xl border border-line bg-surface p-5">
+        <h2 className="text-title-md text-ink">{target ? '소식 고치기' : '소식 쓰기'}</h2>
         <p className="text-caption text-ink-subtle">새 아이템은 소식을 쓰지 않아도 자동으로 올라가요. 그 밖의 바뀐 점을 알릴 때 써 주세요.</p>
         <Field label="날짜">
           <input type="date" className="field" value={date} onChange={(e) => setDate(e.target.value)} required />
@@ -1174,46 +1664,103 @@ function NotesTab({
           <textarea className="field h-32 py-2" value={body} onChange={(e) => setBody(e.target.value)} />
         </Field>
         <ErrorText errors={errors} />
-        <Button type="submit" variant="primary" className="w-full">
-          담기
-        </Button>
+        <div className="flex gap-2">
+          {target && (
+            <Button onClick={clear} className="flex-1">
+              고치기 취소
+            </Button>
+          )}
+          <Button type="submit" variant="primary" className="flex-1">
+            {target ? '고친 내용 담기' : '담기'}
+          </Button>
+        </div>
       </form>
       <section aria-labelledby="notes-list" className="space-y-3">
         <h2 id="notes-list" className="text-title-md text-ink">
           사이트에 보이는 소식
         </h2>
-        {queued.map((note) => (
-          <NoteCard key={note.key} note={note} queued onRemove={() => onRemove(note.key)} />
-        ))}
-        {updates.map((note, i) => (
-          <NoteCard key={i} note={note} />
-        ))}
+        {queued
+          .filter((n) => !n.from)
+          .map((note) => (
+            <NoteCard key={note.key} note={note} badge="추가 예정" pending>
+              <NoteAction onClick={() => fill(note, { key: note.key })}>고치기</NoteAction>
+              <NoteAction onClick={() => undo(note.key)}>빼기</NoteAction>
+            </NoteCard>
+          ))}
+        {updates.map((saved, i) => {
+          // 똑같은 소식이 여러 개면 서버가 앞의 것을 바꾸므로 첫 번째에만 표시
+          const pending = updates.findIndex((n) => sameNote(n, saved)) === i ? pendingFor(saved) : undefined;
+          if (pending?.remove)
+            return (
+              <NoteCard key={i} note={saved} badge="삭제 예정" pending removed>
+                <NoteAction onClick={() => undo(pending.key)}>삭제 취소</NoteAction>
+              </NoteCard>
+            );
+          if (pending)
+            return (
+              <NoteCard key={i} note={pending} badge="고침 예정" pending>
+                <NoteAction onClick={() => fill(pending, { key: pending.key })}>고치기</NoteAction>
+                <NoteAction onClick={() => undo(pending.key)}>원래대로</NoteAction>
+              </NoteCard>
+            );
+          return (
+            <NoteCard key={i} note={saved}>
+              <NoteAction onClick={() => fill(saved, { from: saved })}>고치기</NoteAction>
+              <NoteAction
+                onClick={() => {
+                  if (!confirm(`'${saved.title}' 소식을 지울까요? 저장하기 전에는 되돌릴 수 있어요.`)) return;
+                  const error = onNotes((list) => [...list.filter((n) => !(n.from && sameNote(n.from, saved))), { key: newKey(), ...saved, from: saved, remove: true }]);
+                  if (error) return setErrors([error]);
+                  if (target?.from && sameNote(target.from, saved)) clear();
+                }}
+              >
+                삭제
+              </NoteAction>
+            </NoteCard>
+          );
+        })}
         {updates.length === 0 && queued.length === 0 && <p className="text-body-md text-ink-subtle">아직 직접 쓴 소식이 없어요</p>}
       </section>
     </div>
   );
 }
 
-function NoteCard({ note, queued, onRemove }: { note: { date: string; title: string; items: string[] }; queued?: boolean; onRemove?: () => void }) {
+function NoteCard({
+  note,
+  badge,
+  pending,
+  removed,
+  children,
+}: {
+  note: Note;
+  badge?: string;
+  pending?: boolean;
+  removed?: boolean;
+  children?: React.ReactNode;
+}) {
   return (
-    <article className={clsx('rounded-lg border p-4', queued ? 'border-dashed border-primary-ink/60 bg-primary-soft/50' : 'border-line bg-surface')}>
+    <article className={clsx('rounded-lg border p-4', removed ? 'border-danger/50 bg-danger/5' : pending ? 'border-dashed border-primary-ink/60 bg-primary-soft/50' : 'border-line bg-surface')}>
       <div className="flex items-center gap-2">
-        <h3 className="text-label-md text-ink">{note.title}</h3>
-        {queued && <span className="text-[11px] text-primary-ink">저장 전</span>}
+        <h3 className={clsx('text-label-md text-ink', removed && 'line-through')}>{note.title}</h3>
+        {badge && <span className={clsx('text-[11px]', removed ? 'text-danger' : 'text-primary-ink')}>{badge}</span>}
         <time dateTime={note.date} className="ml-auto text-caption tabular-nums text-ink-subtle">
           {note.date.replaceAll('-', '.')}
         </time>
       </div>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-body-md text-ink-muted">
+      <ul className={clsx('mt-2 list-disc space-y-1 pl-5 text-body-md text-ink-muted', removed && 'line-through opacity-60')}>
         {note.items.map((item, j) => (
           <li key={j}>{item}</li>
         ))}
       </ul>
-      {onRemove && (
-        <button type="button" onClick={onRemove} className="mt-2 text-caption text-ink-subtle underline underline-offset-2 hover:text-ink">
-          빼기
-        </button>
-      )}
+      {children && <div className="mt-2 flex gap-3">{children}</div>}
     </article>
+  );
+}
+
+function NoteAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} className="-my-2 inline-flex min-h-[36px] items-center text-caption text-ink-subtle underline underline-offset-2 hover:text-ink">
+      {children}
+    </button>
   );
 }

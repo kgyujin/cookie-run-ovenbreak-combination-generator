@@ -6,7 +6,14 @@ export type StudioOp =
   | { type: 'move'; category: StudioCategory; from: string; name: string; rarity?: Rarity; sha?: string } // 이름 바꾸기·등급 옮기기 (from: /images/... 경로)
   | { type: 'delete'; category: StudioCategory; image: string; sha?: string } // sha: 담을 때의 파일 (그사이 바뀌었으면 거절)
   | { type: 'meta'; name: string; pinned?: boolean; hidden?: boolean; aliases?: string[]; description?: string }
-  | { type: 'note'; date: string; title: string; items: string[] };
+  | { type: 'note'; date: string; title: string; items: string[]; from?: Note } // from: 고칠 기존 소식 (없으면 새 소식)
+  | ({ type: 'note-delete' } & Note);
+
+export interface Note {
+  date: string;
+  title: string;
+  items: string[];
+}
 
 export const MAX_OPS = 150; // 화면의 변경 1건이 요청 여러 개가 될 수 있어서 넉넉하게 (화면에서는 MAX_CHANGES건까지)
 export const MAX_CHANGES = 30;
@@ -65,6 +72,8 @@ export function describeOp(op: StudioOp): string {
       return `${op.name}: ${parts.join(', ') || '정보 수정'}`;
     }
     case 'note':
-      return `업데이트 소식 추가: ${op.title}`;
+      return `업데이트 소식 ${op.from ? '고침' : '추가'}: ${op.title}`;
+    case 'note-delete':
+      return `업데이트 소식 삭제: ${op.title}`;
   }
 }

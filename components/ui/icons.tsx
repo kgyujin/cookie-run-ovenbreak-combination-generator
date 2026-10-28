@@ -16,6 +16,12 @@ export const SearchIcon = () => <Icon d="m21 21-4.3-4.3M11 18a7 7 0 1 0 0-14 7 7
 export const PlayIcon = () => <Icon d="M7 5v14l11-7L7 5Z" className="h-4 w-4" />;
 export const CheckIcon = ({ className = 'h-4 w-4' }: { className?: string }) => <Icon d="m5 12 5 5L20 7" className={className} />;
 export const CopyIcon = () => <Icon d="M9 9h10v10H9zM5 15V5h10" className="h-4 w-4" />;
+export const ImageIcon = ({ className = 'h-6 w-6' }: { className?: string }) => (
+  <Icon d="M4 5h16v14H4zM4 16l4.5-4.5 4 4 2.5-2.5L20 18M15.5 9.5h.01" className={className} />
+);
+export const EyeIcon = () => <Icon d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" className="h-4 w-4" />;
+export const EyeOffIcon = () => <Icon d="M3 3l18 18M10.6 5.1A9.8 9.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.9 3.7M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2" className="h-4 w-4" />;
+export const PinIcon = () => <Icon d="M9 4h6l-1 6 3 3H7l3-3-1-6Zm3 9v7" className="h-4 w-4" />;
 export const ShareIcon = () => <Icon d="M12 3v12m0-12 4 4m-4-4L8 7M5 13v6h14v-6" className="h-4 w-4" />;
 
 /** 앱 로고: 초코칩 쿠키 */
