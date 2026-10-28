@@ -4,14 +4,16 @@ import clsx from 'clsx';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { safeUrl, useAppStore } from '@/store/useAppStore';
 import { track } from '@/lib/analytics';
-import { backgroundCss } from '@/lib/board';
+import { HIDDEN_PARTS, backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
 import { formatScore } from '@/utils/scoreFormatter';
-import { BackgroundData, FontSettings, ScoreDisplayType } from '@/types';
+import { BackgroundData, FontSettings, HiddenPart, ScoreDisplayType } from '@/types';
 import SidePanel from './ui/SidePanel';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { CheckIcon } from './ui/icons';
+import { Section, Toggle } from './settings/controls';
+import ThemeSection from './settings/ThemeSection';
 
 // 공유 서버(share-assets 버킷)가 받는 형식·크기와 맞춘다
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -64,12 +66,24 @@ const SECTIONS = [
   ['number', '번호'],
   ['cookie', '쿠키 크기'],
   ['style', '카드와 여백'],
+  ['visible', '보이는 영역'],
+  ['theme', '테마'],
 ] as const;
+
+/** 보이는 영역 스위치 이름 (lib/board.ts HIDDEN_PARTS) */
+const PART_LABELS: Record<HiddenPart, string> = {
+  pet: '펫',
+  treasure: '보물',
+  candy: '마법사탕과 축복',
+  dish: '요리',
+  sub: '대체 조합',
+  memo: '메모',
+};
 
 /** 초기화 기준. 이미 만든 공유 링크는 서버에 따로 저장되어 있어 어느 쪽이든 그대로 남는다 */
 const RESET_TEXT = {
-  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치를 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
-  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
+  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치, 보이는 영역을 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
+  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 메모, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
   all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
 } as const;
 
@@ -426,6 +440,20 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             </div>
           </Section>
 
+          <Section id="visible" title="보이는 영역">
+            <p className="text-caption text-ink-subtle">끈 영역은 12개 아레나 모두에서 화면과 저장 이미지에 나오지 않아요. 넣어 둔 내용은 지워지지 않아요.</p>
+            {HIDDEN_PARTS.map((part) => (
+              <Toggle
+                key={part}
+                label={PART_LABELS[part]}
+                checked={!style.hidden.includes(part)}
+                onChange={(visible) => setS({ hidden: visible ? style.hidden.filter((p) => p !== part) : [...style.hidden, part] })}
+              />
+            ))}
+          </Section>
+
+          <ThemeSection />
+
           <Section id="reset" title="초기화">
             <div className="grid grid-cols-3 gap-2">
               <Button onClick={() => setConfirm('style')}>꾸미기만</Button>
@@ -540,38 +568,6 @@ function AlignGrid({
         )}
       </div>
     </div>
-  );
-}
-
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-3">
-      <span className="text-caption font-semibold text-ink-muted">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={clsx('relative h-7 w-12 shrink-0 rounded-full border-[1.5px] transition-colors', checked ? 'border-primary-ink bg-primary-ink' : 'border-ink-subtle bg-surface-sunken')}
-      >
-        <span
-          className={clsx('absolute top-[2.5px] h-5 w-5 rounded-full shadow-e1 transition-[left]', checked ? 'left-[22px] bg-white' : 'left-[2.5px] bg-ink-subtle')}
-          aria-hidden="true"
-        />
-      </button>
-    </label>
-  );
-}
-
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section id={`set-${id}`} aria-labelledby={`set-${id}-title`} className="scroll-mt-2 space-y-4 px-5 py-5">
-      <h3 id={`set-${id}-title`} className="text-label-md text-ink">
-        {title}
-      </h3>
-      {children}
-    </section>
   );
 }
 

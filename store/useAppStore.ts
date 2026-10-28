@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, LayoutKey, MagicCandyData, YoutubeLink } from '@/types';
+import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, LayoutKey, MagicCandyData, Theme, YoutubeLink } from '@/types';
 import { resolveBoardItems } from '@/lib/items';
 import { DEFAULT_BACKGROUND } from '@/lib/backgrounds';
-import { ARENA_HEIGHT, LAYOUT_KEYS } from '@/lib/board';
+import { ARENA_HEIGHT, HIDDEN_PARTS, LAYOUT_KEYS, MAX_MEMO } from '@/lib/board';
 
 const emptyCombo = (): ComboData => ({ pet: '', cookie1: '', cookie2: '', treasures: ['', '', ''] });
 
@@ -18,6 +18,7 @@ const createEmptyArena = (): ArenaData => ({
   dish: '',
   subCombo: emptyCombo(),
   subScore: { value: '' },
+  memo: '',
   mainCookieRatio: 54, // 메인 조합 선달 쿠키 비율 (기본 54%, 이달 46%)
   subCookieRatio: 56, // 대체 조합 선달 쿠키 비율 (기본 56%, 이달 44%)
 });
@@ -71,6 +72,7 @@ export const initialBoard = (): BoardState => ({
     mainPairGap: 32,
     subPairGap: 16,
     layout: {},
+    hidden: [],
   },
 });
 
@@ -179,6 +181,7 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
         dish: itemImage(a.dish),
         subCombo: combo(a.subCombo),
         subScore: { value: str(a.subScore?.value, 30) },
+        memo: str(a.memo, MAX_MEMO).replace(/\s+/g, ' '),
         mainCookieRatio: clamp(a.mainCookieRatio, 30, 70, empty.mainCookieRatio),
         subCookieRatio: clamp(a.subCookieRatio, 30, 70, empty.subCookieRatio),
       };
@@ -243,6 +246,7 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
           return Array.isArray(v) ? [[key, [clamp(v[0], -764, 764, 0), clamp(v[1], -ARENA_HEIGHT, ARENA_HEIGHT, 0)]]] : [];
         })
       ),
+      hidden: HIDDEN_PARTS.filter((part) => Array.isArray(b.hidden) && b.hidden.includes(part)),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {
@@ -266,6 +270,7 @@ export function isBoardEmpty(board: BoardState) {
         !a.dish &&
         !a.score.value &&
         !a.subScore.value &&
+        !a.memo &&
         ![a.mainCombo, a.subCombo].some((c) => [c.pet, c.cookie1, c.cookie2, ...c.treasures].some(filled)) &&
         !Object.values(a.magicCandy).some(filled)
     )
@@ -275,6 +280,33 @@ export function isBoardEmpty(board: BoardState) {
 export function pickBoard(state: BoardState): BoardState {
   const { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings, boardStyle } = state;
   return { background, seasonName, seasonDish, seasonIngredients, arenas, fontSettings, displaySettings, boardStyle };
+}
+
+/** 조합표에서 꾸미기(테마)만 골라낸다 */
+export function pickTheme(board: BoardState): Theme {
+  const { background, fontSettings, displaySettings, boardStyle, arenas } = board;
+  return { background, fontSettings, displaySettings, boardStyle, cookieRatio: { main: arenas[0].mainCookieRatio, sub: arenas[0].subCookieRatio } };
+}
+
+/** 조합표 내용은 그대로 두고 꾸미기만 테마로 바꾼 값 */
+function withTheme(board: BoardState, theme: Theme): Partial<BoardState> {
+  const { background, fontSettings, displaySettings, boardStyle, cookieRatio } = theme;
+  const arenas = board.arenas.map((arena) => ({ ...arena, mainCookieRatio: cookieRatio.main, subCookieRatio: cookieRatio.sub }));
+  return { background, fontSettings, displaySettings, boardStyle, arenas };
+}
+
+/** 저장해 둔(믿을 수 없는) 테마를 지금 구조로 맞춘다. 빠진 값은 처음 설정으로 */
+export function sanitizeTheme(raw: any): Theme {
+  const base = pickTheme(initialBoard());
+  const { background, fontSettings, displaySettings, boardStyle } = sanitizeBoard(raw);
+  const ratio = (v: unknown, fallback: number) => clamp(v, 30, 70, fallback);
+  return {
+    background: background ?? base.background,
+    fontSettings: fontSettings ?? base.fontSettings,
+    displaySettings: displaySettings ?? base.displaySettings,
+    boardStyle: boardStyle ?? base.boardStyle,
+    cookieRatio: { main: ratio(raw?.cookieRatio?.main, base.cookieRatio.main), sub: ratio(raw?.cookieRatio?.sub, base.cookieRatio.sub) },
+  };
 }
 
 export type ComboField = 'pet' | 'cookie1' | 'cookie2' | 'treasure0' | 'treasure1' | 'treasure2';
@@ -307,12 +339,15 @@ export interface AppStore extends BoardState {
   setArenaMagicCandy: (arenaIndex: number, field: keyof MagicCandyData, image: string) => void;
   setArenaScore: (arenaIndex: number, score: 'score' | 'subScore', value: string) => void;
   setArenaDish: (arenaIndex: number, image: string) => void;
+  setArenaMemo: (arenaIndex: number, memo: string) => void;
   setCookieRatio: (combo: 'mainCookieRatio' | 'subCookieRatio', ratio: number) => void;
   setGameData: (data: GameData) => void;
   loadGameData: () => Promise<void>;
   loadBoard: (raw: unknown) => void;
   /** style: 설정 패널에서 바꾸는 꾸미기 / content: 시즌과 아레나에 넣은 내용 / all: 둘 다 */
   reset: (part: 'style' | 'content' | 'all') => void;
+  /** 꾸미기를 테마로 바꾼다 (조합표 내용은 그대로) */
+  applyTheme: (theme: Theme) => void;
   setFontSettings: (settings: Partial<FontSettings>) => void;
   setDisplaySettings: (settings: Partial<DisplaySettings>) => void;
   setBoardStyle: (style: Partial<BoardStyle>) => void;
@@ -398,6 +433,8 @@ export const useAppStore = create<AppStore>((set, get) => {
 
     setArenaDish: (arenaIndex, image) => updateArena(arenaIndex, () => ({ dish: image })),
 
+    setArenaMemo: (arenaIndex, memo) => updateArena(arenaIndex, () => ({ memo })),
+
     // 비율은 12개 아레나 전체에 함께 적용
     setCookieRatio: (combo, ratio) =>
       set((state) => ({ arenas: state.arenas.map((arena) => ({ ...arena, [combo]: ratio })) })),
@@ -431,12 +468,12 @@ export const useAppStore = create<AppStore>((set, get) => {
       set((state) => {
         const init = initialBoard();
         if (part === 'all') return init;
-        // 쿠키 크기 비율은 아레나마다 들어 있지만 설정 패널에서 바꾸는 꾸미기 값이다
-        const { mainCookieRatio, subCookieRatio } = (part === 'style' ? init : state).arenas[0];
-        const arenas = (part === 'style' ? state : init).arenas.map((arena) => ({ ...arena, mainCookieRatio, subCookieRatio }));
-        if (part === 'style') return { background: init.background, fontSettings: init.fontSettings, displaySettings: init.displaySettings, boardStyle: init.boardStyle, arenas };
-        return { seasonName: init.seasonName, seasonDish: init.seasonDish, seasonIngredients: init.seasonIngredients, arenas };
+        // 꾸미기만: 지금 내용 + 처음 테마, 내용만: 처음 내용 + 지금 테마
+        if (part === 'style') return withTheme(state, pickTheme(init));
+        return { ...init, ...withTheme(init, pickTheme(state)) };
       }),
+
+    applyTheme: (theme) => set((state) => withTheme(state, theme)),
 
     setFontSettings: (settings) => set((state) => ({ fontSettings: { ...state.fontSettings, ...settings } })),
     setDisplaySettings: (settings) => set((state) => ({ displaySettings: { ...state.displaySettings, ...settings } })),

@@ -52,6 +52,7 @@ export interface ArenaData {
   dish: string;
   subCombo: ComboData;
   subScore: ScoreData;
+  memo: string; // 아레나 한 줄 메모 (최대 MAX_MEMO자)
   mainCookieRatio: number; // 메인 조합 선달/이달 쿠키 비율 (0-100, 기본 54)
   subCookieRatio: number; // 대체 조합 선달/이달 쿠키 비율 (0-100, 기본 56)
 }
@@ -102,6 +103,9 @@ export interface DisplaySettings {
 /** 아레나 안에서 꾹 눌러 옮길 수 있는 칸 (lib/board.ts LAYOUT_KEYS) */
 export type LayoutKey = (typeof import('@/lib/board').LAYOUT_KEYS)[number];
 
+/** 12개 아레나에서 통째로 숨길 수 있는 영역 (lib/board.ts HIDDEN_PARTS) */
+export type HiddenPart = (typeof import('@/lib/board').HIDDEN_PARTS)[number];
+
 /** 조합표 꾸미기 (칸 크기는 그대로, 겉모습과 칸 위치만) */
 export interface BoardStyle {
   card: boolean; // 아레나마다 카드 바탕
@@ -124,6 +128,16 @@ export interface BoardStyle {
   mainPairGap: number; // 자동 맞춤에서 메인 조합 두 쿠키 몸통 사이 간격 (보드 px)
   subPairGap: number; // 대체 조합 두 쿠키 몸통 사이 간격
   layout: Partial<Record<LayoutKey, [number, number]>>; // 칸을 기본 자리에서 옮긴 거리 [가로, 세로] (보드 px, 12개 아레나 공통)
+  hidden: HiddenPart[]; // 숨긴 영역 (내용은 지우지 않고 화면과 저장 이미지에서만 뺀다)
+}
+
+/** 꾸미기 테마: 조합표 내용을 뺀 겉모습 전부 (쿠키 크기 비율은 아레나마다 들어 있지만 12개 공통이라 따로 담는다) */
+export interface Theme {
+  background: BackgroundData;
+  fontSettings: FontSettings;
+  displaySettings: DisplaySettings;
+  boardStyle: BoardStyle;
+  cookieRatio: { main: number; sub: number };
 }
 
 /** 저장·공유되는 조합표 상태 */

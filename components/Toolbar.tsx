@@ -5,9 +5,10 @@ import { isReturningVisitor, pickBoard, useAppStore } from '@/store/useAppStore'
 import { markUpdatesSeen, unseenCount } from '@/lib/updates';
 import { track } from '@/lib/analytics';
 import Button from './ui/Button';
-import { BellIcon, CookieLogo, DownloadIcon, LinkIcon, SettingsIcon, UndoIcon } from './ui/icons';
+import { BellIcon, CookieLogo, DownloadIcon, FolderIcon, LinkIcon, SettingsIcon, UndoIcon } from './ui/icons';
 import SettingsPanel from './SettingsPanel';
 import ShareDialog from './ShareDialog';
+import LibraryDialog from './LibraryDialog';
 import UpdatesDialog from './UpdatesDialog';
 
 /** 화면 상단 고정 도구 막대 (이미지 저장 대상이 아님) */
@@ -27,6 +28,7 @@ export default function Toolbar() {
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
   const canUndo = useAppStore((s) => s.canUndo);
   const [shareOpen, setShareOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [newUpdates, setNewUpdates] = useState(0);
   const [updatesOpen, setUpdatesOpen] = useState(false);
@@ -112,6 +114,10 @@ export default function Toolbar() {
           <Button variant="ghost" onClick={undo} aria-disabled={!canUndo} aria-label="실행 취소" title="실행 취소 (Ctrl+Z)" className="w-touch px-0">
             <UndoIcon />
           </Button>
+          <Button variant="ghost" onClick={() => setLibraryOpen(true)} aria-label="조합표 보관함" className="w-touch px-0 tb-btn">
+            <FolderIcon />
+            <span className="tb-label hidden">보관함</span>
+          </Button>
           <Button
             variant="ghost"
             onClick={() => setSettingsOpen(!settingsOpen)}
@@ -148,6 +154,7 @@ export default function Toolbar() {
       )}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       {shareOpen && <ShareDialog onClose={() => setShareOpen(false)} />}
+      {libraryOpen && <LibraryDialog onClose={() => setLibraryOpen(false)} />}
       {updatesOpen && <UpdatesDialog updates={updates ?? []} newCount={newUpdates} onClose={closeUpdates} />}
     </>
   );

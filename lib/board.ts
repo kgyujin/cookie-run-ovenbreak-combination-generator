@@ -14,8 +14,14 @@ export const ARENA_HEIGHT = 425;
 /** 아레나 안에서 꾹 눌러 옮길 수 있는 칸. 메인 쿠키 두 칸과 사탕+축복은 한 덩어리로 움직인다 */
 export const LAYOUT_KEYS = [
   'number', 'dish', 'mainCookies', 'pet', 'treasure0', 'treasure1', 'treasure2', 'score', 'candy1', 'candy2',
-  'subPet', 'subScore', 'subCookies', 'subTreasure0', 'subTreasure1', 'subTreasure2',
+  'subPet', 'subScore', 'subCookies', 'subTreasure0', 'subTreasure1', 'subTreasure2', 'memo',
 ] as const;
+
+/** 통째로 숨길 수 있는 영역. 펫과 보물은 메인과 대체 조합 모두, sub는 대체 조합 전체 */
+export const HIDDEN_PARTS = ['pet', 'treasure', 'candy', 'dish', 'sub', 'memo'] as const;
+
+/** 아레나 메모 최대 글자 수 */
+export const MAX_MEMO = 40;
 
 /** 칸을 옮긴 만큼. transform은 globals.css의 [data-move]에서 칸의 hover 효과와 함께 만든다 */
 export const moved = (offset?: [number, number]) => offset && ({ '--mx': u(offset[0]), '--my': u(offset[1]) } as CSSProperties);
