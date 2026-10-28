@@ -6,7 +6,7 @@
 
 **12개 아레나 조합표를 만들고, 이미지로 저장하거나 짧은 링크로 공유하세요.**
 
-[사이트 열기](https://cookie-run-combination-generator.vercel.app) &nbsp;|&nbsp; [아이템 추가하기](#아이템-추가하기) &nbsp;|&nbsp; [데이터 관리 페이지](#데이터-관리-페이지) &nbsp;|&nbsp; [개발](#개발)
+[사이트 열기](https://crob-generator.vercel.app) &nbsp;|&nbsp; [아이템 추가하기](#아이템-추가하기) &nbsp;|&nbsp; [데이터 관리 페이지](#데이터-관리-페이지) &nbsp;|&nbsp; [개발](#개발)
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-000?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=fff)
@@ -58,8 +58,8 @@
 <summary><b>처음 한 번 설정하기 (저장소 관리자)</b></summary>
 
 1. **GitHub OAuth 앱 만들기**: GitHub → Settings → Developer settings → OAuth Apps → New OAuth App
-   - Homepage URL: `https://cookie-run-combination-generator.vercel.app`
-   - Authorization callback URL: `https://cookie-run-combination-generator.vercel.app/api/studio/callback`
+   - Homepage URL: `https://crob-generator.vercel.app`
+   - Authorization callback URL: `https://crob-generator.vercel.app/api/studio/callback`
    - 만든 뒤 **Generate a new client secret**
 2. **Vercel 환경변수 추가**: Vercel 프로젝트 → Settings → Environment Variables (Production)
 
@@ -70,7 +70,7 @@
    | `GITHUB_CLIENT_SECRET` | OAuth 앱의 Client secret |
    | `STUDIO_SESSION_SECRET` | 32자 이상 무작위 문자열 (`openssl rand -base64 32`) |
 
-3. **다시 배포**하면 `https://cookie-run-combination-generator.vercel.app/<STUDIO_PATH>` 에서 열립니다.
+3. **다시 배포**하면 `https://crob-generator.vercel.app/<STUDIO_PATH>` 에서 열립니다.
 
 > [!WARNING]
 > 위 값들은 비밀입니다. 저장소의 `.env`에 적지 말고 Vercel 환경변수(로컬에서는 `.env.local`)에만 넣어 주세요. 관리 페이지 주소도 저장소나 공개된 곳에 적지 않습니다.
