@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { initialBoard, safeUrl, useAppStore } from '@/store/useAppStore';
+import { safeUrl, useAppStore } from '@/store/useAppStore';
 import { backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
 import { formatScore } from '@/utils/scoreFormatter';
@@ -65,6 +65,13 @@ const SECTIONS = [
   ['style', '카드와 여백'],
 ] as const;
 
+/** 초기화 기준. 이미 만든 공유 링크는 서버에 따로 저장되어 있어 어느 쪽이든 그대로 남는다 */
+const RESET_TEXT = {
+  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백을 처음 상태로 되돌릴까요? 패널의 되돌리기로 취소할 수 있어요.'],
+  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 영상 링크를 모두 지울까요? 되돌릴 수 없어요.'],
+  all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 되돌릴 수 없어요.'],
+} as const;
+
 /** 설정 패널. 바꾸는 즉시 조합표에 반영되고, '되돌리기'로 패널을 열었을 때 상태로 돌아간다. */
 export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   const background = useAppStore((s) => s.background);
@@ -87,7 +94,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
     scoreDisplayType !== snapshot.displaySettings.scoreDisplayType ||
     mainRatio !== ratioSnapshot.main ||
     subRatio !== ratioSnapshot.sub;
-  const [confirm, setConfirm] = useState<'style' | 'all' | null>(null);
+  const [confirm, setConfirm] = useState<'style' | 'content' | 'all' | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // 합치기(merge)가 아니라 통째로 바꿔야 나중에 추가된 값(번호 색, 글꼴 파일 등)까지 되돌아간다
@@ -135,13 +142,6 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
     list.addEventListener('scroll', onScroll, { passive: true });
     return () => list.removeEventListener('scroll', onScroll);
   }, []);
-
-  const resetStyle = () => {
-    const { background: bg, fontSettings, displaySettings, boardStyle, arenas } = initialBoard();
-    useAppStore.setState({ background: bg, fontSettings, displaySettings, boardStyle });
-    setCookieRatio('mainCookieRatio', arenas[0].mainCookieRatio);
-    setCookieRatio('subCookieRatio', arenas[0].subCookieRatio);
-  };
 
   return (
     <>
@@ -418,8 +418,11 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           </Section>
 
           <Section id="reset" title="초기화">
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={() => setConfirm('style')}>설정만</Button>
+            <div className="grid grid-cols-3 gap-2">
+              <Button onClick={() => setConfirm('style')}>꾸미기만</Button>
+              <Button className="!text-danger hover:!bg-danger/10" onClick={() => setConfirm('content')}>
+                내용만
+              </Button>
               <Button className="!text-danger hover:!bg-danger/10" onClick={() => setConfirm('all')}>
                 전체
               </Button>
@@ -430,7 +433,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
       {confirm && (
         <Modal
-          title={confirm === 'all' ? '전체 초기화' : '설정 초기화'}
+          title={RESET_TEXT[confirm][0]}
           onClose={() => setConfirm(null)}
           footer={
             <>
@@ -440,10 +443,9 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               <Button
                 variant="danger"
                 onClick={() => {
-                  if (confirm === 'all') {
-                    reset();
-                    onClose();
-                  } else resetStyle();
+                  reset(confirm);
+                  // 꾸미기만 되돌린 경우는 패널에 남아 '되돌리기'로 취소할 수 있다
+                  if (confirm !== 'style') onClose();
                   showToast('초기화했어요');
                   setConfirm(null);
                 }}
@@ -453,9 +455,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             </>
           }
         >
-          <p className="p-5 text-body-md text-ink">
-            {confirm === 'all' ? '모든 조합과 설정을 지울까요? 되돌릴 수 없어요.' : '조합은 그대로 두고 꾸미기 설정만 처음 상태로 되돌릴까요?'}
-          </p>
+          <p className="p-5 text-body-md text-ink">{RESET_TEXT[confirm][1]}</p>
         </Modal>
       )}
     </>

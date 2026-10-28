@@ -294,7 +294,8 @@ export interface AppStore extends BoardState {
   setGameData: (data: GameData) => void;
   loadGameData: () => Promise<void>;
   loadBoard: (raw: unknown) => void;
-  reset: () => void;
+  /** style: 설정 패널에서 바꾸는 꾸미기 / content: 시즌과 아레나에 넣은 내용 / all: 둘 다 */
+  reset: (part: 'style' | 'content' | 'all') => void;
   setFontSettings: (settings: Partial<FontSettings>) => void;
   setDisplaySettings: (settings: Partial<DisplaySettings>) => void;
   setBoardStyle: (style: Partial<BoardStyle>) => void;
@@ -376,7 +377,16 @@ export const useAppStore = create<AppStore>((set) => {
         return state.gameData ? resolveBoardItems(board, state.gameData) : board;
       }),
 
-    reset: () => set(initialBoard()),
+    reset: (part) =>
+      set((state) => {
+        const init = initialBoard();
+        if (part === 'all') return init;
+        // 쿠키 크기 비율은 아레나마다 들어 있지만 설정 패널에서 바꾸는 꾸미기 값이다
+        const { mainCookieRatio, subCookieRatio } = (part === 'style' ? init : state).arenas[0];
+        const arenas = (part === 'style' ? state : init).arenas.map((arena) => ({ ...arena, mainCookieRatio, subCookieRatio }));
+        if (part === 'style') return { background: init.background, fontSettings: init.fontSettings, displaySettings: init.displaySettings, boardStyle: init.boardStyle, arenas };
+        return { seasonName: init.seasonName, seasonDish: init.seasonDish, seasonIngredients: init.seasonIngredients, arenas };
+      }),
 
     setFontSettings: (settings) => set((state) => ({ fontSettings: { ...state.fontSettings, ...settings } })),
     setDisplaySettings: (settings) => set((state) => ({ displaySettings: { ...state.displaySettings, ...settings } })),
