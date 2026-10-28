@@ -63,6 +63,8 @@ export const initialBoard = (): BoardState => ({
     gap: 24,
     exportPadding: 64,
     cookieFit: true,
+    mainCookieGap: 16,
+    subCookieGap: 8,
   },
 });
 
@@ -222,6 +224,8 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       gap: clamp(b.gap, 0, 80, d.gap),
       exportPadding: clamp(b.exportPadding, 0, 160, d.exportPadding),
       cookieFit: bool(b.cookieFit, d.cookieFit),
+      mainCookieGap: clamp(b.mainCookieGap, 0, 120, d.mainCookieGap),
+      subCookieGap: clamp(b.subCookieGap, 0, 80, d.subCookieGap),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {

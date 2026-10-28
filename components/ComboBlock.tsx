@@ -8,6 +8,7 @@ import { formatScore } from '@/utils/scoreFormatter';
 import { cardStyle, fontFamilyOf, outlineShadow, textGlow, u, withOpacity } from '@/lib/board';
 import { Category, MagicCandyData } from '@/types';
 import Slot from './Slot';
+import CookiePair from './CookiePair';
 import YoutubeDialog from './YoutubeDialog';
 
 const CARD_TRIM = 68; // 카드 아래 여백을 위와 같게(12) 맞추려고 줄이는 높이 (보드 px)
@@ -47,6 +48,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       numberBg: s.boardStyle.numberBg,
       numberBgColor: s.boardStyle.numberBgColor,
       cookieFit: s.boardStyle.cookieFit,
+      mainCookieGap: s.boardStyle.mainCookieGap,
+      subCookieGap: s.boardStyle.subCookieGap,
     }))
   );
   const openPicker = useAppStore((s) => s.openPicker);
@@ -83,8 +86,34 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
   // 대체 조합 쿠키 크기 (총 96% 공간을 비율에 따라 분배)
   const subCookie1Width = (arena.subCookieRatio / 100) * 96;
   const subCookie2Width = ((100 - arena.subCookieRatio) / 100) * 96;
-  // 크기 자동 맞춤: 칸 폭 비율대로 그림 크기도 맞춘다 (칸 높이가 같아 정사각형에 가까운 그림은 비율을 바꿔도 같은 크기로 보이던 문제)
-  const fitOf = (width: number, other: number) => (boardStyle.cookieFit ? { scale: width / Math.max(width, other) } : undefined);
+  const main1 = comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키');
+  const main2 = comboSlot('mainCombo', 'cookie2', 'cookies', '이달 쿠키');
+  const sub1 = comboSlot('subCombo', 'cookie1', 'cookies', '대체 선달 쿠키');
+  const sub2 = comboSlot('subCombo', 'cookie2', 'cookies', '대체 이달 쿠키');
+  // 크기 자동 맞춤에서 두 쿠키가 다 있으면 크기 손잡이는 두 쿠키 사이 간격 한가운데에 (칸 경계에 두면 쿠키 그림 위에 겹침)
+  const mainPaired = boardStyle.cookieFit && !!main1.image && !!main2.image;
+  const subPaired = boardStyle.cookieFit && !!sub1.image && !!sub2.image;
+  const inGap: CSSProperties = { position: 'absolute', top: 0, bottom: 0, left: '50%', width: 'var(--pair-handle)', transform: 'translateX(-50%)' };
+  const mainHandle = (style: CSSProperties) => (
+    <RatioHandle
+      label="메인 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
+      tabbable={arenaIndex === 0}
+      value={arena.mainCookieRatio}
+      space={56}
+      onChange={(r) => setCookieRatio('mainCookieRatio', r)}
+      style={style}
+    />
+  );
+  const subHandle = (style: CSSProperties) => (
+    <RatioHandle
+      label="대체 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
+      tabbable={arenaIndex === 0}
+      value={arena.subCookieRatio}
+      space={96}
+      onChange={(r) => setCookieRatio('subCookieRatio', r)}
+      style={style}
+    />
+  );
 
   const scoreStyle: CSSProperties = {
     color: fontSettings.scoreColor,
@@ -97,6 +126,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
 
   return (
     <section
+      data-ratio-area
       aria-label={`${n}번 아레나`}
       className="relative w-full"
       // 카드를 켜면 맨 아래 칸(보물) 밑의 빈 공간(80)만큼 아래 여백이 위(12)보다 커 보이므로, 카드 바탕은 그만큼 짧게 그리고
@@ -143,26 +173,32 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       />
 
       {/* ===== BASE LAYER ===== */}
+      {/* 크기 자동 맞춤: 쿠키 그림은 한 쌍으로 따로 그리고(칸 두 개와 손잡이를 합친 자리), 칸은 누르는 자리로 */}
+      {boardStyle.cookieFit && (
+        <CookiePair
+          images={[main1.image, main2.image]}
+          ratio={arena.mainCookieRatio}
+          gap={boardStyle.mainCookieGap}
+          align="left"
+          full
+          onSelect={[main1.onSelect, main2.onSelect]}
+          handle={mainPaired && mainHandle(inGap)}
+          style={{ zIndex: 15, width: '58%', height: '44.3%', top: '22%', left: '2%' }}
+        />
+      )}
       <Slot
-        {...comboSlot('mainCombo', 'cookie1', 'cookies', '선달 쿠키')}
+        {...main1}
         full
-        fit={fitOf(mainCookie1Width, mainCookie2Width)}
+        hideImage={boardStyle.cookieFit}
         labelSize={18}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
       />
-      <RatioHandle
-        label="메인 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
-        tabbable={arenaIndex === 0}
-        value={arena.mainCookieRatio}
-        space={56}
-        onChange={(r) => setCookieRatio('mainCookieRatio', r)}
-        style={{ position: 'absolute', zIndex: 25, width: '2%', height: '44.3%', top: '22%', left: `${2 + mainCookie1Width}%` }}
-      />
+      {!mainPaired && mainHandle({ position: 'absolute', zIndex: 25, width: '2%', height: '44.3%', top: '22%', left: `${2 + mainCookie1Width}%` })}
       <Slot
-        {...comboSlot('mainCombo', 'cookie2', 'cookies', '이달 쿠키')}
+        {...main2}
         full
-        fit={fitOf(mainCookie2Width, mainCookie1Width)}
+        hideImage={boardStyle.cookieFit}
         labelSize={16}
         imageClassName="object-contain object-bottom"
         style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%` }}
@@ -225,30 +261,34 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
           stroke={scoreStroke}
           style={{ ...scoreStyle, top: '2%', left: `calc(2% + 50 * var(--u))`, right: '2%', height: u(40) }}
         />
-        <div className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
+        <div data-ratio-area className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
+          {boardStyle.cookieFit && (
+            <CookiePair
+              images={[sub1.image, sub2.image]}
+              ratio={arena.subCookieRatio}
+              gap={boardStyle.subCookieGap}
+              align="right"
+              onSelect={[sub1.onSelect, sub2.onSelect]}
+              handle={subPaired && subHandle(inGap)}
+              style={{ zIndex: 1, inset: 0 }}
+            />
+          )}
           <Slot
-            {...comboSlot('subCombo', 'cookie1', 'cookies', '대체 선달 쿠키')}
+            {...sub1}
             text={'대체\n선달\n쿠키'}
             labelSize={10}
             className="!relative h-full"
-            fit={fitOf(subCookie1Width, subCookie2Width)}
+            hideImage={boardStyle.cookieFit}
             imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie1Width}%` }}
           />
-          <RatioHandle
-            label="대체 조합 선달과 이달 쿠키 크기 비율 (모든 아레나 공통)"
-            tabbable={arenaIndex === 0}
-            value={arena.subCookieRatio}
-            space={96}
-            onChange={(r) => setCookieRatio('subCookieRatio', r)}
-            style={{ position: 'relative', width: '2%' }}
-          />
+          {subPaired ? <span className="w-[2%] shrink-0" /> : subHandle({ position: 'relative', width: '2%' })}
           <Slot
-            {...comboSlot('subCombo', 'cookie2', 'cookies', '대체 이달 쿠키')}
+            {...sub2}
             text={'대체\n이달\n쿠키'}
             labelSize={10}
             className="!relative h-full"
-            fit={fitOf(subCookie2Width, subCookie1Width)}
+            hideImage={boardStyle.cookieFit}
             imageClassName="object-contain object-bottom"
             style={{ width: `${subCookie2Width}%` }}
           />
@@ -348,7 +388,8 @@ function RatioHandle({
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const handle = e.currentTarget;
-    const container = handle.parentElement;
+    // 비율을 나누는 영역 (메인 조합: 아레나, 대체 조합: 대체 쿠키 줄). 손잡이가 쿠키 사이에 들어가 있어도 같은 기준
+    const container = handle.closest<HTMLElement>('[data-ratio-area]');
     if (!container) return;
     e.preventDefault();
     handle.setPointerCapture(e.pointerId);

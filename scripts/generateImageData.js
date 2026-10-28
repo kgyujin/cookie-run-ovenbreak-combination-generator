@@ -404,7 +404,7 @@ async function makeThumbnails(data) {
 /**
  * 쿠키 이미지에서 그림이 있는 영역(투명 여백 제외)을 잰다. 이미지 파일은 그대로 두고, 화면에서 이 영역만 보이게 한다.
  * 이미지마다 여백이 달라(그림 높이가 이미지의 72~100%) 같은 칸에 넣어도 크기가 들쭉날쭉해 보이는 것을 맞춘다.
- * 여백이 거의 없으면 기록하지 않는다 (원본 그대로 표시).
+ * 여백이 거의 없으면 이미지 전체를 그림 영역으로 둔다 (쿠키 두 개를 나란히 놓을 때 가로세로 비율이 필요).
  */
 async function measureCrops(data) {
   let sharp;
@@ -432,9 +432,9 @@ async function measureCrops(data) {
         }
         const width = right - left + 1;
         const height = bottom - top + 1;
-        if (bottom < 0 || (width >= info.width * 0.97 && height >= info.height * 0.97)) return;
         // 그림 영역의 위치와 크기(이미지 대비 비율), 그림 영역의 가로세로 비
-        item.crop = [left / info.width, top / info.height, width / info.width, height / info.height, width / height].map(round);
+        if (bottom < 0 || (width >= info.width * 0.97 && height >= info.height * 0.97)) item.crop = [0, 0, 1, 1, round(info.width / info.height)];
+        else item.crop = [left / info.width, top / info.height, width / info.width, height / info.height, width / height].map(round);
       } catch (e) {
         warnings.push(`${item.image}: 그림 영역을 재지 못했습니다 (${e.message})`);
       }

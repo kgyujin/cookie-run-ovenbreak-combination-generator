@@ -374,12 +374,18 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             <div>
               <Toggle label="크기 자동 맞춤" checked={style.cookieFit} onChange={(cookieFit) => setS({ cookieFit })} />
               <p className="mt-1 text-caption text-ink-subtle">
-                이미지마다 다른 빈 여백을 빼고, 아래 비율대로 선달 쿠키를 크게, 이달 쿠키를 작게 보여 줘요.
+                이미지마다 다른 빈 여백을 빼고, 선달과 이달 쿠키를 나란히 놓아요. 크기는 비율로, 두 쿠키 사이는 간격으로 따로 정해요.
               </p>
             </div>
-            <Range label="메인 조합 선달 쿠키 비율" unit="%" value={mainRatio} min={30} max={70} onChange={(r) => setCookieRatio('mainCookieRatio', r)} />
-            <Range label="대체 조합 선달 쿠키 비율" unit="%" value={subRatio} min={30} max={70} onChange={(r) => setCookieRatio('subCookieRatio', r)} />
-            <p className="text-caption text-ink-subtle">나머지는 이달 쿠키 몫이에요. 조합표에서 두 쿠키 사이를 끌어서 바꿀 수도 있어요. 12개 아레나에 함께 적용돼요.</p>
+            <Range label="메인 조합 선달 쿠키 크기 비율" unit="%" value={mainRatio} min={30} max={70} onChange={(r) => setCookieRatio('mainCookieRatio', r)} />
+            {style.cookieFit && (
+              <Range label="메인 조합 쿠키 사이 간격" value={style.mainCookieGap} min={0} max={120} onChange={(mainCookieGap) => setS({ mainCookieGap })} />
+            )}
+            <Range label="대체 조합 선달 쿠키 크기 비율" unit="%" value={subRatio} min={30} max={70} onChange={(r) => setCookieRatio('subCookieRatio', r)} />
+            {style.cookieFit && (
+              <Range label="대체 조합 쿠키 사이 간격" value={style.subCookieGap} min={0} max={80} onChange={(subCookieGap) => setS({ subCookieGap })} />
+            )}
+            <p className="text-caption text-ink-subtle">비율의 나머지는 이달 쿠키 몫이에요. 조합표에서 두 쿠키 사이 손잡이를 끌어서 비율을 바꿀 수도 있어요. 12개 아레나에 함께 적용돼요.</p>
           </Section>
 
           <Section id="style" title="카드와 여백">

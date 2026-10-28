@@ -5,7 +5,6 @@ import { CSSProperties } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getItemMap } from '@/lib/items';
 import { u } from '@/lib/board';
-import type { GameItem } from '@/types';
 
 /**
  * 조합표의 이미지 칸 하나. 누르면 아이템 선택 창이 열린다.
@@ -22,7 +21,7 @@ export default function Slot({
   labelSize = 12,
   imageClassName = 'object-contain',
   full = false,
-  fit,
+  hideImage = false,
   labelClassName,
 }: {
   image: string;
@@ -38,17 +37,12 @@ export default function Slot({
   imageClassName?: string;
   /** 크게 보이는 칸(메인 쿠키, 시즌 요리)은 원본, 나머지는 작은 이미지(최대 320px)로 빠르게 */
   full?: boolean;
-  /**
-   * 쿠키 크기 자동 맞춤: 투명 여백을 뺀 그림 영역만 보이게 하고, 칸 높이의 scale만큼만 채운다 (아래 맞춤).
-   * 칸 자체의 위치와 크기는 그대로 두고 그 안의 그림만 바뀐다.
-   */
-  fit?: { scale: number };
+  /** 이미지는 다른 곳에서 그린다 (쿠키 크기 자동 맞춤: CookiePair). 칸은 누르는 자리와 빈 칸 표시만 */
+  hideImage?: boolean;
   /** 빈 칸 글자 위치 조정 (다른 칸이 겹쳐 올라오는 자리 피하기) */
   labelClassName?: string;
 }) {
   const item = useAppStore((s) => (image ? getItemMap(s.gameData).get(image) : undefined));
-  // 크기 자동 맞춤은 아이템 목록의 그림 영역을 써야 하므로, 목록을 불러오기 전에는 그리지 않는다 (크기가 바뀌며 깜빡이지 않게)
-  const waiting = useAppStore((s) => !!fit && !s.gameData);
   const name = item?.name;
 
   return (
@@ -60,19 +54,8 @@ export default function Slot({
       className={clsx('slot absolute overflow-hidden', !image && emptyClassName, className)}
       style={style}
     >
-      {image && waiting ? null : image && fit && item?.crop ? (
-        <Cropped src={(!full && item.thumb) || image} crop={item.crop} scale={fit.scale} />
-      ) : image ? (
-        <img
-          src={(!full && item?.thumb) || image}
-          alt=""
-          crossOrigin="anonymous"
-          draggable={false}
-          loading="lazy"
-          decoding="async"
-          className={clsx('absolute bottom-0 left-0 w-full', !fit && 'top-0 h-full', imageClassName)}
-          style={fit && { height: `${fit.scale * 100}%` }}
-        />
+      {image && hideImage ? null : image ? (
+        <img src={(!full && item?.thumb) || image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
       ) : (
         <span
           data-edit-only
@@ -86,25 +69,3 @@ export default function Slot({
   );
 }
 
-/**
- * 이미지 파일은 그대로 두고 그림 영역(crop)만 보이게: 칸 높이의 scale만큼인 상자에 그림 영역을 비율대로 꽉 맞춰 아래 가운데에 둔다.
- * (컨테이너 단위로 상자 크기를 재므로 저장 이미지에도 같은 모양으로 그려진다)
- */
-function Cropped({ src, crop: [x, y, w, h, ratio], scale }: { src: string; crop: NonNullable<GameItem['crop']>; scale: number }) {
-  return (
-    <span className="absolute bottom-0 left-0 flex w-full items-end justify-center" style={{ height: `${scale * 100}%`, containerType: 'size' }}>
-      <span className="relative overflow-hidden" style={{ width: `min(100cqw, ${ratio} * 100cqh)`, height: `min(100cqh, 100cqw / ${ratio})` }}>
-        <img
-          src={src}
-          alt=""
-          crossOrigin="anonymous"
-          draggable={false}
-          loading="lazy"
-          decoding="async"
-          className="absolute max-w-none"
-          style={{ width: `${100 / w}%`, height: `${100 / h}%`, left: `${(-x / w) * 100}%`, top: `${(-y / h) * 100}%` }}
-        />
-      </span>
-    </span>
-  );
-}

@@ -111,7 +111,9 @@ export interface BoardStyle {
   numberBgColor: string;
   gap: number; // 아레나 사이 간격 (보드 px)
   exportPadding: number; // 저장 이미지 바깥 여백 (px)
-  cookieFit: boolean; // 쿠키 크기 자동 맞춤 (이미지 여백 무시, 선달/이달 비율대로 크기)
+  cookieFit: boolean; // 쿠키 크기 자동 맞춤 (이미지 여백 무시, 선달/이달 비율대로 크기, 두 쿠키를 간격만큼 띄워 나란히)
+  mainCookieGap: number; // 자동 맞춤에서 메인 조합 두 쿠키 사이 간격 (보드 px)
+  subCookieGap: number; // 대체 조합 두 쿠키 사이 간격
 }
 
 /** 저장·공유되는 조합표 상태 */

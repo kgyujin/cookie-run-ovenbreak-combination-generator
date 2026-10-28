@@ -124,6 +124,19 @@ input[type='search']::-webkit-search-cancel-button {
   container-type: inline-size;
 }
 
+/* 쿠키 쌍(CookiePair)은 자기 크기를 기준으로 그림 크기를 재는 컨테이너라, 그 안에서 보드 단위(u)를 쓰면 쌍 영역 기준으로
+   다시 계산돼 작아진다. 간격과 손잡이 폭은 쌍 영역에서 길이로 한 번 계산해(등록된 속성) 안쪽에 그대로 물려준다 */
+@property --pair-gap {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+@property --pair-handle {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
 .board {
   --u: calc(100cqw / 764);
   max-width: 1552px;
@@ -239,6 +252,7 @@ input.slot:focus {
   justify-content: center;
   cursor: ew-resize;
   touch-action: none;
+  pointer-events: auto; /* 쿠키 쌍(누름이 꺼진 층) 안에 들어가도 잡을 수 있게 */
   opacity: 0;
   position: relative;
   color: #8a5300;
