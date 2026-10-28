@@ -115,8 +115,8 @@ export interface BoardStyle {
   gap: number; // 아레나 사이 간격 (보드 px)
   exportPadding: number; // 저장 이미지 바깥 여백 (px)
   cookieFit: boolean; // 쿠키 크기 자동 맞춤 (이미지 여백 무시, 선달/이달 비율대로 크기, 두 쿠키를 간격만큼 띄워 나란히)
-  mainCookieGap: number; // 자동 맞춤에서 메인 조합 두 쿠키 사이 간격 (보드 px)
-  subCookieGap: number; // 대체 조합 두 쿠키 사이 간격
+  mainPairGap: number; // 자동 맞춤에서 메인 조합 두 쿠키 몸통 사이 간격 (보드 px)
+  subPairGap: number; // 대체 조합 두 쿠키 몸통 사이 간격
   layout: Partial<Record<LayoutKey, [number, number]>>; // 칸을 기본 자리에서 옮긴 거리 [가로, 세로] (보드 px, 12개 아레나 공통)
 }
 

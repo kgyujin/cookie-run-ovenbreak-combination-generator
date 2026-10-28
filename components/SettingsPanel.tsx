@@ -380,11 +380,11 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             </div>
             <Range label="메인 조합 선달 쿠키 크기 비율" unit="%" value={mainRatio} min={30} max={70} onChange={(r) => setCookieRatio('mainCookieRatio', r)} />
             {style.cookieFit && (
-              <Range label="메인 조합 쿠키 사이 간격" value={style.mainCookieGap} min={0} max={120} onChange={(mainCookieGap) => setS({ mainCookieGap })} />
+              <Range label="메인 조합 쿠키 사이 간격" value={style.mainPairGap} min={0} max={120} onChange={(mainPairGap) => setS({ mainPairGap })} />
             )}
             <Range label="대체 조합 선달 쿠키 크기 비율" unit="%" value={subRatio} min={30} max={70} onChange={(r) => setCookieRatio('subCookieRatio', r)} />
             {style.cookieFit && (
-              <Range label="대체 조합 쿠키 사이 간격" value={style.subCookieGap} min={0} max={80} onChange={(subCookieGap) => setS({ subCookieGap })} />
+              <Range label="대체 조합 쿠키 사이 간격" value={style.subPairGap} min={0} max={80} onChange={(subPairGap) => setS({ subPairGap })} />
             )}
             <p className="text-caption text-ink-subtle">비율의 나머지는 이달 쿠키 몫이에요. 조합표에서 두 쿠키 사이 손잡이를 끌어서 비율을 바꿀 수도 있어요. 12개 아레나에 함께 적용돼요.</p>
           </Section>

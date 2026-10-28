@@ -64,8 +64,8 @@ export const initialBoard = (): BoardState => ({
     gap: 24,
     exportPadding: 64,
     cookieFit: true,
-    mainCookieGap: 16,
-    subCookieGap: 8,
+    mainPairGap: 32,
+    subPairGap: 16,
     layout: {},
   },
 });
@@ -226,8 +226,9 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       gap: clamp(b.gap, 0, 80, d.gap),
       exportPadding: clamp(b.exportPadding, 0, 160, d.exportPadding),
       cookieFit: bool(b.cookieFit, d.cookieFit),
-      mainCookieGap: clamp(b.mainCookieGap, 0, 120, d.mainCookieGap),
-      subCookieGap: clamp(b.subCookieGap, 0, 80, d.subCookieGap),
+      // 예전 mainCookieGap, subCookieGap은 그림 전체 기준이라 몸통 기준인 지금 값으로 옮기지 않는다 (새 기본값으로)
+      mainPairGap: clamp(b.mainPairGap, 0, 120, d.mainPairGap),
+      subPairGap: clamp(b.subPairGap, 0, 80, d.subPairGap),
       layout: Object.fromEntries(
         LAYOUT_KEYS.flatMap((key) => {
           const v = b.layout?.[key];

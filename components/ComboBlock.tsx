@@ -49,8 +49,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       numberBg: s.boardStyle.numberBg,
       numberBgColor: s.boardStyle.numberBgColor,
       cookieFit: s.boardStyle.cookieFit,
-      mainCookieGap: s.boardStyle.mainCookieGap,
-      subCookieGap: s.boardStyle.subCookieGap,
+      mainPairGap: s.boardStyle.mainPairGap,
+      subPairGap: s.boardStyle.subPairGap,
       layout: s.boardStyle.layout,
     }))
   );
@@ -186,7 +186,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         <CookiePair
           images={[main1.image, main2.image]}
           ratio={arena.mainCookieRatio}
-          gap={boardStyle.mainCookieGap}
+          gap={boardStyle.mainPairGap}
           align="left"
           full
           onSelect={[main1.onSelect, main2.onSelect]}
@@ -281,7 +281,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
             <CookiePair
               images={[sub1.image, sub2.image]}
               ratio={arena.subCookieRatio}
-              gap={boardStyle.subCookieGap}
+              gap={boardStyle.subPairGap}
               align="right"
               onSelect={[sub1.onSelect, sub2.onSelect]}
               handle={subPaired && subHandle(inGap)}
