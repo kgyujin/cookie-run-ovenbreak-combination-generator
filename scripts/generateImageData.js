@@ -402,10 +402,14 @@ async function makeThumbnails(data) {
 }
 
 /**
- * 쿠키 이미지에서 그림이 있는 영역(투명 여백 제외)을 잰다. 이미지 파일은 그대로 두고, 화면에서 이 영역만 보이게 한다.
+ * 쿠키 이미지에서 그림이 있는 영역(투명 여백 제외)을 잰다. 이미지 파일은 그대로 두고, 크기와 간격을 이 영역으로 맞춘다.
  * 이미지마다 여백이 달라(그림 높이가 이미지의 72~100%) 같은 칸에 넣어도 크기가 들쭉날쭉해 보이는 것을 맞춘다.
- * 여백이 거의 없으면 이미지 전체를 그림 영역으로 둔다 (쿠키 두 개를 나란히 놓을 때 가로세로 비율이 필요).
+ * 좌우는 몸통 기준으로 잰다: 양옆으로 가늘게 뻗은 효과(지팡이, 반짝이, 머리카락 끝)까지 넣으면 쿠키마다 간격이 달라 보여서,
+ * 그림 무게(불투명도 합)의 양끝 2%는 빼고 재고, 뺀 효과의 폭은 따로 적어 둔다 (화면에서는 잘리지 않고 간격 쪽으로 넘쳐 보임).
+ * crop: [x, y, w, h, 몸통 가로세로 비, 왼쪽 효과 폭, 오른쪽 효과 폭] (x, w는 이미지 폭 대비, y, h와 효과 폭은 그림 높이 대비)
  */
+const EDGE_SKIP = 0.02;
+
 async function measureCrops(data) {
   let sharp;
   try {
@@ -418,23 +422,28 @@ async function measureCrops(data) {
     data.cookies.map(async (item) => {
       try {
         const { data: alpha, info } = await sharp(path.join(ROOT, 'public', item.image)).ensureAlpha().extractChannel('alpha').raw().toBuffer({ resolveWithObject: true });
+        const { width: W, height: H } = info;
         // 거의 투명한 점(희미한 그림자 끝 등)은 여백으로 본다
-        let top = info.height, bottom = -1, left = info.width, right = -1;
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            if (alpha[y * info.width + x] > 12) {
-              if (y < top) top = y;
-              if (y > bottom) bottom = y;
-              if (x < left) left = x;
-              if (x > right) right = x;
-            }
+        let top = H, bottom = -1, minX = W, maxX = -1, total = 0;
+        const columns = new Float64Array(W);
+        for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+            const a = alpha[y * W + x];
+            if (a <= 12) continue;
+            if (y < top) top = y;
+            bottom = y;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            columns[x] += a;
+            total += a;
           }
         }
-        const width = right - left + 1;
+        if (bottom < 0) return void (item.crop = [0, 0, 1, 1, round(W / H), 0, 0]);
+        let left = minX, right = maxX;
+        for (let sum = columns[left]; sum < total * EDGE_SKIP; sum += columns[++left]);
+        for (let sum = columns[right]; sum < total * EDGE_SKIP; sum += columns[--right]);
         const height = bottom - top + 1;
-        // 그림 영역의 위치와 크기(이미지 대비 비율), 그림 영역의 가로세로 비
-        if (bottom < 0 || (width >= info.width * 0.97 && height >= info.height * 0.97)) item.crop = [0, 0, 1, 1, round(info.width / info.height)];
-        else item.crop = [left / info.width, top / info.height, width / info.width, height / info.height, width / height].map(round);
+        item.crop = [left / W, top / H, (right - left + 1) / W, height / H, (right - left + 1) / height, (left - minX) / height, (maxX - right) / height].map(round);
       } catch (e) {
         warnings.push(`${item.image}: 그림 영역을 재지 못했습니다 (${e.message})`);
       }

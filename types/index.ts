@@ -17,7 +17,7 @@ export interface GameItem {
   addedAt?: string; // YYYY-MM-DD, 신규 배지 표시용
   pinned?: boolean;
   thumb?: string; // 선택 창용 작은 이미지
-  crop?: [x: number, y: number, w: number, h: number, ratio: number]; // 쿠키: 투명 여백을 뺀 그림 영역 (이미지 대비 비율, 크기 자동 맞춤)
+  crop?: [x: number, y: number, w: number, h: number, ratio: number, padLeft?: number, padRight?: number]; // 쿠키: 투명 여백을 뺀 몸통 영역과 양옆으로 넘치는 효과 폭 (크기 자동 맞춤, scripts/generateImageData.js)
 }
 
 export interface ComboData {
