@@ -44,6 +44,29 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
   });
 }
 
+/**
+ * 꾹 눌러 옮긴 칸: html2canvas는 transform으로 옮긴 칸 안의 그림을 칸과 다르게 옮겨 그려서(화면 배율에 따라) 잘린다.
+ * 저장용 복제본에서는 옮긴 자리를 left/top으로 바로 지정한다.
+ */
+function placeMoved(originals: HTMLElement[], clones: HTMLElement[]) {
+  originals.forEach((el, i) => {
+    const clone = clones[i];
+    const cs = getComputedStyle(el);
+    const [x, y] = [parseFloat(cs.getPropertyValue('--mx')) || 0, parseFloat(cs.getPropertyValue('--my')) || 0];
+    if (!clone || (!x && !y)) return;
+    // 폭이 left와 right로 정해지는 칸(대체 쿠키 줄)도 있어서 크기도 그대로 고정
+    Object.assign(clone.style, {
+      left: `${el.offsetLeft + x}px`,
+      top: `${el.offsetTop + y}px`,
+      width: `${el.offsetWidth}px`,
+      height: `${el.offsetHeight}px`,
+      right: 'auto',
+      bottom: 'auto',
+      transform: 'none',
+    });
+  });
+}
+
 const MAX_PNG_BYTES = 8 * 1024 * 1024;
 
 const COPIED_STYLES = [
@@ -134,6 +157,7 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
         }
         await doc.fonts.ready;
         applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
+        placeMoved(Array.from(captureArea.querySelectorAll<HTMLElement>('[data-move]')), Array.from(clonedArea.querySelectorAll<HTMLElement>('[data-move]')));
         const fields = 'input:not([type=hidden]), textarea';
         replaceFields(
           Array.from(captureArea.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(fields)),
