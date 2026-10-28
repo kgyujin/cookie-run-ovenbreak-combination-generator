@@ -53,15 +53,14 @@ export function formatScore(value: string, displayType: ScoreDisplayType): strin
 }
 
 /**
- * 숫자를 K/M/B/T 단위로 축약 (331M = 3억 3100만)
+ * 숫자를 K/M 단위로 축약 (331M = 3억 3100만)
+ * 10억이 넘어도 B로 바꾸지 않고 M으로 쓴다 (18억 6960만 → 1869.6M)
  * 반올림해서 1000이 되면 다음 단위로 올린다 (999,950 → 1M)
  */
 function formatAbbreviated(num: number): string {
   const units: [number, string][] = [
     [1e3, 'K'],
     [1e6, 'M'],
-    [1e9, 'B'],
-    [1e12, 'T'],
   ];
   if (num < 1000) return Math.round(num).toString();
   const round1 = (v: number) => Math.round(v * 10) / 10;
