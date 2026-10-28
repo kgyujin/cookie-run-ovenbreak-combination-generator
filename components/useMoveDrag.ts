@@ -4,6 +4,7 @@ import { PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from '
 import { useAppStore } from '@/store/useAppStore';
 import { ARENA_HEIGHT } from '@/lib/board';
 import { LayoutKey } from '@/types';
+import { track } from '@/lib/analytics';
 
 const LONG_PRESS = 500; // ms
 const SLOP = 8; // 꾹 누르는 동안 이만큼(화면 px) 움직이면 스크롤이나 클릭으로 본다
@@ -127,6 +128,8 @@ export function useMoveDrag() {
       window.removeEventListener('pointerup', end);
       window.removeEventListener('pointercancel', end);
       window.addEventListener('click', swallowClick, true);
+      const [x, y] = useAppStore.getState().boardStyle.layout[key] ?? [0, 0];
+      if (x !== ox || y !== oy) track('move_cell', { cell: key });
       setTimeout(() => {
         window.removeEventListener('click', swallowClick, true);
         window.removeEventListener('contextmenu', swallowClick);

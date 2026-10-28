@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { isBoardEmpty, pickBoard, useAppStore } from '@/store/useAppStore';
 import { loadShortLink } from '@/lib/share';
+import { track } from '@/lib/analytics';
 import { backgroundCss, backgroundEdgeColor } from '@/lib/board';
 import Toolbar from './Toolbar';
 import Header from './Header';
@@ -17,6 +18,7 @@ function applyShared(board: unknown) {
   const { loadBoard, showToast } = useAppStore.getState();
   loadBoard(board);
   showToast('공유된 조합표를 불러왔어요');
+  track('open_shared_link');
 }
 
 /** 조합표 편집 화면. 주소가 /s/<id>(짧은 링크) 또는 /?data=(예전 긴 링크)면 공유된 조합표를 불러온다. */

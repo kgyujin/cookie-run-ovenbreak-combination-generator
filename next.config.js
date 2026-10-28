@@ -11,11 +11,12 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next App Router의 인라인 스크립트 (개발 서버는 새로고침 없이 반영하는 기능 때문에 eval도 필요)
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+      // Google Analytics (components/Analytics.tsx)
+      `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https:",
-      `connect-src 'self' data: ${SUPABASE_URL}`,
+      `connect-src 'self' data: ${SUPABASE_URL} https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com`,
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

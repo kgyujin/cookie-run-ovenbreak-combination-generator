@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { isReturningVisitor, pickBoard, useAppStore } from '@/store/useAppStore';
 import { markUpdatesSeen, unseenCount } from '@/lib/updates';
+import { track } from '@/lib/analytics';
 import Button from './ui/Button';
 import { BellIcon, CookieLogo, DownloadIcon, LinkIcon, SettingsIcon, UndoIcon } from './ui/icons';
 import SettingsPanel from './SettingsPanel';
@@ -18,6 +19,7 @@ function undo() {
   if (!canUndo) return;
   undo();
   showToast('되돌렸어요');
+  track('undo');
 }
 
 export default function Toolbar() {
@@ -80,6 +82,7 @@ export default function Toolbar() {
       const customFont = fontSettings.fontFamily === 'Custom' ? fontSettings.customFontUrl : undefined;
       await exportBoardImage(area, background, boardStyle.exportPadding, customFont);
       showToast('이미지를 저장했어요');
+      track('save_image');
     } catch (e) {
       console.error('Failed to save image:', e);
       showToast('이미지 저장에 실패했어요. 다시 시도해 주세요', 'error');

@@ -3,6 +3,7 @@
 import clsx from 'clsx';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { safeUrl, useAppStore } from '@/store/useAppStore';
+import { track } from '@/lib/analytics';
 import { backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
 import { formatScore } from '@/utils/scoreFormatter';
@@ -452,6 +453,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                 variant="danger"
                 onClick={() => {
                   reset(confirm);
+                  track('reset', { reset_part: confirm });
                   // 꾸미기만 되돌린 경우는 패널에 남아 바뀐 모습을 바로 본다
                   if (confirm !== 'style') onClose();
                   showToast('초기화했어요');

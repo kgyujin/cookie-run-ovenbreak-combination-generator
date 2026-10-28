@@ -144,6 +144,8 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       useCORS: true,
       logging: false,
       windowWidth: width,
+      // 미리 받기 링크(분석 스크립트 등)는 그림에 필요 없고, 복제본에서 다시 받게 되므로 뺀다
+      ignoreElements: (el) => el.matches('link[rel="preload"]'),
       onclone: async (doc) => {
         const clonedArea = doc.getElementById(captureArea.id);
         if (!clonedArea) return;

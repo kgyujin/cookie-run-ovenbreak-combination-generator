@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { pickBoard, useAppStore } from '@/store/useAppStore';
 import { createLongLink, createShortLink } from '@/lib/share';
+import { track } from '@/lib/analytics';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { CheckIcon, CopyIcon, ShareIcon } from './ui/icons';
@@ -48,6 +49,7 @@ export default function ShareDialog({ onClose }: { onClose: () => void }) {
         if (cancelled) return;
         setState({ status: 'done', url, fallback, dropsUploads });
         copy(url);
+        track('share_link', { link_type: fallback ? 'long' : 'short' });
       });
     return () => {
       cancelled = true;
