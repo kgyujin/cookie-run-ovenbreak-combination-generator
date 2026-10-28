@@ -17,8 +17,8 @@ export const LAYOUT_KEYS = [
   'subPet', 'subScore', 'subCookies', 'subTreasure0', 'subTreasure1', 'subTreasure2',
 ] as const;
 
-/** 칸을 옮긴 만큼 (CSS translate 속성: 칸의 hover 효과용 transform과 겹치지 않게) */
-export const moved = (offset?: [number, number]): CSSProperties | undefined => offset && { translate: `${u(offset[0])} ${u(offset[1])}` };
+/** 칸을 옮긴 만큼. transform은 globals.css의 [data-move]에서 칸의 hover 효과와 함께 만든다 */
+export const moved = (offset?: [number, number]) => offset && ({ '--mx': u(offset[0]), '--my': u(offset[1]) } as CSSProperties);
 
 /** 조합표 기준 폭 (2열) */
 export const BOARD_WIDTH = 1552;
