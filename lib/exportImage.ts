@@ -57,7 +57,7 @@ function strokeAsShadow(width: number, color: string) {
 
 const COPIED_STYLES = [
   'position', 'left', 'top', 'width', 'height', 'zIndex', 'margin', 'padding', 'boxSizing', 'borderRadius', 'backgroundColor',
-  'fontFamily', 'fontSize', 'fontWeight', 'color', 'letterSpacing', 'lineHeight', 'textAlign', 'transform', 'textShadow',
+  'fontFamily', 'fontSize', 'fontWeight', 'color', 'letterSpacing', 'lineHeight', 'textAlign', 'transform', 'textShadow', 'maxHeight',
 ] as const;
 
 /** 칸 안쪽 폭에 맞게 글자를 줄이고 끝에 '…' */
@@ -90,7 +90,8 @@ function replaceFields(originals: (HTMLInputElement | HTMLTextAreaElement)[], cl
     Object.assign(box.style, {
       display: 'block',
       whiteSpace: isTextarea ? 'pre-wrap' : 'nowrap',
-      overflow: 'visible',
+      // 시즌명은 화면처럼 3줄 높이에서 자른다 (글자 크기를 키워 넘친 줄이 이미지에만 나오지 않게)
+      overflow: isTextarea ? 'hidden' : 'visible',
       border: 'none',
       boxShadow: 'none',
     });
@@ -111,8 +112,9 @@ function replaceFields(originals: (HTMLInputElement | HTMLTextAreaElement)[], cl
  * 조합표를 PNG로 저장한다. 화면 크기와 관계없이 항상 같은 폭(2열 배치)으로 만든다.
  * 저장하는 동안 .is-exporting 클래스로 빈 칸 표시·편집용 요소를 숨긴다.
  */
-export async function exportBoardImage(captureArea: HTMLElement, background: BackgroundData, padding: number) {
+export async function exportBoardImage(captureArea: HTMLElement, background: BackgroundData, padding: number, customFontUrl?: string) {
   const originalStyle = captureArea.getAttribute('style') ?? '';
+  const scrollY = window.scrollY; // 저장용으로 폭을 바꾸면 페이지 길이가 바뀌어 스크롤이 튀므로 나중에 되돌린다
   const width = BOARD_WIDTH + padding * 2;
   captureArea.classList.add('is-exporting');
   captureArea.style.setProperty('--export-pad', `${padding}px`);
@@ -133,9 +135,18 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
       useCORS: true,
       logging: false,
       windowWidth: width,
-      onclone: (doc) => {
+      onclone: async (doc) => {
         const clonedArea = doc.getElementById(captureArea.id);
         if (!clonedArea) return;
+        // 직접 올린 글꼴은 화면 문서에만 등록돼 있어서, 저장용 복제본에도 등록하고 다 불러온 뒤 그린다
+        // (안 하면 글자 폭이 달라져 겹치거나 줄바꿈이 바뀜)
+        if (customFontUrl) {
+          const style = doc.createElement('style');
+          style.textContent = `@font-face{font-family:'CustomFont';src:url(${JSON.stringify(customFontUrl)})}`;
+          doc.head.appendChild(style);
+          await doc.fonts.load("16px 'CustomFont'").catch(() => {});
+        }
+        await doc.fonts.ready;
         applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
         const fields = 'input:not([type=hidden]), textarea';
         replaceFields(
@@ -166,5 +177,6 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
   } finally {
     captureArea.classList.remove('is-exporting');
     captureArea.setAttribute('style', originalStyle);
+    window.scrollTo(0, scrollY);
   }
 }

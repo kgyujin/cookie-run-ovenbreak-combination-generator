@@ -27,6 +27,8 @@ export default function Modal({
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const pressedOutside = useRef(false);
+  const releasedOutside = useRef(false);
   const scrollArea = useScrollArea(bodyRef);
 
   useEffect(() => {
@@ -46,8 +48,11 @@ export default function Modal({
         e.preventDefault();
         onClose();
       }}
+      // 바깥(배경)을 눌렀다 뗐을 때만 닫는다 (입력칸에서 글자를 드래그해 밖에서 놓은 경우는 닫지 않음)
+      onPointerDown={(e) => (pressedOutside.current = e.target === e.currentTarget)}
+      onPointerUp={(e) => (releasedOutside.current = e.target === e.currentTarget)}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose(); // 바깥(배경) 클릭
+        if (e.target === e.currentTarget && pressedOutside.current && releasedOutside.current) onClose();
       }}
       className={'modal overflow-hidden bg-surface p-0 text-ink shadow-e3 ' + (drawer ? 'modal-drawer ' : '') + (className ?? '')}
     >

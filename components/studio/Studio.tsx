@@ -23,6 +23,8 @@ import {
   nameTaken,
   queueBytes,
   OrderError,
+  extOfBase64,
+  pathOf,
   queueSize,
   savedPreviews,
   toOps,
@@ -128,14 +130,23 @@ export default function Studio() {
       setData(next);
       setStatus('ready');
       // 다른 관리자가 그사이 지우거나 바꾼 아이템에 걸린 변경은 뺀다 (저장할 수 없는 변경이 남지 않게)
+      // (응답을 못 받았지만 실제로는 저장된 추가, 담은 뒤 파일이 바뀐 것도 여기서 빠진다: 엉뚱한 새 그림을 지우거나 옮기지 않게)
       const exists = new Set(next.items.map((i) => i.image));
+      const current = new Map(next.items.map((i) => [i.image, i.sha]));
       setQueue((q) => {
-        const edits = Object.fromEntries(Object.entries(q.edits).filter(([image]) => exists.has(image)));
-        const deletes = q.deletes.filter((image) => exists.has(image));
-        const dropped = Object.keys(q.edits).length - Object.keys(edits).length + q.deletes.length - deletes.length;
+        const still = (image: string) => exists.has(image) && (!q.shas?.[image] || q.shas[image] === current.get(image));
+        const edits = Object.fromEntries(Object.entries(q.edits).filter(([image]) => still(image)));
+        const deletes = q.deletes.filter(still);
+        // 같은 저장에서 지우거나 옮겨서 비워질 자리에 넣는 새 그림은 남긴다 (그 자리의 지금 그림은 아직 지울 예정인 것)
+        const freed = new Set([...deletes, ...Object.keys(edits)]);
+        const adds = q.adds.filter((a) => {
+          const path = pathOf(a.category, a.rarity, a.name, extOfBase64(a.image));
+          return !exists.has(path) || freed.has(path);
+        });
+        const dropped = queueSize(q) - queueSize({ ...q, edits, deletes, adds });
         if (!dropped) return q;
-        setNotice({ tone: 'error', text: `다른 관리자가 먼저 바꾼 아이템에 걸린 변경 ${dropped}건은 목록에서 뺐어요` });
-        return { ...q, edits, deletes };
+        setNotice({ tone: 'error', text: `이미 저장됐거나 다른 관리자가 먼저 바꾼 변경 ${dropped}건은 목록에서 뺐어요` });
+        return { ...q, edits, deletes, adds };
       });
     } else if (res?.status === 401) {
       setStatus('login');
@@ -215,8 +226,18 @@ export default function Studio() {
       setReviewing(false);
       setNotice({ tone: 'ok', text: '저장했어요. 1~3분 뒤 사이트에 반영돼요.', url: body.url });
       load();
+    } else if (res?.status === 400 && body?.error === '바뀐 내용이 없어요') {
+      // 앞서 응답만 못 받고 실제로는 저장된 경우
+      setQueue(emptyQueue());
+      setReviewing(false);
+      setNotice({ tone: 'ok', text: '이미 저장된 내용이에요. 1~3분 뒤 사이트에 반영돼요.' });
+      load();
+    } else if (body?.error) {
+      setSaveError({ text: body.error, relogin: res?.status === 401 });
     } else {
-      setSaveError({ text: body?.error ?? '인터넷 연결을 확인한 뒤 다시 저장해 주세요', relogin: res?.status === 401 });
+      // 응답을 받지 못함: 저장이 됐을 수도 있으니 목록을 새로 불러와 이미 반영된 변경은 뺀다
+      setSaveError({ text: '저장 결과를 확인하지 못했어요. 이미 저장됐을 수 있어서 목록을 다시 불러왔어요. 남은 변경을 확인한 뒤 다시 저장해 주세요' });
+      load();
     }
   };
 
@@ -381,12 +402,23 @@ export default function Studio() {
           queue={queue}
           onClose={() => setEditing(null)}
           previews={previews}
-          onSubmit={(edit) => {
+          onSubmit={(edit, touched) => {
             const error = update((q) => {
               const edits = { ...q.edits };
               if (edit) edits[editing.image] = edit;
               else delete edits[editing.image];
-              return { ...q, edits };
+              // 같은 이름을 쓰는 다른 아이템에 담아 둔 같은 정보 변경은 이번 값이 대신한다 (서로 엇갈리지 않게)
+              const name = edit?.name ?? editing.name;
+              for (const [image, other] of Object.entries(edits)) {
+                if (image === editing.image || other.name !== name || !touched.some((k) => k in other.meta)) continue;
+                const meta = { ...other.meta };
+                for (const k of touched) delete meta[k];
+                const item = data.items.find((i) => i.image === image);
+                const empty = !Object.keys(meta).length && !other.replace && item && other.name === item.name && other.rarity === item.rarity;
+                if (empty) delete edits[image];
+                else edits[image] = { ...other, meta };
+              }
+              return { ...q, edits, shas: { ...q.shas, ...(editing.sha && { [editing.image]: editing.sha }) } };
             });
             if (!error) setEditing(null);
             return error;
@@ -395,7 +427,7 @@ export default function Studio() {
             const error = update((q) => {
               const edits = { ...q.edits };
               delete edits[editing.image];
-              return { ...q, edits, deletes: [...q.deletes, editing.image] };
+              return { ...q, edits, deletes: [...q.deletes, editing.image], shas: { ...q.shas, ...(editing.sha && { [editing.image]: editing.sha }) } };
             });
             if (!error) setEditing(null);
             return error;
@@ -694,7 +726,7 @@ function EditDialog({
   queue: Queue;
   onClose: () => void;
   previews: Record<string, string>;
-  onSubmit: (edit: ItemEdit | null) => string | null;
+  onSubmit: (edit: ItemEdit | null, touched: (keyof MetaFields)[]) => string | null;
   onDelete: () => string | null;
 }) {
   const original = baseMeta(data.meta, item.name);
@@ -722,13 +754,16 @@ function EditDialog({
     if (nameTaken(data.items, queue, { category: item.category, rarity: form.rarity, name }, { image: item.image }))
       return setErrors([`${name}: 같은 자리에 같은 이름이 이미 있어요`]);
     const aliases = splitAliases(form.aliases);
-    const meta: ItemEdit['meta'] = {};
-    if (form.hidden !== original.hidden) meta.hidden = form.hidden;
-    if (form.pinned !== original.pinned) meta.pinned = form.pinned;
-    if (!sameList(aliases, original.aliases)) meta.aliases = aliases;
-    if (form.description.trim() !== original.description) meta.description = form.description.trim();
+    if (aliases.length > 10 || aliases.some((a) => a.length > 30)) return setErrors(['다른 이름은 10개까지, 하나에 30자까지 쓸 수 있어요']);
+    // 이번에 바꾼 정보(저장 전 변경까지 반영한 값과 비교). 같은 이름을 함께 쓰는 아이템의 변경도 이 값으로 맞춘다
+    const next: MetaFields = { hidden: form.hidden, pinned: form.pinned, aliases, description: form.description.trim() };
+    const touched = (Object.keys(next) as (keyof MetaFields)[]).filter((k) => JSON.stringify(next[k]) !== JSON.stringify(current.meta[k]));
+    const meta: ItemEdit['meta'] = { ...current.edit?.meta };
+    for (const k of touched) (meta as Record<string, unknown>)[k] = next[k];
+    // 저장된 값과 같아진 것은 변경에서 뺀다
+    for (const k of Object.keys(meta) as (keyof MetaFields)[]) if (JSON.stringify(meta[k]) === JSON.stringify(original[k])) delete meta[k];
     const changed = name !== item.name || form.rarity !== item.rarity || form.replace || Object.keys(meta).length > 0;
-    const error = onSubmit(changed ? { name, rarity: form.rarity, meta, ...(form.replace && { replace: form.replace }) } : null);
+    const error = onSubmit(changed ? { name, rarity: form.rarity, meta, ...(form.replace && { replace: form.replace }) } : null, touched);
     if (error) setErrors([error]);
   };
 
@@ -1102,6 +1137,7 @@ function NotesTab({
     const items = body.split('\n').map((l) => l.trim()).filter(Boolean);
     if (!date || !title.trim() || items.length === 0) return setErrors(['날짜, 제목, 내용을 모두 적어 주세요']);
     if (items.some((l) => /[·ㅡ]/.test(l) || /[·ㅡ]/.test(title))) return setErrors(['· 나 ㅡ 같은 기호 대신 쉼표나 문장으로 써 주세요']);
+    if (items.length > 20 || items.some((l) => l.length > 100)) return setErrors(['내용은 20줄까지, 한 줄에 100자까지 쓸 수 있어요']);
     const error = onQueue({ key: newKey(), date, title: title.trim(), items });
     if (error) return setErrors([error]);
     setTitle('');

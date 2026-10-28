@@ -14,7 +14,10 @@ async function gh<T>(token: string, path: string, init?: RequestInit): Promise<T
   });
   if (!res.ok) {
     // 요청 한도 초과(403 + 남은 횟수 0)는 권한 없음과 구분해 429로 다룬다
-    const status = res.status === 403 && res.headers.get('x-ratelimit-remaining') === '0' ? 429 : res.status;
+    // 1차·2차 요청 한도 (2차 한도는 머리글 없이 본문에만 적혀 올 때도 있다)
+    const limited =
+      res.headers.get('x-ratelimit-remaining') === '0' || res.headers.has('retry-after') || (res.status === 403 && /rate limit/i.test(await res.text().catch(() => '')));
+    const status = res.status === 403 && limited ? 429 : res.status;
     throw new GitHubError(status, `${init?.method ?? 'GET'} ${path}: ${res.status}`);
   }
   return res.status === 204 ? (undefined as T) : res.json();

@@ -12,6 +12,7 @@ export default function Toast() {
   useEffect(() => {
     if (!toast) return;
     setVisible(true);
+    if (toast.tone === 'loading') return; // 불러오는 중: 결과 알림으로 바뀔 때까지 계속 보인다
     const timer = setTimeout(() => setVisible(false), 2800);
     return () => clearTimeout(timer);
   }, [toast]);
@@ -19,7 +20,13 @@ export default function Toast() {
   const message = visible && toast && (
     <p key={toast.id} className="toast flex items-center gap-2 rounded-full bg-ink py-3 pl-3 pr-5 text-label-md text-white shadow-e3">
       <span className={'grid h-6 w-6 place-items-center rounded-full ' + (toast.tone === 'error' ? 'bg-danger text-white' : 'bg-primary text-on-primary')} aria-hidden="true">
-        {toast.tone === 'error' ? <span className="text-sm font-bold">!</span> : <CheckIcon />}
+        {toast.tone === 'error' ? (
+          <span className="text-sm font-bold">!</span>
+        ) : toast.tone === 'loading' ? (
+          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <CheckIcon />
+        )}
       </span>
       {toast.message}
     </p>

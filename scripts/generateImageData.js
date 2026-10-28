@@ -137,8 +137,10 @@ function scanCategory(category) {
  * 얕은 클론이면 잘린 지점 커밋은 '전부 새로 추가'로 보이므로 제외한다.
  * 아직 커밋하지 않은 새 이미지는 오늘 날짜로 본다.
  */
-function gitAddedDates() {
+function gitAddedDates(renamed = {}) {
   const dates = new Map();
+  // 날짜는 한국 시간 기준 (관리 페이지에서 올린 커밋은 UTC로 기록돼 새벽 저장이 전날로 잡히지 않게)
+  const kstDate = (unixSeconds) => new Date((Number(unixSeconds) + 9 * 3600) * 1000).toISOString().slice(0, 10);
   const git = (cmd) => execSync(`git -c core.quotepath=off ${cmd}`, { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
   try {
     const shallowFile = path.resolve(ROOT, git('rev-parse --git-path shallow').trim());
@@ -153,29 +155,74 @@ function gitAddedDates() {
     // 오래된 커밋부터 따라간다. 이름·등급을 옮기거나(R) 같은 이름으로 이미지를 바꾼 것(지우고 다시 추가)은
     // 처음 추가된 날짜를 이어받는다 (오타 수정이나 그림 교체로 '새 아이템'이 되지 않게)
     const stem = (p) => p.replace(/\.[^./]+$/, '');
-    for (const block of git('log --reverse -M --diff-filter=ADR --format=%x01%H%x20%cs --name-status -- public/images').split('\x01').filter(Boolean)) {
-      const [head, ...lines] = block.split('\n');
-      const [hash, d] = head.split(' ');
-      const date = boundary.has(hash) ? null : d;
-      const rows = lines.filter(Boolean).map((l) => l.split('\t'));
-      const deleted = new Map();
-      for (const [status, file] of rows) {
-        if (status !== 'D') continue;
-        deleted.set(stem(file), dates.get(file));
-        dates.delete(file);
+    const nameOf = (p) => path.basename(stem(p)).normalize('NFC');
+    const folderOf = (p) => p.split('/')[2];
+    const present = new Set(); // 커밋을 따라가며 지금 있는 이미지 경로
+    /**
+     * 같은 저장에서 이름이나 등급을 바꾸면서 그림도 바꾼 경우: 지운 파일의 이름을 renamed로 따라가 새 파일 이름이 나오면 같은 아이템.
+     * 따라가다 지금도 있는 이름을 만나면 그 아이템은 거기로 간 것이다 (A→B, B→C를 한 번에 바꾼 경우)
+     */
+    const sameItem = (removed, added, names) => {
+      if (folderOf(removed) !== folderOf(added)) return false;
+      const here = new Set([...present].filter((p) => p !== added && folderOf(p) === folderOf(removed)).map(nameOf));
+      for (let n = names[nameOf(removed)], i = 0; n && i < 10; n = names[n], i++) {
+        if (n === nameOf(added)) return true;
+        if (here.has(n)) return false;
       }
-      for (const [status, file, renamedTo] of rows) {
-        if (status.startsWith('R')) {
-          const prev = dates.get(file);
-          dates.delete(file);
-          if (prev) dates.set(renamedTo, prev);
+      // 이 저장에서 이름을 바꾼 기록이 없으면: 같은 이름이면 등급만 바꾼 것
+      return !names[nameOf(removed)] && nameOf(removed) === nameOf(added);
+    };
+    /** 그 커밋 때의 renamed (나중에 이름을 또 바꾸면 지금의 renamed에는 예전 기록이 남아 있지 않다) */
+    const renamedAt = (hash) => {
+      try {
+        return JSON.parse(git(`show ${hash}:data/item-meta.json`)).renamed ?? renamed;
+      } catch {
+        return renamed;
+      }
+    };
+    for (const block of git('log --reverse -B -M -C --diff-filter=ADRCMB --format=%x01%H%x20%ct --name-status -- public/images').split('\x01').filter(Boolean)) {
+      const [head, ...lines] = block.split('\n');
+      const [hash, ct] = head.split(' ');
+      const date = boundary.has(hash) ? null : kstDate(ct);
+      const rows = lines.filter(Boolean).map((l) => l.split('\t'));
+      // 한 커밋 안의 변경은 동시에 일어난 것: 커밋 전 날짜를 기준으로 읽는다 (A→B, B→C가 서로 섞이지 않게)
+      const before = new Map(dates);
+      const removed = rows.filter(([status]) => status === 'D').map(([, file]) => file);
+      let names = null; // 필요할 때만 읽는다
+      const namesNow = () => (names ??= renamedAt(hash));
+      const modified = new Set(rows.filter(([status]) => status.startsWith('M')).map(([, file]) => file));
+      for (const [status, file] of rows) if (status === 'D' || status.startsWith('R')) present.delete(file);
+      for (const [status, file, to] of rows) {
+        if (status === 'A') present.add(file);
+        else if (status.startsWith('R') || status.startsWith('C')) present.add(to);
+      }
+      // 새로 생긴 자리: 같은 저장에서 지운 아이템이 옮겨 온 것이면 그 날짜, 아니면 이 커밋 날짜
+      const arrived = (file) => {
+        const match = removed.find((r) => stem(r) === stem(file)) ?? removed.find((r) => sameItem(r, file, namesNow()));
+        const prev = match ? before.get(match) : date;
+        if (prev) dates.set(file, prev);
+        else dates.delete(file);
+      };
+      for (const file of removed) dates.delete(file);
+      for (const [status, file] of rows) if (status.startsWith('R')) dates.delete(file);
+      for (const [status, file, to] of rows) {
+        // 복사(C)는 이름을 바꾸면서 원래 자리에 새 아이템을 넣은 경우(renamed에 기록됨)만 옮긴 것으로 본다.
+        // 그 밖의 복사는 같은 그림으로 만든 새 아이템
+        const moved = status.startsWith('R') || (status.startsWith('C') && (namesNow()[nameOf(file)] === nameOf(to) || nameOf(file) === nameOf(to)));
+        if (moved) {
+          // 옮긴 곳은 원래 날짜를 이어받는다. 원래 자리에 새 그림이 들어왔으면 그건 새 아이템
+          const prev = before.get(file);
+          if (prev) dates.set(to, prev);
+          else dates.delete(to);
+          if (status.startsWith('C') && modified.has(file)) arrived(file);
+        } else if (status.startsWith('C')) {
+          arrived(to);
         } else if (status === 'A') {
-          const prev = deleted.has(stem(file)) ? deleted.get(stem(file)) : date;
-          if (prev) dates.set(file, prev);
+          arrived(file);
         }
       }
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = kstDate(Date.now() / 1000);
     for (const line of git('ls-files --others --exclude-standard -- public/images').split('\n')) if (line) dates.set(line, today);
   } catch {
     warnings.push('Git 기록을 읽지 못해 새 아이템 날짜와 업데이트 소식을 자동으로 만들지 못했습니다 (item-meta.json의 added만 사용)');
@@ -230,7 +277,7 @@ function build() {
   };
 
   // 추가 날짜: Git 기록에서 자동으로, item-meta.json의 added가 있으면 그쪽 우선
-  const gitDates = gitAddedDates();
+  const gitDates = gitAddedDates(meta.renamed);
   const added = new Map(); // 이미지 경로 → 추가 날짜
   for (const item of Object.values(data).flat()) {
     const d = gitDates.get(`public${item.image}`);

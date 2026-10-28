@@ -10,6 +10,9 @@ import ShareDialog from './ShareDialog';
 import UpdatesDialog from './UpdatesDialog';
 
 /** 화면 상단 고정 도구 막대 (이미지 저장 대상이 아님) */
+// 공유 링크로 들어왔는지는 처음 주소로 판단한다 (공유 조합표를 불러오면 주소가 '/'로 바뀜)
+const openedFromShare = typeof window !== 'undefined' && (/^\/s\//.test(window.location.pathname) || window.location.search.includes('data='));
+
 export default function Toolbar() {
   const showToast = useAppStore((s) => s.showToast);
   const settingsOpen = useAppStore((s) => s.settingsOpen);
@@ -35,8 +38,7 @@ export default function Toolbar() {
     const unseen = count === -1 ? 1 : count;
     setNewUpdates(unseen);
     // 공유 링크로 들어온 경우는 공유된 조합표가 먼저: 소식은 종 표시로만 알린다 (창이 두 개 겹치지 않게)
-    const fromShare = /^\/s\//.test(location.pathname) || location.search.includes('data=');
-    if (unseen > 0 && !fromShare && !document.querySelector('dialog:modal')) setUpdatesOpen(true);
+    if (unseen > 0 && !openedFromShare && !document.querySelector('dialog:modal')) setUpdatesOpen(true);
   }, [updates]);
 
   const closeUpdates = () => {
@@ -52,8 +54,9 @@ export default function Toolbar() {
     setSaving(true);
     try {
       const { exportBoardImage } = await import('@/lib/exportImage'); // html2canvas는 저장할 때만 불러온다
-      const { background, boardStyle } = pickBoard(useAppStore.getState());
-      await exportBoardImage(area, background, boardStyle.exportPadding);
+      const { background, boardStyle, fontSettings } = pickBoard(useAppStore.getState());
+      const customFont = fontSettings.fontFamily === 'Custom' ? fontSettings.customFontUrl : undefined;
+      await exportBoardImage(area, background, boardStyle.exportPadding, customFont);
       showToast('이미지를 저장했어요');
     } catch (e) {
       console.error('Failed to save image:', e);
@@ -64,12 +67,15 @@ export default function Toolbar() {
     }
   };
 
+  // 버튼 글자는 globals.css의 .tb-label에서 em 기준으로 켠다 (브라우저 글자를 키우면 좁은 화면처럼 아이콘만)
   return (
     <>
       <header className="sticky top-0 z-40 px-2 pt-2 sm:px-3 sm:pt-3">
         <div className="mx-auto flex h-14 max-w-[1680px] items-center gap-1 rounded-xl border border-white/70 bg-surface-cream/85 pl-2 pr-1.5 shadow-e2 backdrop-blur-md sm:gap-2 sm:pl-3">
           <h1 className="mr-auto flex min-w-0 items-center gap-2">
-            <CookieLogo />
+            <span className="shrink-0">
+              <CookieLogo />
+            </span>
             <span className="truncate text-title-md text-ink">쿠키런 조합표</span>
           </h1>
           <Button variant="ghost" onClick={() => setUpdatesOpen(true)} aria-label={newUpdates ? '업데이트 (새 소식 있음)' : '업데이트'} className="w-touch px-0">
@@ -81,23 +87,23 @@ export default function Toolbar() {
             onClick={() => setSettingsOpen(!settingsOpen)}
             aria-label="설정"
             aria-expanded={settingsOpen}
-            className={'w-touch px-0 sm:w-auto sm:px-3' + (settingsOpen ? ' bg-surface-sunken !text-ink' : '')}
+            className={'w-touch px-0 tb-btn' + (settingsOpen ? ' bg-surface-sunken !text-ink' : '')}
           >
             <SettingsIcon />
-            <span className="hidden sm:inline">설정</span>
+            <span className="tb-label hidden">설정</span>
           </Button>
           <Button
             ref={saveButtonRef}
             variant="secondary"
             onClick={saveImage}
             aria-disabled={saving}
-            aria-label="이미지 저장" className="w-touch px-0 sm:w-auto sm:px-4">
+            aria-label="이미지 저장" className="w-touch px-0 tb-btn">
             <DownloadIcon />
-            <span className="hidden sm:inline">{saving ? '저장 중…' : '이미지 저장'}</span>
+            <span className="tb-label hidden">{saving ? '저장 중…' : '이미지 저장'}</span>
           </Button>
-          <Button variant="primary" onClick={() => setShareOpen(true)} aria-label="링크 공유" className="w-touch px-0 sm:w-auto sm:px-4">
+          <Button variant="primary" onClick={() => setShareOpen(true)} aria-label="링크 공유" className="w-touch px-0 tb-btn">
             <LinkIcon />
-            <span className="hidden sm:inline">링크 공유</span>
+            <span className="tb-label hidden">링크 공유</span>
           </Button>
         </div>
       </header>

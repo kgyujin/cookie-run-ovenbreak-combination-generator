@@ -3,8 +3,8 @@ import type { Rarity, StudioCategory } from './config';
 
 export type StudioOp =
   | { type: 'add'; category: StudioCategory; rarity?: Rarity; name: string; image: string } // image: base64 (data: 접두어 없이)
-  | { type: 'move'; category: StudioCategory; from: string; name: string; rarity?: Rarity } // 이름 바꾸기·등급 옮기기 (from: /images/... 경로)
-  | { type: 'delete'; category: StudioCategory; image: string }
+  | { type: 'move'; category: StudioCategory; from: string; name: string; rarity?: Rarity; sha?: string } // 이름 바꾸기·등급 옮기기 (from: /images/... 경로)
+  | { type: 'delete'; category: StudioCategory; image: string; sha?: string } // sha: 담을 때의 파일 (그사이 바뀌었으면 거절)
   | { type: 'meta'; name: string; pinned?: boolean; hidden?: boolean; aliases?: string[]; description?: string }
   | { type: 'note'; date: string; title: string; items: string[] };
 
@@ -23,6 +23,8 @@ export function cleanName(raw: string): string | null {
   if (/[\\/:*?"<>|#%{}^~[\]`]/.test(name) || INVISIBLE.test(name)) return null;
   // 경로처럼 보이거나(.., 끝의 .) 프로그램이 쓰는 예약어인 이름도 막는다
   if (name.startsWith('.') || name.endsWith('.') || name.includes('..') || /^(__proto__|constructor|prototype)$/i.test(name)) return null;
+  // 윈도우에서 파일로 만들 수 없는 이름 (저장소를 내려받을 때 오류)
+  if (/^(con|prn|aux|nul|conin\$|conout\$|com[\d¹²³]|lpt[\d¹²³])\s*(\.|$)/i.test(name)) return null;
   return name;
 }
 

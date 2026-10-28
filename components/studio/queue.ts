@@ -51,11 +51,12 @@ export interface NoteDraft {
 export interface Queue {
   edits: Record<string, ItemEdit>; // 원래 이미지 경로 → 바뀐 내용
   deletes: string[];
+  shas: Record<string, string>; // 고치거나 지우려고 담을 때의 파일 (그사이 바뀌면 서버가 거절)
   adds: AddDraft[];
   notes: NoteDraft[];
 }
 
-export const emptyQueue = (): Queue => ({ edits: {}, deletes: [], adds: [], notes: [] });
+export const emptyQueue = (): Queue => ({ edits: {}, deletes: [], adds: [], notes: [], shas: {} });
 export const queueSize = (q: Queue) => Object.keys(q.edits).length + q.deletes.length + q.adds.length + q.notes.length;
 export const queueBytes = (q: Queue) =>
   q.adds.reduce((s, a) => s + a.size, 0) + Object.values(q.edits).reduce((s, e) => s + (e.replace?.size ?? 0), 0);
@@ -124,7 +125,7 @@ export function toOps(q: Queue, items: StudioItem[]): StudioOp[] {
   const metaOps: StudioOp[] = [];
   for (const image of q.deletes) {
     const item = byImage.get(image);
-    if (item) ops.push({ type: 'delete', category: item.category, image });
+    if (item) ops.push({ type: 'delete', category: item.category, image, ...(q.shas[image] && { sha: q.shas[image] }) });
   }
   const slot = (category: StudioCategory, rarity: string | undefined, name: string) => `${dirKey(category, rarity)}/${name.toLowerCase()}`;
   let groups = Object.entries(q.edits).flatMap(([image, e]) => {
@@ -132,13 +133,15 @@ export function toOps(q: Queue, items: StudioItem[]): StudioOp[] {
     if (!item || q.deletes.includes(image)) return [];
     const moved = e.name !== item.name || e.rarity !== item.rarity;
     const group: StudioOp[] = [];
-    if (moved) group.push({ type: 'move', category: item.category, from: image, name: e.name, ...(e.rarity !== item.rarity && { rarity: e.rarity }) });
+    if (moved)
+      group.push({ type: 'move', category: item.category, from: image, name: e.name, ...(e.rarity !== item.rarity && { rarity: e.rarity }), ...(q.shas[image] && { sha: q.shas[image] }) });
     if (e.replace) {
       // 옮긴 자리(또는 원래 자리)의 파일을 새 이미지로 바꾼다
       const at = moved
         ? `/images/${CATEGORY_FOLDERS[item.category]}${RARITY_CATEGORIES.includes(item.category) ? `/${e.rarity}` : ''}/${e.name}.${extOf(image)}`
         : image;
-      group.push({ type: 'delete', category: item.category, image: at });
+      // 이름을 그대로 두고 그림만 바꾸면 원래 파일을 지우므로, 그사이 다른 관리자가 바꿨는지도 확인한다
+      group.push({ type: 'delete', category: item.category, image: at, ...(!moved && q.shas[image] && { sha: q.shas[image] }) });
       group.push({ type: 'add', category: item.category, ...(e.rarity && { rarity: e.rarity }), name: e.name, image: e.replace.image });
     }
     if (Object.keys(e.meta).length) metaOps.push({ type: 'meta', name: e.name, ...e.meta });
@@ -173,8 +176,8 @@ export function describeEdit(item: StudioItem, e: ItemEdit) {
 }
 
 /** base64 이미지의 실제 형식 → 확장자 (서버가 같은 방식으로 이름을 정함) */
-const extOfBase64 = (b64: string) => (b64.startsWith('iVBOR') ? 'png' : b64.startsWith('/9j/') ? 'jpg' : 'webp');
-const pathOf = (category: StudioCategory, rarity: string | undefined, name: string, ext: string) =>
+export const extOfBase64 = (b64: string) => (b64.startsWith('iVBOR') ? 'png' : b64.startsWith('/9j/') ? 'jpg' : 'webp');
+export const pathOf = (category: StudioCategory, rarity: string | undefined, name: string, ext: string) =>
   `/images/${CATEGORY_FOLDERS[category]}${RARITY_CATEGORIES.includes(category) ? `/${rarity}` : ''}/${name}.${ext}`;
 
 /** 저장한 새 이미지의 경로 → 미리보기 (사이트에 반영되기 전까지 관리 화면에 보여줄 것) */

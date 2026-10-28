@@ -98,7 +98,7 @@ const DATA_URL = {
 
 /**
  * https 주소 또는 형식이 확실한 data: URL만 허용.
- * URL 객체로 다시 써서 따옴표·괄호가 인코딩되므로 CSS url("...") 안에서 빠져나갈 수 없다.
+ * URL 객체로 다시 쓰고 따옴표·괄호는 %로 바꾸므로 CSS url("...") 밖으로 빠져나갈 수 없다.
  */
 export const safeUrl = (v: unknown, dataKind?: keyof typeof DATA_URL) => {
   if (typeof v !== 'string') return '';
@@ -106,7 +106,9 @@ export const safeUrl = (v: unknown, dataKind?: keyof typeof DATA_URL) => {
   if (dataKind && raw.length <= 7_000_000 && DATA_URL[dataKind].test(raw)) return raw;
   try {
     const url = new URL(raw.slice(0, 2048));
-    return url.protocol === 'https:' ? url.href : '';
+    // 따옴표·괄호는 %로 바꿔 CSS url("...") 밖으로 빠져나갈 수 없게 한다 (호스트 이름에 남은 것까지). 공백·역슬래시가 남으면 받지 않는다
+    const href = url.href.replace(/["'()]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+    return url.protocol === 'https:' && !/[\\\s]/.test(href) ? href : '';
   } catch {
     return '';
   }
@@ -137,7 +139,7 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       dim: clamp(bg.dim, 0, 0.6, 0),
     };
   }
-  if (typeof raw.seasonName === 'string') out.seasonName = str(raw.seasonName, 120);
+  if (typeof raw.seasonName === 'string') out.seasonName = str(raw.seasonName, 300).split('\n').slice(0, 3).join('\n');
   if ('seasonDish' in raw) out.seasonDish = itemImage(raw.seasonDish);
   if (Array.isArray(raw.seasonIngredients)) {
     out.seasonIngredients = [0, 1, 2].map((i) => itemImage(raw.seasonIngredients[i])) as [string, string, string];
@@ -267,11 +269,12 @@ export interface AppStore extends BoardState {
   gameDataError: boolean;
   picker: PickerRequest | null;
   settingsOpen: boolean;
-  toast: { id: number; message: string; tone: 'success' | 'error' } | null;
+  toast: { id: number; message: string; tone: 'success' | 'error' | 'loading' } | null;
   openPicker: (request: PickerRequest) => void;
   closePicker: () => void;
   setSettingsOpen: (open: boolean) => void;
-  showToast: (message: string, tone?: 'success' | 'error') => void;
+  /** loading: 다음 알림이 올 때까지 사라지지 않음 */
+  showToast: (message: string, tone?: 'success' | 'error' | 'loading') => void;
   setBackground: (background: BackgroundData) => void;
   setSeasonName: (name: string) => void;
   setSeasonDish: (image: string) => void;

@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES } from './config';
 import { CATEGORY_LABELS, MAX_IMAGE_BYTES, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
 import { TreeChange, listImages, readFile } from './github';
@@ -18,6 +19,8 @@ function imageExt(bytes: Buffer) {
 const strList = (v: unknown, max: number, len: number) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, len)).filter(Boolean).slice(0, max) : [];
 
+/** git이 파일 내용에 붙이는 이름 (같은 그림인지 비교) */
+const gitBlobSha = (bytes: Buffer) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 const dirName = (path: string) => path.slice(0, path.lastIndexOf('/'));
 const hasOwn = (o: object, k: string) => Object.prototype.hasOwnProperty.call(o, k);
 const sameName = (a: string, b: string) => a.toLowerCase() === b.toLowerCase(); // 대소문자만 다른 이름은 윈도우·맥에서 같은 파일
@@ -33,6 +36,7 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
 
   const files = await listImages(token, headSha); // 작업하면서 함께 갱신한다
   const headPaths = new Set(files.keys());
+  const headFiles = new Map(files);
   let changes: TreeChange[] = [];
   /** 같은 경로의 앞선 변경은 덮어쓴다 (예: 지운 뒤 같은 이름으로 다시 올리기) */
   const setChange = (change: TreeChange) => {
@@ -55,6 +59,11 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
   };
   const nameTaken = (dir: string, name: string, except?: string) =>
     Array.from(files.keys()).some((p) => p !== except && dirName(p) === dir && sameName(nameOf(p), name));
+  /** 담을 때와 지금 파일이 다르면(다른 관리자가 바꿨거나, 응답을 못 받은 저장이 이미 반영됨) 거절 */
+  const unchanged = (path: string, sha: unknown) => {
+    if (sha !== undefined && headFiles.get(path) !== sha)
+      throw new OpError(`${nameOf(path)}: 그사이 바뀌었어요. 새로고침해서 목록을 다시 불러온 뒤 해 주세요`);
+  };
   const existing = (image: unknown) => {
     const path = `public${String(image ?? '')}`;
     return files.has(path) && !path.includes('..') ? path : null;
@@ -76,6 +85,13 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         if (totalBytes > MAX_TOTAL_IMAGE_BYTES) throw new OpError('한 번에 올리는 이미지가 너무 커요. 나눠서 저장해 주세요');
         if (nameTaken(dir, name)) throw new OpError(`${name}: 같은 이름이 이미 있어요`);
         const path = `${dir}/${name}.${ext}`;
+        const sha = gitBlobSha(bytes);
+        if (headFiles.get(path) === sha) {
+          // 지금과 똑같은 그림을 다시 올린 경우(응답을 못 받고 다시 저장 등): 바꿀 것이 없다
+          changes = changes.filter((c) => c.path !== path);
+          files.set(path, sha);
+          break;
+        }
         setChange({ path, content: bytes.toString('base64'), encoding: 'base64' });
         files.set(path, '');
         break;
@@ -86,12 +102,20 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
         const from = existing(raw.from);
         const sha = from && files.get(from);
         if (!from || !sha) throw new OpError(`${nameOf(String(raw.from ?? ''))}: 옮길 파일을 찾을 수 없어요 (이미 바뀌었을 수 있어요)`);
+        unchanged(from, raw.sha);
         const oldName = nameOf(from);
         // 종류는 바꿀 수 없다 (등급과 이름만)
         const toDir = dirOf(categoryOf(from) ?? '', raw.rarity ?? dirName(from).split('/').pop());
         const to = `${toDir}/${name}.${from.split('.').pop()}`;
         if (to === from) break;
         if (nameTaken(toDir, name, from)) throw new OpError(`${name}: 같은 이름이 이미 있어요`);
+        // 새 이름을 쓰는 파일이 하나도 없으면(같은 저장에서 지운 아이템의 이름 등) 그 이름에 남은 정보는 이 아이템 것이 아니다
+        if (name !== oldName && !Array.from(files.keys()).some((p) => p !== from && nameOf(p) === name)) {
+          for (const k of ['pinned', 'hidden']) meta[k] = meta[k].filter((n: string) => n !== name);
+          for (const k of ['aliases', 'descriptions']) meta[k][name] = undefined;
+          for (const d of Object.keys(meta.added)) meta.added[d] = meta.added[d].filter((n: string) => n !== name);
+          for (const [k, v] of Object.entries(meta.renamed)) if (v === name) meta.renamed[k] = undefined;
+        }
         setChange({ path: to, sha });
         setChange({ path: from, delete: true });
         files.delete(from);
@@ -118,6 +142,7 @@ export async function buildChanges(token: string, ops: unknown, headSha: string)
       case 'delete': {
         const target = existing(raw.image);
         if (!target) throw new OpError(`${nameOf(String(raw.image ?? ''))}: 지울 파일을 찾을 수 없어요 (이미 지워졌을 수 있어요)`);
+        unchanged(target, raw.sha);
         setChange({ path: target, delete: true });
         files.delete(target);
         break;

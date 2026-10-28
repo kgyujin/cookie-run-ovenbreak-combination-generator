@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { initialBoard, useAppStore } from '@/store/useAppStore';
+import { initialBoard, safeUrl, useAppStore } from '@/store/useAppStore';
 import { backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
 import { formatScore } from '@/utils/scoreFormatter';
@@ -90,10 +90,13 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
 
   // 패널 안쪽 목록만 스크롤한다 (scrollIntoView는 패널 전체를 밀어 올림)
   const jump = (id: string) => {
-    const list = bodyRef.current?.parentElement;
+    const body = bodyRef.current?.parentElement;
     const target = bodyRef.current?.querySelector<HTMLElement>(`#set-${id}`);
+    // 아주 낮은 화면에서는 패널 전체가 스크롤된다 (globals.css)
+    const list = body && body.scrollHeight > body.clientHeight + 1 ? body : body?.parentElement;
     if (!list || !target) return;
-    list.scrollTo({ top: target.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop, behavior: 'smooth' });
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    list.scrollTo({ top: target.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop, behavior: smooth ? 'smooth' : 'auto' });
   };
 
   // 지금 보고 있는 항목을 위쪽 목차에 표시
@@ -141,7 +144,8 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
         }
         footer={
           <>
-            <Button onClick={revert} disabled={!changed} className="flex-1">
+            {/* disabled로 바꾸면 누른 직후 키보드 초점이 사라져서 aria-disabled 사용 */}
+            <Button onClick={() => changed && revert()} aria-disabled={!changed} className="flex-1">
               되돌리기
             </Button>
             <Button variant="primary" onClick={onClose} className="flex-1">
@@ -152,7 +156,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
       >
         <div ref={bodyRef} className="divide-y divide-line">
           <Section id="bg" title="배경">
-            <div role="radiogroup" aria-label="추천 배경" onKeyDown={radioArrows(5)} className="grid grid-cols-5 gap-2">
+            <div role="radiogroup" aria-label="추천 배경" onKeyDown={radioArrows(5)} className="grid max-w-[24rem] grid-cols-5 gap-2">
               {BACKGROUND_PRESETS.map((preset, i) => {
                 const selected = isSameBackground(background, preset.background);
                 const anySelected = BACKGROUND_PRESETS.some((p) => isSameBackground(background, p.background));
@@ -229,16 +233,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                   onData={async (imageUrl, file) => setBg({ imageUrl: await shrinkImage(imageUrl, file) })}
                 />
                 <Field label="이미지 주소">
-                  {(id) => (
-                    <input
-                      id={id}
-                      type="url"
-                      value={background.imageUrl?.startsWith('data:') ? '' : background.imageUrl ?? ''}
-                      onChange={(e) => setBg({ imageUrl: e.target.value })}
-                      placeholder="https://"
-                      className="field"
-                    />
-                  )}
+                  {(id) => <ImageUrlInput id={id} value={background.imageUrl?.startsWith('data:') ? '' : background.imageUrl ?? ''} onApply={(imageUrl) => setBg({ imageUrl })} />}
                 </Field>
                 <Segmented
                   label="맞춤"
@@ -689,6 +684,50 @@ function Segmented<T extends string>({
         ))}
       </div>
     </fieldset>
+  );
+}
+
+/**
+ * 배경 이미지 주소: 다 입력하고 칸을 벗어나거나 Enter를 누를 때 적용한다 (한 글자마다 잘못된 주소를 불러오지 않게).
+ * 저장·공유할 수 있는 https 주소만 받는다 (http는 https로 바꿔 줌).
+ */
+function ImageUrlInput({ id, value, onApply }: { id: string; value: string; onApply: (url: string) => void }) {
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState(false);
+  useEffect(() => setDraft(value), [value]);
+  const apply = () => {
+    const trimmed = draft.trim();
+    // 비어 있으면: 원래 주소가 있을 때만 지운다 (올린 사진은 이 칸에 안 보이므로, 지나가기만 해도 지워지면 안 됨)
+    if (!trimmed) {
+      if (value) onApply('');
+      return;
+    }
+    const raw = /^https?:\/\//i.test(trimmed) ? trimmed.replace(/^http:/i, 'https:') : `https://${trimmed}`;
+    // 주소처럼 생기지 않은 글자(점 없는 이름 등)는 받지 않는다
+    if (!/^https:\/\/[^/\s]+\.[^/\s]+/i.test(raw)) return setError(true);
+    const url = safeUrl(raw);
+    setError(!url);
+    if (url && url !== value) onApply(url);
+  };
+  return (
+    <>
+      <input
+        id={id}
+        type="url"
+        value={draft}
+        onChange={(e) => (setDraft(e.target.value), setError(false))}
+        onBlur={apply}
+        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), apply())}
+        placeholder="https://"
+        aria-invalid={error}
+        className="field"
+      />
+      {error && (
+        <p role="alert" className="mt-1.5 text-caption font-semibold text-danger">
+          https:// 로 시작하는 이미지 주소를 넣어 주세요
+        </p>
+      )}
+    </>
   );
 }
 

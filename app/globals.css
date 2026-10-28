@@ -98,6 +98,18 @@ input[type='search']::-webkit-search-cancel-button {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm3.5 12.1-1.4 1.4L12 13.4l-2.1 2.1-1.4-1.4 2.1-2.1-2.1-2.1 1.4-1.4 2.1 2.1 2.1-2.1 1.4 1.4-2.1 2.1 2.1 2.1Z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* 도구 막대 버튼 글자: 화면 폭을 em으로 재서 켠다 (브라우저 글자를 키우면 아이콘만 보여 도구 막대가 넘치지 않게).
+   40em = 기본 글자 크기에서 640px */
+@media (min-width: 40em) {
+  .tb-label.tb-label {
+    display: inline;
+  }
+  .tb-btn.tb-btn {
+    width: auto;
+    padding-inline: 1rem;
+  }
+}
+
 :focus-visible {
   outline: 3px solid #8a5300;
   outline-offset: 2px;
@@ -117,6 +129,10 @@ input[type='search']::-webkit-search-cancel-button {
   max-width: 1552px;
   margin-inline: auto;
 }
+/* 시즌명 글자 단위: 1열에서는 칸 폭 비율(--title-k, Header.tsx)만큼 줄여 저장 이미지와 줄바꿈을 맞춘다 */
+.title-input {
+  --title-u: calc(var(--u) * var(--title-k, 1));
+}
 
 .board-grid {
   display: grid;
@@ -125,6 +141,9 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 @container (min-width: 1000px) {
+  .title-input {
+    --title-u: var(--u);
+  }
   .board {
     --u: calc(min(100cqw, 1552px) / 1552);
   }
@@ -147,7 +166,19 @@ input[type='search']::-webkit-search-cancel-button {
   transform: translateY(0) scale(0.97);
 }
 
-.slot:focus-visible {
+.slot/* 도구 막대 버튼 글자: 화면 폭을 em으로 재서 켠다 (브라우저 글자를 키우면 아이콘만 보여 도구 막대가 넘치지 않게).
+   40em = 기본 글자 크기에서 640px */
+@media (min-width: 40em) {
+  .tb-label.tb-label {
+    display: inline;
+  }
+  .tb-btn.tb-btn {
+    width: auto;
+    padding-inline: 1rem;
+  }
+}
+
+:focus-visible {
   outline: 3px solid #8a5300;
   outline-offset: -3px;
   box-shadow: inset 0 0 0 5px #fff;
@@ -230,7 +261,19 @@ input.slot:focus,
 
 .ratio-handle:hover,
 .ratio-handle:active,
-.ratio-handle:focus-visible {
+.ratio-handle/* 도구 막대 버튼 글자: 화면 폭을 em으로 재서 켠다 (브라우저 글자를 키우면 아이콘만 보여 도구 막대가 넘치지 않게).
+   40em = 기본 글자 크기에서 640px */
+@media (min-width: 40em) {
+  .tb-label.tb-label {
+    display: inline;
+  }
+  .tb-btn.tb-btn {
+    width: auto;
+    padding-inline: 1rem;
+  }
+}
+
+:focus-visible {
   opacity: 1;
   color: #fff;
   background: #8a5300;
@@ -322,7 +365,8 @@ input.slot:focus,
   position: fixed;
   z-index: 45;
   inset: auto 12px 12px auto;
-  top: 80px;
+  /* 도구 막대(위 여백 0.75rem + h-14 3.5rem) 아래부터: 브라우저 글자 크기를 키워도 겹치지 않게 */
+  top: calc(4.25rem + 12px);
   width: 380px;
   height: auto;
   max-height: none;
@@ -347,7 +391,7 @@ input.slot:focus,
 @media (max-height: 560px) and (max-width: 1023px) {
   .panel[open] {
     /* 도구 막대(설정·저장·공유)는 가리지 않게 그 아래부터 */
-    inset: 68px 8px 8px auto;
+    inset: calc(4.25rem + 8px) 8px 8px auto;
     width: min(380px, 60vw);
     height: auto;
     border-radius: 20px;
@@ -355,6 +399,13 @@ input.slot:focus,
   }
   .panel-handle {
     display: none;
+  }
+  /* 글자를 크게 키운 가로 휴대폰처럼 아주 낮으면 머리말·버튼까지 패널 전체가 스크롤 (내용 칸이 사라지지 않게) */
+  .panel[open] > div {
+    overflow-y: auto;
+  }
+  .panel[open] > div > * {
+    flex: none;
   }
   .board-wrap.panel-open {
     padding-bottom: 16px;
@@ -375,6 +426,9 @@ input.slot:focus,
 @media (min-width: 1024px) {
   .board-wrap.panel-open {
     padding-right: 404px;
+  }
+  .board-wrap.panel-open .title-input {
+    --title-u: var(--u);
   }
   .board-wrap.panel-open .board {
     --u: calc(min(100cqw, 1552px) / 1552);

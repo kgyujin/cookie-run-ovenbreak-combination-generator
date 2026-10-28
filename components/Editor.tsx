@@ -52,7 +52,7 @@ export default function Editor() {
       return;
     }
     if (shareId) {
-      showToast('공유된 조합표를 불러오고 있어요');
+      showToast('공유된 조합표를 불러오고 있어요', 'loading');
       loadShortLink(shareId)
         .then((board) => {
           if (board) return receive(board);

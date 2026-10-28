@@ -8,7 +8,7 @@ import Modal from './ui/Modal';
 import Button from './ui/Button';
 import { CheckIcon, CopyIcon, ShareIcon } from './ui/icons';
 
-type State = { status: 'loading' } | { status: 'done'; url: string; fallback: boolean };
+type State = { status: 'loading' } | { status: 'done'; url: string; fallback: boolean; dropsUploads: boolean };
 
 // 내용이 그대로면 같은 링크를 다시 쓴다 (열 때마다 DB에 새로 저장하지 않도록)
 let lastShort: { key: string; url: string } | null = null;
@@ -36,15 +36,17 @@ export default function ShareDialog({ onClose }: { onClose: () => void }) {
     (lastShort?.key === key ? Promise.resolve(lastShort.url) : createShortLink(board))
       .then((url) => {
         lastShort = { key, url };
-        return { url, fallback: false };
+        return { url, fallback: false, dropsUploads: false };
       })
       .catch((e) => {
         console.error('Failed to create short link:', e);
-        return { url: createLongLink(board), fallback: true };
+        // 긴 링크에는 직접 올린 파일을 담을 수 없다
+        const dropsUploads = [board.background.imageUrl, board.fontSettings.customFontUrl].some((u) => u?.startsWith('data:'));
+        return { url: createLongLink(board), fallback: true, dropsUploads };
       })
-      .then(({ url, fallback }) => {
+      .then(({ url, fallback, dropsUploads }) => {
         if (cancelled) return;
-        setState({ status: 'done', url, fallback });
+        setState({ status: 'done', url, fallback, dropsUploads });
         copy(url);
       });
     return () => {
@@ -88,7 +90,7 @@ export default function ShareDialog({ onClose }: { onClose: () => void }) {
               <span role="status" className="sr-only">{copied ? '복사했어요' : ''}</span>
               {state.fallback && (
                 <p className="mt-3 rounded-md border border-primary-ink/20 bg-primary-soft p-3 text-caption text-ink">
-                  짧은 링크를 만들지 못해 긴 링크로 대신했어요. 직접 올린 이미지와 글꼴은 빠져요.
+                  짧은 링크를 만들지 못해 긴 링크로 대신했어요.{state.dropsUploads && ' 직접 올린 이미지와 글꼴은 빠져요.'}
                 </p>
               )}
             </div>
