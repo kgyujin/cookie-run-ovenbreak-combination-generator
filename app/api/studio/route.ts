@@ -82,7 +82,7 @@ export async function POST(req: Request) {
   }
   if (!session) {
     try {
-      await applyLocal(await buildChanges(localSource, ops));
+      await applyLocal(await buildChanges(localSource, ops, Infinity));
       return json({ local: true });
     } catch (e) {
       if (e instanceof OpError) return json({ error: e.message }, 400);

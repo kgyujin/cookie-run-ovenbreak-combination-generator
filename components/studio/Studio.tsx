@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { cloneElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES, Rarity, StudioCategory } from '@/lib/studio/config';
-import { CATEGORY_LABELS, MAX_CHANGES, MAX_IMAGE_BYTES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
+import { CATEGORY_LABELS, MAX_CHANGES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { CheckIcon, CookieLogo, EyeIcon, EyeOffIcon, ImageIcon, PinIcon, SearchIcon } from '../ui/icons';
@@ -70,13 +70,14 @@ const readBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-/** 고른 이미지 파일 검사 → 통과한 것과 오류 목록 */
-async function readImages(files: ArrayLike<File> | null) {
+/** 고른 이미지 파일 검사 → 통과한 것과 오류 목록. local: 로컬 모드 (크기 제한 없음) */
+async function readImages(files: ArrayLike<File> | null, local: boolean) {
   const ok: { name: string; image: string; size: number }[] = [];
   const errors: string[] = [];
   for (const file of Array.from(files ?? [])) {
     if (!/^image\/(png|jpeg|webp)$/.test(file.type)) errors.push(`${file.name}: PNG, JPG, WEBP 이미지만 올릴 수 있어요`);
-    else if (file.size > MAX_IMAGE_BYTES) errors.push(`${file.name}: 1.5MB 이하로 올려 주세요`);
+    else if (!local && file.size > MAX_TOTAL_IMAGE_BYTES)
+      errors.push(`${file.name}: 사이트의 관리 페이지에서는 한 번에 ${MAX_TOTAL_IMAGE_BYTES / 1024 / 1024}MB까지 올릴 수 있어요. 이미지를 줄이거나 로컬 모드로 올려 주세요`);
     else ok.push({ name: file.name.replace(/\.[^.]+$/, '').normalize('NFC'), image: await readBase64(file), size: file.size });
   }
   return { ok, errors };
@@ -244,7 +245,7 @@ export default function Studio() {
   const update = (next: (q: Queue) => Queue): string | null => {
     const result = next(queue);
     if (queueSize(result) > MAX_CHANGES && queueSize(result) > size) return `한 번에 ${MAX_CHANGES}건까지 저장할 수 있어요. 지금까지 담은 변경을 먼저 저장한 뒤 이어서 해 주세요`;
-    if (queueBytes(result) > MAX_TOTAL_IMAGE_BYTES && queueBytes(result) > queueBytes(queue))
+    if (!data?.local && queueBytes(result) > MAX_TOTAL_IMAGE_BYTES && queueBytes(result) > queueBytes(queue))
       return '한 번에 올리는 이미지는 모두 합쳐 3MB까지예요. 지금까지 담은 변경을 먼저 저장한 뒤 이어서 추가해 주세요';
     setQueue(result);
     return null;
@@ -1071,7 +1072,7 @@ function EditDialog({
     else onClose();
   };
   const replaceWith = async (files: ArrayLike<File> | null) => {
-    const { ok, errors } = await readImages(files);
+    const { ok, errors } = await readImages(files, data.local);
     setErrors(errors);
     if (ok[0]) set('replace', { image: ok[0].image, size: ok[0].size });
   };
@@ -1225,7 +1226,7 @@ function AddDialog({
   const hasRarity = (c: StudioCategory) => RARITY_CATEGORIES.includes(c);
 
   const pick = async (files: ArrayLike<File> | null) => {
-    const { ok, errors } = await readImages(files);
+    const { ok, errors } = await readImages(files, data.local);
     setErrors(errors);
     setDrafts((d) => [...d, ...ok.map((f) => ({ ...f, key: newKey(), category, rarity: hasRarity(category) ? rarity : undefined }))]);
   };
@@ -1276,7 +1277,8 @@ function AddDialog({
         <>
           {drafts.length > 0 && (
             <p className="text-caption text-ink-subtle">
-              {drafts.length}장, {totalBytes < 1024 * 1024 ? `${Math.ceil(totalBytes / 1024)}KB` : `${(totalBytes / 1024 / 1024).toFixed(1)}MB`} (한 번에 3MB까지)
+              {drafts.length}장, {totalBytes < 1024 * 1024 ? `${Math.ceil(totalBytes / 1024)}KB` : `${(totalBytes / 1024 / 1024).toFixed(1)}MB`}
+              {!data.local && ' (한 번에 3MB까지)'}
             </p>
           )}
           <Button variant="primary" className="ml-auto" onClick={submit}>
@@ -1306,7 +1308,7 @@ function AddDialog({
           </Field>
           {hasRarity(category) && <RaritySelect value={rarity} onChange={setRarity} />}
         </div>
-        <DropZone onFiles={pick} />
+        <DropZone onFiles={pick} local={data.local} />
         {drafts.length > 0 && (
           <ul className="space-y-2" aria-label="올릴 이미지">
             {drafts.map((d) => (
@@ -1360,7 +1362,7 @@ function AddDialog({
 }
 
 /** 이미지 고르기: 누르거나, 끌어다 놓거나 (여러 장) */
-function DropZone({ onFiles }: { onFiles: (files: FileList) => void }) {
+function DropZone({ onFiles, local }: { onFiles: (files: FileList) => void; local: boolean }) {
   const [over, setOver] = useState(false);
   return (
     <label
@@ -1397,7 +1399,7 @@ function DropZone({ onFiles }: { onFiles: (files: FileList) => void }) {
         )}
       </span>
       <span className="text-caption text-ink-subtle">
-        PNG, JPG, WEBP (1장 1.5MB 이하). 여러 장을 한 번에 넣을 수 있어요.
+        PNG, JPG, WEBP{!local && ' (한 번 저장에 모두 합쳐 3MB까지)'}. 여러 장을 한 번에 넣을 수 있어요.
         <span className="[@media(hover:none)]:hidden"> 복사한 이미지는 붙여넣기(Ctrl+V)로도 돼요.</span> 파일 이름이 아이템 이름이 돼요.
       </span>
       <input

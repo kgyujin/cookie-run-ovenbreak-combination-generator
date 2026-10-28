@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES } from './config';
-import { CATEGORY_LABELS, MAX_IMAGE_BYTES, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
+import { CATEGORY_LABELS, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
 import type { TreeChange } from './github';
 
 export class OpError extends Error {}
@@ -35,8 +35,11 @@ const isRealDate = (d: string) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(t) && new Date(t).toISOString().startsWith(d);
 };
 
-/** 요청을 하나하나 검사해서, 저장소에 쓸 파일 변경 목록으로 바꾼다 */
-export async function buildChanges(source: Source, ops: unknown): Promise<TreeChange[]> {
+/**
+ * 요청을 하나하나 검사해서, 저장소에 쓸 파일 변경 목록으로 바꾼다.
+ * maxImageBytes: 한 번에 올리는 이미지 합계 한도 (로컬 모드는 Infinity)
+ */
+export async function buildChanges(source: Source, ops: unknown, maxImageBytes = MAX_TOTAL_IMAGE_BYTES): Promise<TreeChange[]> {
   if (!Array.isArray(ops) || ops.length === 0) throw new OpError('변경할 내용이 없어요');
   if (ops.length > MAX_OPS) throw new OpError('한 번에 저장하기에는 변경이 너무 많아요. 나눠서 저장해 주세요');
 
@@ -89,9 +92,8 @@ export async function buildChanges(source: Source, ops: unknown): Promise<TreeCh
         const bytes = Buffer.from(String(raw.image ?? ''), 'base64');
         const ext = imageExt(bytes);
         if (!ext) throw new OpError(`${name}: PNG, JPG, WEBP 이미지만 올릴 수 있어요`);
-        if (bytes.length > MAX_IMAGE_BYTES) throw new OpError(`${name}: 이미지는 1.5MB 이하로 올려 주세요`);
         totalBytes += bytes.length;
-        if (totalBytes > MAX_TOTAL_IMAGE_BYTES) throw new OpError('한 번에 올리는 이미지가 너무 커요. 나눠서 저장해 주세요');
+        if (totalBytes > maxImageBytes) throw new OpError('한 번에 올리는 이미지가 너무 커요. 나눠서 저장해 주세요');
         if (nameTaken(dir, name)) throw new OpError(`${name}: 같은 이름이 이미 있어요`);
         const path = `${dir}/${name}.${ext}`;
         const sha = gitBlobSha(bytes);

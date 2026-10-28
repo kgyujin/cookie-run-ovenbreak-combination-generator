@@ -17,8 +17,9 @@ export interface Note {
 
 export const MAX_OPS = 150; // 화면의 변경 1건이 요청 여러 개가 될 수 있어서 넉넉하게 (화면에서는 MAX_CHANGES건까지)
 export const MAX_CHANGES = 30;
-export const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
-export const MAX_TOTAL_IMAGE_BYTES = 3 * 1024 * 1024; // base64로 보내면 1.33배 → 서버 요청 한도(4.5MB) 안쪽
+// 이미지 1장 크기 제한은 없다 (저장소에 파일로 들어감). 다만 배포된 관리 페이지는 Vercel 서버 함수로 보내므로
+// 한 번 저장에 담는 이미지 합계만 제한한다: base64로 보내면 1.33배 → 서버 요청 한도(4.5MB) 안쪽. 로컬 모드는 제한 없음
+export const MAX_TOTAL_IMAGE_BYTES = 3 * 1024 * 1024;
 
 // 제어 문자, 폭 없는 공백 같은 보이지 않는 글자 (같아 보이는 다른 이름이 생기지 않게)
 const INVISIBLE = new RegExp('[\\p{Cc}\\p{Cf}\\p{Co}\\p{Cn}\\p{Cs}]', 'u');
