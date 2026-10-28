@@ -9,6 +9,9 @@ declare global {
 }
 
 /** 어떤 기능을 썼는지만 기록한다 (조합표 내용이나 개인 정보는 보내지 않음) */
-export function track(event: string, params?: Record<string, string>) {
-  window.gtag?.('event', event, params);
+export function track(event: string, params?: Record<string, string>, tries = 10) {
+  if (!GA_ID) return;
+  if (window.gtag) return window.gtag('event', event, params);
+  // 분석 스크립트가 뜨기 전(공유 링크를 바로 여는 경우 등)이면 잠깐 기다렸다가 보낸다
+  if (tries > 0) setTimeout(() => track(event, params, tries - 1), 500);
 }

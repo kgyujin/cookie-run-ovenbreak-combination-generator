@@ -16,8 +16,7 @@ const openedFromShare = typeof window !== 'undefined' && (/^\/s\//.test(window.l
 
 function undo() {
   const { canUndo, undo, showToast } = useAppStore.getState();
-  if (!canUndo) return;
-  undo();
+  if (!canUndo || !undo()) return;
   showToast('되돌렸어요');
   track('undo');
 }
@@ -51,10 +50,12 @@ export default function Toolbar() {
     if (unseen > 0 && !openedFromShare && !document.querySelector('dialog:modal')) setUpdatesOpen(true);
   }, [updates]);
 
-  // Ctrl+Z (맥은 Cmd+Z). 글자를 입력하는 칸에서는 그 칸의 입력 취소가 먼저. 한글 자판이어도 같은 키로
+  // Ctrl+Z (맥은 Cmd+Z). 글자를 입력하는 칸에서는 그 칸의 입력 취소가 먼저.
+  // 한글 자판이어도 같은 자리의 키로, 다른 영문 자판(AZERTY 등)은 Z 글자로. 선택 창 같은 모달이 열려 있으면 뒤의 조합표는 그대로
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'KeyZ' || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+      const isZ = /^[a-z]$/i.test(e.key) ? e.key.toLowerCase() === 'z' : e.code === 'KeyZ';
+      if (!isZ || !(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey || document.querySelector('dialog:modal')) return;
       const el = e.target as HTMLElement;
       const typing = el.isContentEditable || el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'color', 'button'].includes((el as HTMLInputElement).type));
       if (typing) return;

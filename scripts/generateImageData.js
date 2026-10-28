@@ -415,6 +415,7 @@ async function measureCrops(data) {
   try {
     sharp = require('sharp');
   } catch {
+    warnings.push('sharp가 없어 쿠키 그림 영역을 재지 못했습니다 (크기 자동 맞춤이 이미지 전체 기준으로 동작)');
     return;
   }
   const round = (n) => Math.round(n * 10000) / 10000;

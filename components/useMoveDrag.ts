@@ -55,7 +55,7 @@ export function useMoveDrag() {
     window.addEventListener('contextmenu', blockMenu);
     const timer = setTimeout(() => {
       stopWaiting();
-      startDrag(section, key, id, sx, sy);
+      if (!dragging) startDrag(section, key, id, sx, sy); // 두 손가락으로 두 칸을 동시에 누르면 먼저 것만
     }, LONG_PRESS);
   };
 
@@ -82,7 +82,9 @@ export function useMoveDrag() {
       const b = boxOf(name);
       if (b) others.push(b);
     });
-    const [ox, oy] = useAppStore.getState().boardStyle.layout[key] ?? [0, 0];
+    const startLayout = useAppStore.getState().boardStyle.layout;
+    const [ox, oy] = startLayout[key] ?? [0, 0];
+    let moving = false;
     const parts = section.querySelectorAll<HTMLElement>(`[data-move="${key}"]`);
     parts.forEach((el) => (el.dataset.lifted = ''));
     document.documentElement.classList.add('is-moving');
@@ -104,10 +106,14 @@ export function useMoveDrag() {
     };
     const move = (ev: PointerEvent) => {
       if (ev.pointerId !== id) return;
+      // 들어 올린 뒤 손이 조금 떨린 것은 옮기기로 보지 않는다 (빈 실행 취소 단계와 줄 맞춤으로 튀는 것 방지)
+      if (!moving && Math.hypot(ev.clientX - sx, ev.clientY - sy) <= SLOP) return;
+      moving = true;
       const x = snap('x', ev.clientX - sx);
       const y = snap('y', ev.clientY - sy);
-      const round = (v: number) => Math.round(v * 10) / 10;
-      useAppStore.getState().setLayout(key, [round(ox + x.d / unit), round(oy + y.d / unit)]);
+      // 저장하거나 공유할 때와 같은 범위 안에서만 (sanitizeBoard)
+      const fit = (v: number, limit: number) => Math.max(-limit, Math.min(limit, Math.round(v * 10) / 10));
+      useAppStore.getState().setLayout(key, [fit(ox + x.d / unit, 764), fit(oy + y.d / unit, ARENA_HEIGHT)]);
       const lines: Guide[] = [];
       if (x.at !== undefined) lines.push({ axis: 'x', at: (x.at - area.left) / unit });
       if (y.at !== undefined) lines.push({ axis: 'y', at: (y.at - area.top) / unit });
@@ -121,6 +127,8 @@ export function useMoveDrag() {
     const end = (ev: PointerEvent) => {
       if (ev.pointerId !== id) return;
       dragging = false;
+      // 브라우저가 끌기를 가로챈 경우(스크롤, 다른 동작)는 원래 자리로
+      if (ev.type === 'pointercancel' && moving) useAppStore.setState((s) => ({ boardStyle: { ...s.boardStyle, layout: startLayout } }));
       parts.forEach((el) => delete el.dataset.lifted);
       document.documentElement.classList.remove('is-moving');
       setGuides([]);

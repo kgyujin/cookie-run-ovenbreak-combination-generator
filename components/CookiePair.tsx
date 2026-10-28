@@ -48,56 +48,62 @@ export default function CookiePair({
   const parts = images.flatMap((image, i) => {
     if (!image) return [];
     const item = map.get(image);
-    return [{ i, image, src: (!full && item?.thumb) || image, crop: item?.crop ?? [0, 0, 1, 1, 1], scale: (i === 0 ? ratio : 100 - ratio) / big }];
+    return [{ i, image, src: (!full && item?.thumb) || image, crop: item?.crop, scale: (i === 0 ? ratio : 100 - ratio) / big }];
   });
   if (!parts.length) return null;
 
+  // 그림 영역을 모르는 이미지(목록에 없는 주소 등)는 정사각형 칸에 비율을 지켜 넣는다
+  const cropOf = (p: (typeof parts)[number]) => p.crop ?? [0, 0, 1, 1, 1, 0, 0];
   // 바깥쪽(첫 쿠키 왼쪽, 마지막 쿠키 오른쪽)으로 뻗은 효과 폭 (큰 쪽 높이 대비)
-  const padLeft = (parts[0].crop[5] ?? 0) * parts[0].scale;
-  const padRight = (parts[parts.length - 1].crop[6] ?? 0) * parts[parts.length - 1].scale;
+  const padLeft = (cropOf(parts[0])[5] ?? 0) * parts[0].scale;
+  const padRight = (cropOf(parts[parts.length - 1])[6] ?? 0) * parts[parts.length - 1].scale;
   // 큰 쪽 쿠키의 높이: 영역 높이, 또는 두 쿠키와 간격, 바깥 효과가 영역 폭에 딱 맞는 높이 중 작은 쪽
   // (간격은 바깥 보드 단위로 계산한 --pair-gap: globals.css)
-  const widthPerHeight = parts.reduce((sum, p) => sum + p.crop[4] * p.scale, padLeft + padRight);
+  const widthPerHeight = parts.reduce((sum, p) => sum + cropOf(p)[4] * p.scale, padLeft + padRight);
   const unit = `min(100cqh, (100cqw - var(--pair-gap)) / ${widthPerHeight})`;
 
   return (
     <div
-      className={clsx('pointer-events-none absolute flex items-end', align === 'left' ? 'justify-start' : 'justify-end')}
+      // 한 쿠키만 있으면 그 쿠키 자리 쪽으로 (선달은 왼쪽, 이달은 오른쪽: 빈 칸을 가리지 않게)
+      className={clsx('pointer-events-none absolute flex items-end', (parts.length > 1 ? align === 'left' : parts[0].i === 0) ? 'justify-start' : 'justify-end')}
       data-move={move}
       style={{ ...style, containerType: 'size', ['--pair-gap' as string]: parts.length > 1 ? u(gap) : '0px', ['--pair-handle' as string]: u(14) }}
     >
-      {parts.map(({ i, src, crop: [x, y, w, h, r], scale }, n) => (
-        <Fragment key={i}>
-          {/* 두 쿠키 사이 간격. 크기 손잡이는 그 한가운데에, 큰 쪽 쿠키 높이만큼 (넘친 효과보다 위) */}
-          {n === 1 && (
-            <span className="relative z-10 shrink-0" style={{ width: 'var(--pair-gap)', height: unit }}>
-              {handle}
+      {parts.map(({ i, src, crop, scale }, n) => {
+        const [x, y, w, h, r] = crop ?? [0, 0, 1, 1, 1];
+        return (
+          <Fragment key={i}>
+            {/* 두 쿠키 사이 간격. 크기 손잡이는 그 한가운데에, 큰 쪽 쿠키 높이만큼 (넘친 효과보다 위) */}
+            {n === 1 && (
+              <span className="relative z-10 shrink-0" style={{ width: 'var(--pair-gap)', height: unit }}>
+                {handle}
+              </span>
+            )}
+            <span
+              aria-hidden="true"
+              onClick={onSelect[i]}
+              className="pointer-events-auto relative shrink-0 cursor-pointer"
+              style={{
+                width: `calc(${r * scale} * ${unit})`,
+                height: `calc(${scale} * ${unit})`,
+                marginLeft: n === 0 ? `calc(${padLeft} * ${unit})` : undefined,
+                marginRight: n === parts.length - 1 ? `calc(${padRight} * ${unit})` : undefined,
+              }}
+            >
+              <img
+                src={src}
+                alt=""
+                crossOrigin="anonymous"
+                draggable={false}
+                loading="lazy"
+                decoding="async"
+                className={clsx('pointer-events-none absolute max-w-none', !crop && 'object-contain object-bottom')}
+                style={{ width: `${100 / w}%`, height: `${100 / h}%`, left: `${(-x / w) * 100}%`, top: `${(-y / h) * 100}%` }}
+              />
             </span>
-          )}
-          <span
-            aria-hidden="true"
-            onClick={onSelect[i]}
-            className="pointer-events-auto relative shrink-0 cursor-pointer"
-            style={{
-              width: `calc(${r * scale} * ${unit})`,
-              height: `calc(${scale} * ${unit})`,
-              marginLeft: n === 0 ? `calc(${padLeft} * ${unit})` : undefined,
-              marginRight: n === parts.length - 1 ? `calc(${padRight} * ${unit})` : undefined,
-            }}
-          >
-            <img
-              src={src}
-              alt=""
-              crossOrigin="anonymous"
-              draggable={false}
-              loading="lazy"
-              decoding="async"
-              className="pointer-events-none absolute max-w-none"
-              style={{ width: `${100 / w}%`, height: `${100 / h}%`, left: `${(-x / w) * 100}%`, top: `${(-y / h) * 100}%` }}
-            />
-          </span>
-        </Fragment>
-      ))}
+          </Fragment>
+        );
+      })}
     </div>
   );
 }

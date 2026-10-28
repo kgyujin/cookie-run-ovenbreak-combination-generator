@@ -311,7 +311,8 @@ export interface AppStore extends BoardState {
   setLayout: (key: LayoutKey, offset: [number, number]) => void;
   /** 실행 취소할 편집이 있는지 */
   canUndo: boolean;
-  undo: () => void;
+  /** 되돌린 것이 있으면 true */
+  undo: () => boolean;
 }
 
 /**
@@ -324,6 +325,15 @@ const past: BoardState[] = [];
 let editing = false;
 /** 기록하지 않는 변경 (아이템 목록을 받아 이름을 맞추는 것, 실행 취소 자체) */
 let recording = true;
+/** 두 모습이 같은지 (항목마다 같은 값이거나, 객체면 한 단계 안의 값이 모두 같은지) */
+const sameBoard = (a: BoardState, b: BoardState) =>
+  (Object.keys(a) as (keyof BoardState)[]).every((key) => {
+    const [x, y] = [a[key], b[key]] as unknown as [Record<string, unknown>, Record<string, unknown>];
+    if (x === y) return true;
+    if (typeof x !== 'object' || typeof y !== 'object' || !x || !y) return false;
+    const keys = Object.keys(x);
+    return keys.length === Object.keys(y).length && keys.every((k) => x[k] === y[k]);
+  });
 const quietly = (fn: () => void) => {
   recording = false;
   try {
@@ -333,7 +343,7 @@ const quietly = (fn: () => void) => {
   }
 };
 
-export const useAppStore = create<AppStore>((set) => {
+export const useAppStore = create<AppStore>((set, get) => {
   const updateArena = (arenaIndex: number, update: (arena: ArenaData) => Partial<ArenaData>) =>
     set((state) => ({
       arenas: state.arenas.map((arena, i) => (i === arenaIndex ? { ...arena, ...update(arena) } : arena)),
@@ -423,14 +433,27 @@ export const useAppStore = create<AppStore>((set) => {
     setFontSettings: (settings) => set((state) => ({ fontSettings: { ...state.fontSettings, ...settings } })),
     setDisplaySettings: (settings) => set((state) => ({ displaySettings: { ...state.displaySettings, ...settings } })),
     setBoardStyle: (style) => set((state) => ({ boardStyle: { ...state.boardStyle, ...style } })),
-    setLayout: (key, offset) => set((state) => ({ boardStyle: { ...state.boardStyle, layout: { ...state.boardStyle.layout, [key]: offset } } })),
+    setLayout: (key, offset) =>
+      set((state) => {
+        const now = state.boardStyle.layout[key];
+        if (now?.[0] === offset[0] && now?.[1] === offset[1]) return state; // 같은 자리면 바꾸지 않는다 (빈 실행 취소 단계 방지)
+        return { boardStyle: { ...state.boardStyle, layout: { ...state.boardStyle.layout, [key]: offset } } };
+      }),
 
     canUndo: false,
     undo: () => {
-      const board = past.pop();
-      if (!board) return;
+      // 바뀐 것 없이 기록된 단계(끌다가 취소한 칸 등)는 건너뛴다
+      const now = pickBoard(get());
+      let board = past.pop();
+      while (board && sameBoard(board, now)) board = past.pop();
       editing = false;
-      quietly(() => set({ ...board, canUndo: past.length > 0 }));
+      if (!board) {
+        set({ canUndo: false });
+        return false;
+      }
+      // 아이템 목록을 받기 전에 기록된 모습이면 이름이 바뀐 아이템 등을 지금 목록에 맞춘다
+      quietly(() => set((state) => ({ ...(state.gameData ? resolveBoardItems(board, state.gameData) : board), canUndo: past.length > 0 })));
+      return true;
     },
   };
 });
@@ -504,5 +527,7 @@ if (typeof window !== 'undefined') {
   });
   window.addEventListener('pointerdown', () => ((pressed = true), (editing = false)), true);
   for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, () => ((pressed = false), editing && endEdit()), true);
+  // 누른 채 다른 창으로 가서 손을 떼면 pointerup이 오지 않으므로, 그때도 누름이 끝난 것으로
+  window.addEventListener('blur', () => ((pressed = false), editing && endEdit()));
   window.addEventListener('pagehide', save);
 }
