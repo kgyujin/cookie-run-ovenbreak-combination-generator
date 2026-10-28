@@ -3,7 +3,7 @@
 import clsx from 'clsx';
 import { memo, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { cardStyle, fontFamilyOf, u } from '@/lib/board';
+import { cardStyle, fontFamilyOf, outlineShadow, u } from '@/lib/board';
 import Slot from './Slot';
 
 const MAX_LINES = 3;
@@ -107,8 +107,7 @@ export default memo(function Header() {
             textAlign: fontSettings.textAlign,
             color: fontSettings.fontColor || '#1c1917',
             fontWeight: fontSettings.fontWeight ?? 700,
-            WebkitTextStroke: fontSettings.seasonStrokeWidth && seasonName ? `${tu(fontSettings.seasonStrokeWidth)} ${fontSettings.seasonStrokeColor}` : undefined,
-            paintOrder: 'stroke fill',
+            textShadow: fontSettings.seasonStrokeWidth && seasonName ? outlineShadow(fontSettings.seasonStrokeWidth, fontSettings.seasonStrokeColor ?? '#ffffff', tu) : undefined,
             lineHeight: fontSettings.lineHeight ?? 1.2,
             letterSpacing: tu(fontSettings.letterSpacing ?? 0),
             transform: `translate(${tu(fontSettings.offsetX ?? 0)}, ${tu(fontSettings.offsetY ?? 0)})`,
@@ -134,7 +133,8 @@ export default memo(function Header() {
             style={{ inset: u(2) }}
           />
         </div>
-        <div className={clsx('grid h-[40%] grid-cols-3', ingredientsEmpty && 'card-empty')} style={{ gap: u(2), padding: u(2) }}>
+        {/* 재료는 남은 높이를 채워 아래 끝을 시즌명 칸과 맞춘다 */}
+        <div className={clsx('grid min-h-0 flex-1 grid-cols-3', ingredientsEmpty && 'card-empty')} style={{ gap: u(2), padding: u(2) }}>
           {([0, 1, 2] as const).map((i) => (
             <div key={i} className="relative h-full">
               <Slot

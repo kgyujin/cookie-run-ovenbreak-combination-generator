@@ -46,15 +46,6 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
 
 const MAX_PNG_BYTES = 8 * 1024 * 1024;
 
-/** 외곽선을 글자 뒤에 깔리는 그림자 고리로 바꾼다 (html2canvas는 외곽선을 글자 위에 덮어 그려 글자가 얇아지거나 사라짐) */
-function strokeAsShadow(width: number, color: string) {
-  const steps = Math.max(12, Math.ceil(width * 8));
-  return Array.from({ length: steps }, (_, i) => {
-    const a = (i / steps) * Math.PI * 2;
-    return `${(Math.cos(a) * width).toFixed(2)}px ${(Math.sin(a) * width).toFixed(2)}px 0 ${color}`;
-  }).join(', ');
-}
-
 const COPIED_STYLES = [
   'position', 'left', 'top', 'width', 'height', 'zIndex', 'margin', 'padding', 'boxSizing', 'borderRadius', 'backgroundColor',
   'fontFamily', 'fontSize', 'fontWeight', 'color', 'letterSpacing', 'lineHeight', 'textAlign', 'transform', 'textShadow', 'maxHeight',
@@ -98,11 +89,6 @@ function replaceFields(originals: (HTMLInputElement | HTMLTextAreaElement)[], cl
     if (!isTextarea) {
       // 한 줄 입력칸: 줄 높이를 칸 높이와 같게 해서 세로 가운데 (html2canvas는 flex 가운데 정렬을 아래로 밀리게 그림)
       Object.assign(box.style, { paddingTop: '0', paddingBottom: '0', lineHeight: `${parseFloat(cs.height)}px` });
-    }
-    const strokeWidth = parseFloat(cs.webkitTextStrokeWidth);
-    if (strokeWidth > 0) {
-      const ring = strokeAsShadow(strokeWidth, cs.webkitTextStrokeColor);
-      box.style.textShadow = cs.textShadow && cs.textShadow !== 'none' ? `${ring}, ${cs.textShadow}` : ring;
     }
     clone.replaceWith(box);
   });

@@ -5,11 +5,12 @@ import { CSSProperties, KeyboardEvent, PointerEvent, memo, useState } from 'reac
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
-import { cardStyle, fontFamilyOf, textGlow, u, withOpacity } from '@/lib/board';
+import { cardStyle, fontFamilyOf, outlineShadow, textGlow, u, withOpacity } from '@/lib/board';
 import { Category, MagicCandyData } from '@/types';
 import Slot from './Slot';
 import YoutubeDialog from './YoutubeDialog';
 
+const CARD_TRIM = 68; // 카드 아래 여백을 위와 같게(12) 맞추려고 줄이는 높이 (보드 px)
 const MIN_RATIO = 30;
 const MAX_RATIO = 70;
 
@@ -91,16 +92,18 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
     fontWeight: fontSettings.scoreFontWeight ?? 400,
     textAlign: fontSettings.scoreAlign ?? 'center',
     fontFamily: fontFamilyOf(fontSettings.fontFamily),
-    paintOrder: 'stroke fill',
   };
-  const scoreStroke = fontSettings.scoreStrokeWidth ? `${u(fontSettings.scoreStrokeWidth)} ${fontSettings.scoreStrokeColor}` : undefined;
+  const scoreStroke = fontSettings.scoreStrokeWidth ? outlineShadow(fontSettings.scoreStrokeWidth, fontSettings.scoreStrokeColor ?? '#ffffff', u) : undefined;
 
   return (
     <section
       aria-label={`${n}번 아레나`}
       className="relative w-full"
-      style={{ height: u(425), ...(boardStyle.card ? cardStyle(boardStyle) : {}) }}
+      // 카드를 켜면 맨 아래 칸(보물) 밑의 빈 공간(80)만큼 아래 여백이 위(12)보다 커 보이므로, 카드 바탕은 그만큼 짧게 그리고
+      // 아래 아레나를 그만큼 당겨 아레나 사이 간격이 설정값 그대로 보이게 한다 (칸 위치와 크기는 그대로)
+      style={{ height: u(425), ...(boardStyle.card && { marginBottom: u(-CARD_TRIM) }) }}
     >
+      {boardStyle.card && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0" style={{ bottom: u(CARD_TRIM), ...cardStyle(boardStyle) }} />}
       {/* ===== TOP LAYER (Tab 순서상 먼저: 번호 → 요리 → 나머지) ===== */}
       {/* 아레나 번호 (유튜브 링크) */}
       <button
@@ -279,7 +282,7 @@ function ScoreInput({
   field: 'score' | 'subScore';
   label: string;
   placeholder: string;
-  stroke?: string;
+  stroke?: string; // 외곽선 (text-shadow 값, outlineShadow)
   style: CSSProperties;
 }) {
   const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
@@ -316,7 +319,7 @@ function ScoreInput({
       style={{
         ...style,
         // 외곽선은 입력한 점수에만 (빈 칸 안내 글자에는 그리지 않음)
-        WebkitTextStroke: value ? stroke : undefined,
+        textShadow: value ? stroke : undefined,
         ...(value && boardStyle.scoreBg && { backgroundColor: withOpacity(boardStyle.scoreBgColor, boardStyle.scoreBgOpacity), borderRadius: u(boardStyle.scoreBgRadius) }),
       }}
     />

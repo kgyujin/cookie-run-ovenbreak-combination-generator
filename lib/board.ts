@@ -43,6 +43,19 @@ export function textGlow(color = '#1c1917') {
   return `0 0 3px ${c}, 0 0 5px ${c}, 0 0 8px ${c}, 1px 1px 2px ${c}, -1px -1px 2px ${c}, 1px -1px 2px ${c}, -1px 1px 2px ${c}`;
 }
 
+/**
+ * 글자 외곽선: 글자 뒤에 깔리는 그림자 고리로 그린다.
+ * -webkit-text-stroke는 입력칸에서 글자 위에 덮여 그려져(글자가 가늘어짐) 저장 이미지와 달라 보이므로 화면과 저장 모두 이 방식으로.
+ * unit: 보드 배율 단위 (u, tu)
+ */
+export function outlineShadow(width: number, color: string, unit: (px: number) => string) {
+  const steps = Math.max(12, Math.ceil(width * 8));
+  return Array.from({ length: steps }, (_, i) => {
+    const a = (i / steps) * Math.PI * 2;
+    return `${unit(+(Math.cos(a) * width).toFixed(3))} ${unit(+(Math.sin(a) * width).toFixed(3))} 0 ${color}`;
+  }).join(', ');
+}
+
 /** #rrggbb + 0~100 투명도 → rgb() */
 export function withOpacity(hex: string, opacity: number) {
   const h = hex.replace('#', '');
