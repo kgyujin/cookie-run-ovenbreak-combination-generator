@@ -8,6 +8,18 @@ import { BackgroundData, BoardStyle, FontSettings } from '@/types';
  */
 export const u = (px: number) => `calc(${px} * var(--u))`;
 
+/** 아레나 높이 (보드 px) */
+export const ARENA_HEIGHT = 425;
+
+/** 아레나 안에서 꾹 눌러 옮길 수 있는 칸. 메인 쿠키 두 칸과 사탕+축복은 한 덩어리로 움직인다 */
+export const LAYOUT_KEYS = [
+  'number', 'dish', 'mainCookies', 'pet', 'treasure0', 'treasure1', 'treasure2', 'score', 'candy1', 'candy2',
+  'subPet', 'subScore', 'subCookies', 'subTreasure0', 'subTreasure1', 'subTreasure2',
+] as const;
+
+/** 칸을 옮긴 만큼 (CSS translate 속성: 칸의 hover 효과용 transform과 겹치지 않게) */
+export const moved = (offset?: [number, number]): CSSProperties | undefined => offset && { translate: `${u(offset[0])} ${u(offset[1])}` };
+
 /** 조합표 기준 폭 (2열) */
 export const BOARD_WIDTH = 1552;
 

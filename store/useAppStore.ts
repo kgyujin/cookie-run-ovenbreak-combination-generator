@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, MagicCandyData } from '@/types';
+import { ArenaData, BackgroundData, BoardState, BoardStyle, Category, ComboData, DisplaySettings, FontSettings, GameData, LayoutKey, MagicCandyData } from '@/types';
 import { resolveBoardItems } from '@/lib/items';
 import { DEFAULT_BACKGROUND } from '@/lib/backgrounds';
+import { ARENA_HEIGHT, LAYOUT_KEYS } from '@/lib/board';
 
 const emptyCombo = (): ComboData => ({ pet: '', cookie1: '', cookie2: '', treasures: ['', '', ''] });
 
@@ -65,6 +66,7 @@ export const initialBoard = (): BoardState => ({
     cookieFit: true,
     mainCookieGap: 16,
     subCookieGap: 8,
+    layout: {},
   },
 });
 
@@ -226,6 +228,12 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
       cookieFit: bool(b.cookieFit, d.cookieFit),
       mainCookieGap: clamp(b.mainCookieGap, 0, 120, d.mainCookieGap),
       subCookieGap: clamp(b.subCookieGap, 0, 80, d.subCookieGap),
+      layout: Object.fromEntries(
+        LAYOUT_KEYS.flatMap((key) => {
+          const v = b.layout?.[key];
+          return Array.isArray(v) ? [[key, [clamp(v[0], -764, 764, 0), clamp(v[1], -ARENA_HEIGHT, ARENA_HEIGHT, 0)]]] : [];
+        })
+      ),
     };
   }
   if (raw.displaySettings && typeof raw.displaySettings === 'object') {
@@ -299,7 +307,30 @@ export interface AppStore extends BoardState {
   setFontSettings: (settings: Partial<FontSettings>) => void;
   setDisplaySettings: (settings: Partial<DisplaySettings>) => void;
   setBoardStyle: (style: Partial<BoardStyle>) => void;
+  setLayout: (key: LayoutKey, offset: [number, number]) => void;
+  /** 실행 취소할 편집이 있는지 */
+  canUndo: boolean;
+  undo: () => void;
 }
+
+/**
+ * 실행 취소: 조합표가 바뀔 때마다 바뀌기 전 모습을 쌓아 두고, 가장 최근 것부터 하나씩 되돌린다.
+ * 연달아 바뀐 것(입력하는 글자, 끄는 동안의 슬라이더나 칸 위치)은 한 번으로 묶는다 (아래 구독).
+ */
+const HISTORY_LIMIT = 100;
+const past: BoardState[] = [];
+/** 지금 바뀌는 것이 직전 변경과 같은 편집인지 */
+let editing = false;
+/** 기록하지 않는 변경 (아이템 목록을 받아 이름을 맞추는 것, 실행 취소 자체) */
+let recording = true;
+const quietly = (fn: () => void) => {
+  recording = false;
+  try {
+    fn();
+  } finally {
+    recording = true;
+  }
+};
 
 export const useAppStore = create<AppStore>((set) => {
   const updateArena = (arenaIndex: number, update: (arena: ArenaData) => Partial<ArenaData>) =>
@@ -352,7 +383,7 @@ export const useAppStore = create<AppStore>((set) => {
     setCookieRatio: (combo, ratio) =>
       set((state) => ({ arenas: state.arenas.map((arena) => ({ ...arena, [combo]: ratio })) })),
 
-    setGameData: (gameData) => set((state) => ({ gameData, gameDataError: false, ...resolveBoardItems(pickBoard(state), gameData) })),
+    setGameData: (gameData) => quietly(() => set((state) => ({ gameData, gameDataError: false, ...resolveBoardItems(pickBoard(state), gameData) }))),
 
     // 아이템 목록 (빌드 때 생성된 JSON). 잠깐 끊겨도 몇 번 다시 시도한다
     loadGameData: async () => {
@@ -391,6 +422,15 @@ export const useAppStore = create<AppStore>((set) => {
     setFontSettings: (settings) => set((state) => ({ fontSettings: { ...state.fontSettings, ...settings } })),
     setDisplaySettings: (settings) => set((state) => ({ displaySettings: { ...state.displaySettings, ...settings } })),
     setBoardStyle: (style) => set((state) => ({ boardStyle: { ...state.boardStyle, ...style } })),
+    setLayout: (key, offset) => set((state) => ({ boardStyle: { ...state.boardStyle, layout: { ...state.boardStyle.layout, [key]: offset } } })),
+
+    canUndo: false,
+    undo: () => {
+      const board = past.pop();
+      if (!board) return;
+      editing = false;
+      quietly(() => set({ ...board, canUndo: past.length > 0 }));
+    },
   };
 });
 
@@ -438,5 +478,30 @@ if (typeof window !== 'undefined') {
     clearTimeout(timer);
     timer = setTimeout(save, 300);
   });
+
+  // 실행 취소 기록. 새로 누르기 시작하면 새 편집이고, 누르고 있는 동안(끌기)이나 0.5초 안에 이어진 변경은 같은 편집이다
+  let before = pickBoard(useAppStore.getState());
+  let pressed = false;
+  let idle: ReturnType<typeof setTimeout> | undefined;
+  const endEdit = () => {
+    clearTimeout(idle);
+    idle = setTimeout(() => (editing = pressed), 500);
+  };
+  useAppStore.subscribe((state) => {
+    const board = pickBoard(state);
+    if (Object.keys(board).every((k) => board[k as keyof BoardState] === before[k as keyof BoardState])) return;
+    const previous = before;
+    before = board;
+    if (!recording) return;
+    if (!editing) {
+      past.push(previous);
+      if (past.length > HISTORY_LIMIT) past.shift();
+      editing = true;
+      if (!state.canUndo) useAppStore.setState({ canUndo: true });
+    }
+    endEdit();
+  });
+  window.addEventListener('pointerdown', () => ((pressed = true), (editing = false)), true);
+  for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type, () => ((pressed = false), editing && endEdit()), true);
   window.addEventListener('pagehide', save);
 }

@@ -5,18 +5,19 @@ import { CSSProperties, KeyboardEvent, PointerEvent, memo, useState } from 'reac
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore, ComboField } from '@/store/useAppStore';
 import { formatScore } from '@/utils/scoreFormatter';
-import { cardStyle, fontFamilyOf, outlineShadow, textGlow, u, withOpacity } from '@/lib/board';
-import { Category, MagicCandyData } from '@/types';
+import { ARENA_HEIGHT, cardStyle, fontFamilyOf, moved, outlineShadow, textGlow, u, withOpacity } from '@/lib/board';
+import { Category, LayoutKey, MagicCandyData } from '@/types';
 import Slot from './Slot';
 import CookiePair from './CookiePair';
 import YoutubeDialog from './YoutubeDialog';
+import { useMoveDrag } from './useMoveDrag';
 
 const CARD_TRIM = 68; // 카드 아래 여백을 위와 같게(12) 맞추려고 줄이는 높이 (보드 px)
 const MIN_RATIO = 30;
 const MAX_RATIO = 70;
 
 /**
- * 아레나 1개의 조합표. 배치(위치·크기)는 기존 디자인 그대로이며,
+ * 아레나 1개의 조합표. 칸 크기는 기존 디자인 그대로이며, 위치는 꾹 눌러 옮길 수 있다 (useMoveDrag, 12개 아레나 공통).
  * 모든 px 값은 u()로 감싸 보드 배율에 맞춰 함께 커지고 작아진다.
  */
 export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) {
@@ -50,6 +51,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
       cookieFit: s.boardStyle.cookieFit,
       mainCookieGap: s.boardStyle.mainCookieGap,
       subCookieGap: s.boardStyle.subCookieGap,
+      layout: s.boardStyle.layout,
     }))
   );
   const openPicker = useAppStore((s) => s.openPicker);
@@ -58,6 +60,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
   const setArenaDish = useAppStore((s) => s.setArenaDish);
   const setCookieRatio = useAppStore((s) => s.setCookieRatio);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
+  const { sectionRef, guides, onPointerDown } = useMoveDrag();
+  const at = (key: LayoutKey) => moved(boardStyle.layout[key]);
 
   const n = arenaIndex + 1;
   const numberColor = fontSettings.numberColor ?? fontSettings.fontColor;
@@ -126,12 +130,14 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
 
   return (
     <section
+      ref={sectionRef}
+      onPointerDown={onPointerDown}
       data-ratio-area
       aria-label={`${n}번 아레나`}
-      className="relative w-full"
+      className="arena relative w-full"
       // 카드를 켜면 맨 아래 칸(보물) 밑의 빈 공간(80)만큼 아래 여백이 위(12)보다 커 보이므로, 카드 바탕은 그만큼 짧게 그리고
       // 아래 아레나를 그만큼 당겨 아레나 사이 간격이 설정값 그대로 보이게 한다 (칸 위치와 크기는 그대로)
-      style={{ height: u(425), ...(boardStyle.card && { marginBottom: u(-CARD_TRIM) }) }}
+      style={{ height: u(ARENA_HEIGHT), ...(boardStyle.card && { marginBottom: u(-CARD_TRIM) }) }}
     >
       {boardStyle.card && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0" style={{ bottom: u(CARD_TRIM), ...cardStyle(boardStyle) }} />}
       {/* ===== TOP LAYER (Tab 순서상 먼저: 번호 → 요리 → 나머지) ===== */}
@@ -142,7 +148,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         aria-label={`${n}번 아레나 유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
         title={`유튜브 링크 ${arena.youtubeUrl ? '수정' : '추가'}`}
         className="slot slot-overlay absolute flex items-center justify-center font-bold"
-        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18) }}
+        data-move="number"
+        style={{ zIndex: 30, width: u(48), height: u(48), top: u(12), left: u(12), fontSize: u(fontSettings.numberSize ?? 18), ...at('number') }}
       >
         {boardStyle.numberBg ? (
           <span className="absolute inset-0 rounded-[8px]" style={{ backgroundColor: boardStyle.numberBgColor }} aria-hidden="true" />
@@ -169,7 +176,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         onSelect={pick('dishes', '요리', arena.dish, (image) => setArenaDish(arenaIndex, image))}
         emptyClassName="badge"
         className="slot-overlay"
-        style={{ zIndex: 30, width: u(60), height: u(60), top: u(12), right: u(12) }}
+        move="dish"
+        style={{ zIndex: 30, width: u(60), height: u(60), top: u(12), right: u(12), ...at('dish') }}
       />
 
       {/* ===== BASE LAYER ===== */}
@@ -183,7 +191,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
           full
           onSelect={[main1.onSelect, main2.onSelect]}
           handle={mainPaired && mainHandle(inGap)}
-          style={{ zIndex: 15, width: '58%', height: '44.3%', top: '22%', left: '2%' }}
+          move="mainCookies"
+          style={{ zIndex: 15, width: '58%', height: '44.3%', top: '22%', left: '2%', ...at('mainCookies') }}
         />
       )}
       <Slot
@@ -192,25 +201,28 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         hideImage={boardStyle.cookieFit}
         labelSize={18}
         imageClassName="object-contain object-bottom"
-        style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%' }}
+        move="mainCookies"
+        style={{ zIndex: 10, width: `${mainCookie1Width}%`, height: '44.3%', top: '22%', left: '2%', ...at('mainCookies') }}
       />
-      {!mainPaired && mainHandle({ position: 'absolute', zIndex: 25, width: '2%', height: '44.3%', top: '22%', left: `${2 + mainCookie1Width}%` })}
+      {!mainPaired && mainHandle({ position: 'absolute', zIndex: 25, width: '2%', height: '44.3%', top: '22%', left: `${2 + mainCookie1Width}%`, ...at('mainCookies') })}
       <Slot
         {...main2}
         full
         hideImage={boardStyle.cookieFit}
         labelSize={16}
         imageClassName="object-contain object-bottom"
-        style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%` }}
+        move="mainCookies"
+        style={{ zIndex: 10, width: `${mainCookie2Width}%`, height: '44.3%', top: '22%', left: `${2 + mainCookie1Width + 2}%`, ...at('mainCookies') }}
       />
 
       {/* ===== MID LAYER ===== */}
-      <Slot {...comboSlot('mainCombo', 'pet', 'pets', '펫')} style={{ zIndex: 20, width: u(75), height: u(75), top: '8%', left: '4%' }} />
+      <Slot {...comboSlot('mainCombo', 'pet', 'pets', '펫')} move="pet" style={{ zIndex: 20, width: u(75), height: u(75), top: '8%', left: '4%', ...at('pet') }} />
       {[0, 1, 2].map((t) => (
         <Slot
           key={t}
           {...comboSlot('mainCombo', `treasure${t}` as ComboField, 'treasures', `보물${t + 1}`)}
-          style={{ zIndex: 20, width: u(50), height: u(50), bottom: u(80), left: `calc(2% + ${t * 60} * var(--u))` }}
+          move={`treasure${t}` as LayoutKey}
+          style={{ zIndex: 20, width: u(50), height: u(50), bottom: u(80), left: `calc(2% + ${t * 60} * var(--u))`, ...at(`treasure${t}` as LayoutKey) }}
         />
       ))}
 
@@ -220,8 +232,9 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         label="최고점"
         placeholder="최고점"
         stroke={scoreStroke}
+        move="score"
         // 오른쪽 끝은 요리 칸에 가려지므로 오른쪽 정렬일 때 글자를 그만큼 안쪽에서 끝낸다
-        style={{ ...scoreStyle, zIndex: 20, width: '35%', height: '10%', top: '9%', right: '3%', ...(fontSettings.scoreAlign === 'right' && { paddingRight: u(60) }) }}
+        style={{ ...scoreStyle, zIndex: 20, width: '35%', height: '10%', top: '9%', right: '3%', ...(fontSettings.scoreAlign === 'right' && { paddingRight: u(60) }), ...at('score') }}
       />
 
       {/* 마법사탕 + 축복 (축복은 사탕 우측 하단 1/4에 겹침) */}
@@ -229,7 +242,8 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
         <div
           key={c}
           className={clsx('absolute', !arena.magicCandy[`cookie${c}Candy`] && 'slot-empty')}
-          style={{ zIndex: 20, width: u(72), height: u(72), top: '9%', left: c === 1 ? '38%' : '49%' }}
+          data-move={`candy${c}`}
+          style={{ zIndex: 20, width: u(72), height: u(72), top: '9%', left: c === 1 ? '38%' : '49%', ...at(`candy${c}`) }}
         >
           <Slot
             {...candySlot(`cookie${c}Candy`, 'magicCandies', `${c === 1 ? '선달' : '이달'} 마법사탕`)}
@@ -252,16 +266,17 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
 
       {/* 대체 조합 (width 35%) */}
       <div className="absolute" style={{ zIndex: 20, top: '22%', right: '3%', width: '35%', height: '56%' }}>
-        <Slot {...comboSlot('subCombo', 'pet', 'pets', '대체 펫')} style={{ top: '2%', left: '2%', width: u(40), height: u(40) }} />
+        <Slot {...comboSlot('subCombo', 'pet', 'pets', '대체 펫')} move="subPet" style={{ top: '2%', left: '2%', width: u(40), height: u(40), ...at('subPet') }} />
         <ScoreInput
           arenaIndex={arenaIndex}
           field="subScore"
           label="대체 최고점"
           placeholder="대체 최고점"
           stroke={scoreStroke}
-          style={{ ...scoreStyle, top: '2%', left: `calc(2% + 50 * var(--u))`, right: '2%', height: u(40) }}
+          move="subScore"
+          style={{ ...scoreStyle, top: '2%', left: `calc(2% + 50 * var(--u))`, right: '2%', height: u(40), ...at('subScore') }}
         />
-        <div data-ratio-area className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%' }}>
+        <div data-ratio-area data-move="subCookies" className="absolute flex" style={{ top: '25%', left: '2%', right: '2%', height: '54%', ...at('subCookies') }}>
           {boardStyle.cookieFit && (
             <CookiePair
               images={[sub1.image, sub2.image]}
@@ -270,6 +285,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
               align="right"
               onSelect={[sub1.onSelect, sub2.onSelect]}
               handle={subPaired && subHandle(inGap)}
+              move="subCookies"
               style={{ zIndex: 1, inset: 0 }}
             />
           )}
@@ -300,7 +316,19 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
           key={t}
           {...comboSlot('subCombo', `treasure${t}` as ComboField, 'treasures', `대체 보물${t + 1}`)}
           text={`보물${t + 1}`}
-          style={{ zIndex: 20, width: u(40), height: u(40), bottom: u(80), right: `calc(3% + ${(2 - t) * 50} * var(--u))` }}
+          move={`subTreasure${t}` as LayoutKey}
+          style={{ zIndex: 20, width: u(40), height: u(40), bottom: u(80), right: `calc(3% + ${(2 - t) * 50} * var(--u))`, ...at(`subTreasure${t}` as LayoutKey) }}
+        />
+      ))}
+
+      {/* 꾹 눌러 옮기는 동안 맞춘 줄 */}
+      {guides.map((g) => (
+        <span
+          key={g.axis}
+          data-edit-only
+          aria-hidden="true"
+          className={clsx('move-guide', g.axis)}
+          style={g.axis === 'x' ? { left: u(g.at), top: 0, bottom: 0 } : { top: u(g.at), left: 0, right: 0 }}
         />
       ))}
 
@@ -317,6 +345,7 @@ function ScoreInput({
   placeholder,
   stroke,
   style,
+  move,
 }: {
   arenaIndex: number;
   field: 'score' | 'subScore';
@@ -324,6 +353,7 @@ function ScoreInput({
   placeholder: string;
   stroke?: string; // 외곽선 (text-shadow 값, outlineShadow)
   style: CSSProperties;
+  move: LayoutKey;
 }) {
   const value = useAppStore((s) => s.arenas[arenaIndex][field].value);
   const displayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
@@ -355,6 +385,7 @@ function ScoreInput({
       onChange={(e) => setArenaScore(arenaIndex, field, e.target.value)}
       placeholder={placeholder}
       maxLength={20}
+      data-move={move}
       className={clsx('slot absolute min-w-0 text-ellipsis bg-transparent px-2 py-1 placeholder:text-ink-subtle', !value && 'slot-empty')}
       style={{
         ...style,

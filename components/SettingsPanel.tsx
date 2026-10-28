@@ -67,9 +67,9 @@ const SECTIONS = [
 
 /** 초기화 기준. 이미 만든 공유 링크는 서버에 따로 저장되어 있어 어느 쪽이든 그대로 남는다 */
 const RESET_TEXT = {
-  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백을 처음 상태로 되돌릴까요? 패널의 되돌리기로 취소할 수 있어요.'],
-  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 영상 링크를 모두 지울까요? 되돌릴 수 없어요.'],
-  all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 되돌릴 수 없어요.'],
+  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치를 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
+  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
+  all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
 } as const;
 
 /** 설정 패널. 바꾸는 즉시 조합표에 반영되고, '되돌리기'로 패널을 열었을 때 상태로 돌아간다. */
@@ -415,6 +415,14 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             {style.numberBg && <ColorField label="바탕 색" value={style.numberBgColor} onChange={(numberBgColor) => setS({ numberBgColor })} />}
             <Range label="아레나 사이 간격" value={style.gap} min={0} max={80} onChange={(gap) => setS({ gap })} />
             <Range label="저장 이미지 바깥 여백" value={style.exportPadding} min={0} max={160} step={4} onChange={(exportPadding) => setS({ exportPadding })} />
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-caption text-ink-subtle">아레나의 칸을 꾹 누르면 위치를 옮길 수 있어요. 12개 아레나에 함께 적용돼요.</p>
+              {Object.keys(style.layout).length > 0 && (
+                <Button className="shrink-0" onClick={() => setS({ layout: {} })}>
+                  칸 위치 처음대로
+                </Button>
+              )}
+            </div>
           </Section>
 
           <Section id="reset" title="초기화">
@@ -444,7 +452,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                 variant="danger"
                 onClick={() => {
                   reset(confirm);
-                  // 꾸미기만 되돌린 경우는 패널에 남아 '되돌리기'로 취소할 수 있다
+                  // 꾸미기만 되돌린 경우는 패널에 남아 바뀐 모습을 바로 본다
                   if (confirm !== 'style') onClose();
                   showToast('초기화했어요');
                   setConfirm(null);

@@ -44,6 +44,18 @@ function applyObjectFit(originals: HTMLImageElement[], clones: HTMLImageElement[
   });
 }
 
+/** html2canvas는 CSS translate 속성을 몰라서, 꾹 눌러 옮긴 칸은 같은 이동을 transform으로 바꿔 그린다 */
+function moveToTransform(clonedArea: HTMLElement) {
+  const view = clonedArea.ownerDocument.defaultView!;
+  clonedArea.querySelectorAll<HTMLElement>('[data-move]').forEach((el) => {
+    const cs = view.getComputedStyle(el);
+    if (!cs.translate || cs.translate === 'none') return;
+    const [x, y = '0px'] = cs.translate.split(' ');
+    el.style.transform = `translate(${x}, ${y})${cs.transform === 'none' ? '' : ` ${cs.transform}`}`;
+    el.style.translate = 'none';
+  });
+}
+
 const MAX_PNG_BYTES = 8 * 1024 * 1024;
 
 const COPIED_STYLES = [
@@ -134,6 +146,7 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
         }
         await doc.fonts.ready;
         applyObjectFit(Array.from(captureArea.querySelectorAll('img')), Array.from(clonedArea.querySelectorAll('img')));
+        moveToTransform(clonedArea);
         const fields = 'input:not([type=hidden]), textarea';
         replaceFields(
           Array.from(captureArea.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(fields)),

@@ -296,6 +296,44 @@ input.slot:focus {
   }
 }
 
+/* 칸 꾹 눌러 옮기기 (components/useMoveDrag.ts) */
+.arena {
+  -webkit-touch-callout: none; /* 꾹 누를 때 이미지 저장 메뉴 대신 옮기기 */
+}
+
+.arena .slot:not(input) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+[data-lifted] {
+  outline: 2px dashed #8a5300;
+  outline-offset: 2px;
+  filter: drop-shadow(0 6px 12px rgb(138 83 0 / 0.3));
+}
+
+.is-moving,
+.is-moving * {
+  cursor: grabbing !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+.move-guide {
+  position: absolute;
+  z-index: 40;
+  pointer-events: none;
+  border: 0 dashed #8a5300;
+}
+
+.move-guide.x {
+  border-left-width: 1.5px;
+}
+
+.move-guide.y {
+  border-top-width: 1.5px;
+}
+
 /* 이미지 저장 중: 편집용 표시를 모두 숨긴다 (lib/exportImage.ts) */
 .is-exporting {
   padding: var(--export-pad, 64px) !important;

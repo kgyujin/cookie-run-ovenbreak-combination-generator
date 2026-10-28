@@ -5,6 +5,7 @@ import { CSSProperties, Fragment, ReactNode } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getItemMap } from '@/lib/items';
 import { u } from '@/lib/board';
+import { LayoutKey } from '@/types';
 
 /**
  * 쿠키 크기 자동 맞춤: 선달과 이달 쿠키를 한 쌍으로 나란히 그린다.
@@ -22,6 +23,7 @@ export default function CookiePair({
   onSelect,
   handle,
   style,
+  move,
 }: {
   images: [string, string];
   ratio: number;
@@ -34,6 +36,7 @@ export default function CookiePair({
   /** 두 쿠키가 다 있을 때 사이에 두는 크기 손잡이 */
   handle?: ReactNode;
   style: CSSProperties;
+  move: LayoutKey;
 }) {
   const map = useAppStore((s) => getItemMap(s.gameData));
   const loaded = useAppStore((s) => !!s.gameData);
@@ -56,6 +59,7 @@ export default function CookiePair({
   return (
     <div
       className={clsx('pointer-events-none absolute flex items-end', align === 'left' ? 'justify-start' : 'justify-end')}
+      data-move={move}
       style={{ ...style, containerType: 'size', ['--pair-gap' as string]: parts.length > 1 ? u(gap) : '0px', ['--pair-handle' as string]: u(14) }}
     >
       {parts.map(({ i, src, crop: [x, y, w, h, r], scale }) => (

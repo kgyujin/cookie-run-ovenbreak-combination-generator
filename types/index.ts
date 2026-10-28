@@ -93,7 +93,10 @@ export interface DisplaySettings {
   scoreDisplayType: ScoreDisplayType;
 }
 
-/** 조합표 꾸미기 (배치는 그대로, 겉모습만) */
+/** 아레나 안에서 꾹 눌러 옮길 수 있는 칸 (lib/board.ts LAYOUT_KEYS) */
+export type LayoutKey = (typeof import('@/lib/board').LAYOUT_KEYS)[number];
+
+/** 조합표 꾸미기 (칸 크기는 그대로, 겉모습과 칸 위치만) */
 export interface BoardStyle {
   card: boolean; // 아레나마다 카드 바탕
   cardColor: string;
@@ -114,6 +117,7 @@ export interface BoardStyle {
   cookieFit: boolean; // 쿠키 크기 자동 맞춤 (이미지 여백 무시, 선달/이달 비율대로 크기, 두 쿠키를 간격만큼 띄워 나란히)
   mainCookieGap: number; // 자동 맞춤에서 메인 조합 두 쿠키 사이 간격 (보드 px)
   subCookieGap: number; // 대체 조합 두 쿠키 사이 간격
+  layout: Partial<Record<LayoutKey, [number, number]>>; // 칸을 기본 자리에서 옮긴 거리 [가로, 세로] (보드 px, 12개 아레나 공통)
 }
 
 /** 저장·공유되는 조합표 상태 */

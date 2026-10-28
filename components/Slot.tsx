@@ -5,6 +5,7 @@ import { CSSProperties } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { getItemMap } from '@/lib/items';
 import { u } from '@/lib/board';
+import { LayoutKey } from '@/types';
 
 /**
  * 조합표의 이미지 칸 하나. 누르면 아이템 선택 창이 열린다.
@@ -23,6 +24,7 @@ export default function Slot({
   full = false,
   hideImage = false,
   labelClassName,
+  move,
 }: {
   image: string;
   /** 스크린리더용 이름 */
@@ -41,6 +43,8 @@ export default function Slot({
   hideImage?: boolean;
   /** 빈 칸 글자 위치 조정 (다른 칸이 겹쳐 올라오는 자리 피하기) */
   labelClassName?: string;
+  /** 꾹 눌러 옮길 때 함께 움직이는 칸 이름 (useMoveDrag) */
+  move?: LayoutKey;
 }) {
   const item = useAppStore((s) => (image ? getItemMap(s.gameData).get(image) : undefined));
   const name = item?.name;
@@ -53,6 +57,7 @@ export default function Slot({
       title={item?.description ?? name}
       className={clsx('slot absolute overflow-hidden', !image && emptyClassName, className)}
       style={style}
+      data-move={move}
     >
       {image && hideImage ? null : image ? (
         <img src={(!full && item?.thumb) || image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
