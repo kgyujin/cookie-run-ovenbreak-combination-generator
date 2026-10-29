@@ -2,8 +2,8 @@ import type * as TF from '@tensorflow/tfjs-core';
 import { Pixels, bleedColors, hasTransparency } from './imageOps';
 
 /**
- * AI 2배 키우기 (관리 페이지 전용). Real-ESRGAN 애니 그림용 모델(RRDBNet 6블록, 4배)을 브라우저의 WebGL로 돌리고,
- * 4배로 키운 결과를 반으로 줄여 2배를 만든다 (바로 2배로 키우는 것보다 선이 깨끗함).
+ * AI로 키우기 (관리 페이지 전용). Real-ESRGAN 애니 그림용 모델(RRDBNet 6블록, 4배)을 브라우저의 WebGL로 돌린다.
+ * 늘 4배로 키우고, 2배나 3배는 쓰는 쪽에서 줄인다 (바로 작게 키우는 것보다 선이 깨끗함, 배율을 바꿔도 다시 계산하지 않게).
  * 가중치: public/models/realesrgan-x4-anime-6b.bin (scripts/convertUpscaleModel.py로 만든 float16)
  * 투명한 그림은 색과 투명도를 따로 키운다 (투명도도 같은 모델로 키워 테두리가 흐려지지 않게).
  */
@@ -134,41 +134,22 @@ async function upscaleChannels(tf: typeof TF, model: Model, input: Float32Array,
   return out;
 }
 
-/** 2×2 칸을 하나로 (색은 투명도를 곱해 평균해서 투명한 곳의 색이 섞이지 않게) */
-function halve(rgb: Float32Array, alpha: Float32Array | null, W: number, H: number): Pixels {
-  const width = W / 2;
-  const height = H / 2;
+/** 색(0~1)과 투명도(0~1)를 8비트 RGBA로 */
+function toPixels(rgb: Float32Array, alpha: Float32Array | null, width: number, height: number): Pixels {
   const data = new Uint8ClampedArray(width * height * 4);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let a = 0;
-      for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]]) {
-        const p = (y * 2 + dy) * W + x * 2 + dx;
-        const pa = alpha ? alpha[p] : 1;
-        r += rgb[p * 3] * pa;
-        g += rgb[p * 3 + 1] * pa;
-        b += rgb[p * 3 + 2] * pa;
-        a += pa;
-      }
-      const i = (y * width + x) * 4;
-      if (a > 0) {
-        data[i] = (r / a) * 255;
-        data[i + 1] = (g / a) * 255;
-        data[i + 2] = (b / a) * 255;
-      }
-      data[i + 3] = (a / 4) * 255;
-    }
+  for (let p = 0; p < width * height; p++) {
+    data[p * 4] = rgb[p * 3] * 255;
+    data[p * 4 + 1] = rgb[p * 3 + 1] * 255;
+    data[p * 4 + 2] = rgb[p * 3 + 2] * 255;
+    data[p * 4 + 3] = alpha ? alpha[p] * 255 : 255;
   }
   return { width, height, data };
 }
 
 export class UpscaleError extends Error {}
 
-/** 2배로 키운 새 픽셀. onProgress(0~1). signal로 멈추면 AbortError */
-export async function upscale2x(src: Pixels, onProgress: (done: number) => void, signal?: AbortSignal): Promise<Pixels> {
+/** 4배로 키운 새 픽셀. onProgress(0~1). signal로 멈추면 AbortError */
+export async function upscale4x(src: Pixels, onProgress: (done: number) => void, signal?: AbortSignal): Promise<Pixels> {
   let loaded: Awaited<ReturnType<typeof load>>;
   try {
     loaded = await load();
@@ -201,5 +182,5 @@ export async function upscale2x(src: Pixels, onProgress: (done: number) => void,
     bigAlpha = new Float32Array(big.length / 3);
     for (let p = 0; p < bigAlpha.length; p++) bigAlpha[p] = big[p * 3];
   }
-  return halve(bigRgb, bigAlpha, width * SCALE, height * SCALE);
+  return toPixels(bigRgb, bigAlpha, width * SCALE, height * SCALE);
 }

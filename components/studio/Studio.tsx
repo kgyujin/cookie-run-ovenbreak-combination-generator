@@ -5,10 +5,13 @@ import { cloneElement, useCallback, useEffect, useId, useMemo, useRef, useState 
 import { createPortal } from 'react-dom';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES, Rarity, StudioCategory } from '@/lib/studio/config';
 import { CATEGORY_LABELS, MAX_CHANGES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
+import { EditSettings, processImage } from '@/lib/studio/editImage';
+import { upscale4x } from '@/lib/studio/upscale';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { CheckIcon, CookieLogo, EyeIcon, EyeOffIcon, ImageIcon, PinIcon, SearchIcon } from '../ui/icons';
 import ImageEditor from './ImageEditor';
+import { loadPixels, toPngBase64 } from './imageIO';
 import {
   AddDraft,
   ItemEdit,
@@ -1180,7 +1183,7 @@ function EditDialog({
               />
             </label>
             <button type="button" className="block text-caption font-semibold text-primary-ink underline-offset-2 hover:underline" onClick={() => setEditingImage(true)}>
-              이미지 다듬기 (투명하게, 2배로)
+              이미지 다듬기 (투명하게, 크게)
             </button>
             <p className="text-caption text-ink-subtle [@media(hover:none)]:hidden">새 이미지를 여기에 끌어다 놓아도 돼요</p>
             {form.replace && (
@@ -1246,6 +1249,10 @@ function AddDialog({
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const editing = drafts.find((d) => d.key === editingKey);
   const hasRarity = (c: StudioCategory) => RARITY_CATEGORIES.includes(c);
+  // '나머지에도 같은 설정 적용'으로 다듬는 중인 진행 (창을 닫으면 멈춘다)
+  const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
+  const batchAbort = useRef<AbortController | null>(null);
+  useEffect(() => () => batchAbort.current?.abort(), []);
 
   const pick = async (files: ArrayLike<File> | null) => {
     const { ok, errors } = await readImages(files, data.local);
@@ -1270,7 +1277,33 @@ function AddDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** 다듬기 창에서 고른 설정을 나머지 이미지에도 차례로 적용한다 */
+  const applyToOthers = async (exceptKey: string, settings: EditSettings) => {
+    const targets = drafts.filter((d) => d.key !== exceptKey);
+    const { signal } = (batchAbort.current = new AbortController());
+    const failed: string[] = [];
+    setBatch({ done: 0, total: targets.length });
+    for (let i = 0; i < targets.length; i++) {
+      const d = targets[i];
+      if (signal.aborted) return;
+      try {
+        const pixels = await loadPixels([`data:image;base64,${d.image}`]);
+        const result = await processImage(pixels, settings, (p) => upscale4x(p, () => {}, signal));
+        if (signal.aborted) return;
+        change(d.key, await toPngBase64(result));
+      } catch (e) {
+        if (signal.aborted) return;
+        console.error('Failed to edit image:', e);
+        failed.push(d.name);
+      }
+      setBatch({ done: i + 1, total: targets.length });
+    }
+    setBatch(null);
+    if (failed.length) setErrors([`다듬지 못한 이미지가 있어요: ${failed.join(', ')}`]);
+  };
+
   const submit = () => {
+    if (batch) return;
     if (drafts.length === 0) return setErrors(['이미지를 골라 주세요']);
     const result: AddDraft[] = [];
     const problems: string[] = [];
@@ -1303,7 +1336,12 @@ function AddDialog({
               {!data.local && ' (한 번에 3MB까지)'}
             </p>
           )}
-          <Button variant="primary" className="ml-auto" onClick={submit}>
+          {batch && (
+            <p role="status" className="text-caption font-semibold text-ink-muted">
+              같은 설정으로 다듬는 중 {batch.done}/{batch.total}
+            </p>
+          )}
+          <Button variant="primary" className="ml-auto" onClick={submit} aria-disabled={!!batch}>
             {drafts.length > 1 ? `${drafts.length}개 담기` : '담기'}
           </Button>
         </>
@@ -1371,10 +1409,11 @@ function AddDialog({
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-col justify-center gap-1">
-                  <Button variant="ghost" onClick={() => setEditingKey(d.key)} aria-label={`${d.name} 이미지 다듬기`} title="투명하게, 2배로">
+                  {/* 같은 설정으로 다듬는 동안에는 목록을 바꾸지 않는다 */}
+                  <Button variant="ghost" onClick={() => !batch && setEditingKey(d.key)} aria-disabled={!!batch} aria-label={`${d.name} 이미지 다듬기`} title="투명하게, 크게">
                     다듬기
                   </Button>
-                  <Button variant="ghost" onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-label={`${d.name} 빼기`}>
+                  <Button variant="ghost" onClick={() => !batch && setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-disabled={!!batch} aria-label={`${d.name} 빼기`}>
                     빼기
                   </Button>
                 </div>
@@ -1388,9 +1427,11 @@ function AddDialog({
         <ImageEditor
           name={editing.name}
           sources={[`data:image;base64,${editing.image}`]}
-          onApply={(result) => {
+          othersCount={batch ? 0 : drafts.length - 1}
+          onApply={(result, settings, toOthers) => {
             change(editing.key, result);
             setEditingKey(null);
+            if (toOthers) applyToOthers(editing.key, settings);
           }}
           onClose={() => setEditingKey(null)}
         />

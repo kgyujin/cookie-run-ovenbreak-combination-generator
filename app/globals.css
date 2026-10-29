@@ -395,6 +395,13 @@ input.slot:focus {
   height: min(85dvh, 760px);
 }
 
+/* 크게 봐야 하는 창 (관리 페이지 이미지 다듬기): 화면을 거의 다 쓴다 */
+.modal-full {
+  max-width: 96rem;
+  height: min(94dvh, 1100px);
+  max-height: min(94dvh, 1100px);
+}
+
 .modal::backdrop {
   background: rgb(28 25 23 / 0.5);
 }
@@ -526,6 +533,10 @@ input.slot:focus {
   }
   .modal-wide {
     height: 90dvh;
+  }
+  .modal-full {
+    height: 94dvh;
+    max-height: 94dvh;
   }
   .modal[open] {
     animation: slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);

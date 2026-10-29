@@ -98,7 +98,8 @@ export function Range({
   const commit = () => {
     const n = Number(text);
     if (text.trim() === '' || Number.isNaN(n)) return setText(shown);
-    const next = Math.min(max, Math.max(min, n));
+    // 슬라이더처럼 칸 단위(step)에 맞춘다
+    const next = Math.min(max, Math.max(min, Number((min + Math.round((n - min) / step) * step).toFixed(4))));
     onChange(next);
     setText(String(Math.round(next * 100) / 100));
   };
