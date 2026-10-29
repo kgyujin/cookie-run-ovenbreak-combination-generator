@@ -2,34 +2,35 @@
 
 import { useEffect, useState } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
-import { isBoardEmpty, pickBoard, useAppStore } from '@/store/useAppStore';
-import { loadShortLink } from '@/lib/share';
+import { hasBoardData, isBoardEmpty, pickBoard, useAppStore } from '@/store/useAppStore';
+import { loadShortLink, shareIdIn } from '@/lib/share';
 import { track } from '@/lib/analytics';
-import { backgroundCss, backgroundEdgeColor } from '@/lib/board';
 import Toolbar from './Toolbar';
-import Header from './Header';
-import ComboBlock from './ComboBlock';
+import Board from './Board';
 import ImageSelectModal from './ImageSelectModal';
-import Toast from './Toast';
+import { WithToasts } from './Toast';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
 
 function applyShared(board: unknown) {
   const { loadBoard, showToast } = useAppStore.getState();
-  loadBoard(board);
+  try {
+    loadBoard(board);
+  } catch (err) {
+    // 여기서 멈추면 '불러오고 있어요' 알림이 계속 남으므로 실패를 알린다
+    console.error('Failed to apply shared board:', err);
+    showToast('공유된 조합표를 열지 못했어요. 링크를 다시 확인해 주세요', 'error');
+    return;
+  }
   showToast('공유된 조합표를 불러왔어요');
   track('open_shared_link');
 }
 
 /** 조합표 편집 화면. 주소가 /s/<id>(짧은 링크) 또는 /?data=(예전 긴 링크)면 공유된 조합표를 불러온다. */
 export default function Editor() {
-  const arenaCount = useAppStore((s) => s.arenas.length);
-  const background = useAppStore((s) => s.background);
-  const fontSettings = useAppStore((s) => s.fontSettings);
   const picker = useAppStore((s) => s.picker);
   const closePicker = useAppStore((s) => s.closePicker);
   const settingsOpen = useAppStore((s) => s.settingsOpen);
-  const gap = useAppStore((s) => s.boardStyle.gap);
 
   // 게임 데이터 (빌드 때 생성된 JSON)
   useEffect(() => {
@@ -40,33 +41,41 @@ export default function Editor() {
   // 이미 만들던 조합표가 있으면 바로 덮어쓰지 않고 먼저 물어본다.
   const [incoming, setIncoming] = useState<unknown>(null);
   useEffect(() => {
-    const { showToast } = useAppStore.getState();
+    const { showToast, hideToast } = useAppStore.getState();
     const receive = (board: unknown) => {
       window.history.replaceState(null, '', '/'); // 새로고침해도 이후 수정한 내용이 유지되게
-      if (isBoardEmpty(pickBoard(useAppStore.getState()))) applyShared(board);
-      else setIncoming(board);
+      if (!hasBoardData(board)) return showToast('공유 링크를 열 수 없어요', 'error');
+      if (isBoardEmpty(pickBoard(useAppStore.getState()))) return applyShared(board);
+      // 다 받았으니 '불러오고 있어요' 알림은 내리고 물어본다 (지금 것 유지를 골라도 알림이 남지 않게)
+      hideToast();
+      setIncoming(board);
     };
-    const sharePath = window.location.pathname.match(/^\/s\/([^/]*)\/?$/);
-    const shareId = sharePath?.[1].match(/^[A-Za-z0-9]{4,16}$/)?.[0];
-    if (sharePath && !shareId) {
+    const shareId = shareIdIn(window.location.pathname, 'edit');
+    if (shareId === '') {
       window.history.replaceState(null, '', '/');
       showToast('공유 링크 주소가 올바르지 않아요. 주소를 다시 확인해 주세요', 'error');
       return;
     }
     if (shareId) {
+      // 받기 전에 화면이 정리되면(개발 모드에서 효과를 두 번 돌릴 때 등) 늦게 온 결과는 버린다
+      let active = true;
       showToast('공유된 조합표를 불러오고 있어요', 'loading');
       loadShortLink(shareId)
         .then((board) => {
+          if (!active) return;
           if (board) return receive(board);
           window.history.replaceState(null, '', '/');
           showToast('공유 링크를 찾을 수 없어요. 주소를 다시 확인해 주세요', 'error');
         })
         .catch((err) => {
+          if (!active) return;
           // 연결 문제일 때는 주소를 그대로 두어 새로고침으로 다시 시도할 수 있게
           console.error('Failed to load share:', err);
           showToast('공유된 조합표를 불러오지 못했어요. 인터넷 연결을 확인한 뒤 새로고침해 주세요', 'error');
         });
-      return;
+      return () => {
+        active = false;
+      };
     }
     const data = new URLSearchParams(window.location.search).get('data');
     if (!data) return;
@@ -81,59 +90,10 @@ export default function Editor() {
     }
   }, []);
 
-  // 직접 올린 배경 사진은 짧은 blob: 주소로 바꿔서 쓴다 (밝기 등을 바꿀 때마다 수 MB 문자열을 다시 넣지 않게)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const dataUrl = background.imageUrl;
-    if (!dataUrl?.startsWith('data:')) return setPhotoUrl(null);
-    let objectUrl = '';
-    fetch(dataUrl)
-      .then((res) => res.blob())
-      .then((blob) => setPhotoUrl((objectUrl = URL.createObjectURL(blob))))
-      .catch(() => setPhotoUrl(null));
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-      setPhotoUrl(null);
-    };
-  }, [background.imageUrl]);
-
-  useEffect(() => {
-    document.body.style.background = backgroundCss(photoUrl ? { ...background, imageUrl: photoUrl } : background);
-    if (background.type === 'image' && background.imageFit !== 'repeat') document.body.style.backgroundAttachment = 'fixed';
-    document.documentElement.style.setProperty('--page-edge', backgroundEdgeColor(background));
-    // 저장된 조합표와 배경을 적용한 뒤에 보여준다 (빈 화면 → 내 조합표로 바뀌는 깜빡임 방지, layout.tsx)
-    document.documentElement.dataset.ready = '';
-  }, [background, photoUrl]);
-
-  // 직접 올린 글꼴 적용 (FontFace API — 주소가 CSS로 해석되지 않음)
-  useEffect(() => {
-    const url = fontSettings.customFontUrl;
-    if (fontSettings.fontFamily !== 'Custom' || !url) return;
-    const ext = url.match(/^data:font\/(\w+)/)?.[1] ?? url.split('?')[0].split('.').pop();
-    const format = { woff2: 'woff2', woff: 'woff', otf: 'opentype' }[ext ?? ''] ?? 'truetype';
-    const face = new FontFace('CustomFont', `url(${JSON.stringify(url)}) format("${format}")`, { display: 'swap' });
-    face
-      .load()
-      .then(() => document.fonts.add(face))
-      .catch((err) => console.error('Failed to load custom font:', err));
-    return () => {
-      document.fonts.delete(face);
-    };
-  }, [fontSettings.fontFamily, fontSettings.customFontUrl]);
-
   return (
-    <>
+    <WithToasts>
       <Toolbar />
-      <main id="capture-area" className={'board-wrap px-3 py-4 sm:px-8 sm:py-8 lg:p-16' + (settingsOpen ? ' panel-open' : '')}>
-        <div className="board" style={{ ['--gap' as string]: gap }}>
-          <Header />
-          <div className="board-grid">
-            {Array.from({ length: arenaCount }, (_, i) => (
-              <ComboBlock key={i} arenaIndex={i} />
-            ))}
-          </div>
-        </div>
-      </main>
+      <Board className={settingsOpen ? 'panel-open' : undefined} />
       {picker && <ImageSelectModal request={picker} onClose={closePicker} />}
       {incoming !== null && (
         <Modal
@@ -159,7 +119,6 @@ export default function Editor() {
           <p className="p-5 text-body-md text-ink">공유된 조합표를 열면 지금 만들던 조합표가 바뀌어요.</p>
         </Modal>
       )}
-      <Toast />
-    </>
+    </WithToasts>
   );
 }

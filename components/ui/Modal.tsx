@@ -1,9 +1,12 @@
 'use client';
 
-import { ReactNode, useEffect, useId, useRef } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useId, useRef } from 'react';
 import { CloseIcon } from './icons';
 import { restoreFocus } from './restoreFocus';
 import { focusInitial, useScrollArea } from './useScrollArea';
+
+/** 모든 창 안에 함께 넣을 것 (예: 사이트 알림을 창 안에서도 읽어 주는 영역). 쓰는 화면에서 정한다 */
+export const ModalExtras = createContext<ReactNode>(null);
 
 /**
  * 네이티브 <dialog> 기반 창. 포커스 가두기·Esc 닫기·배경 비활성화를 브라우저가 처리하고,
@@ -32,6 +35,7 @@ export default function Modal({
   const pressedOutside = useRef(false);
   const releasedOutside = useRef(false);
   const scrollArea = useScrollArea(bodyRef);
+  const extras = useContext(ModalExtras);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -81,6 +85,7 @@ export default function Modal({
         </div>
         {footer && <div className="flex shrink-0 flex-wrap gap-2 border-t border-line bg-surface-cream px-5 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">{footer}</div>}
       </div>
+      {extras}
     </dialog>
   );
 }

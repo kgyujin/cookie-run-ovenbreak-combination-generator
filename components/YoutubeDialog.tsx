@@ -4,7 +4,7 @@ import { FormEvent, useState } from 'react';
 import { MAX_YOUTUBE_LINKS, MAX_YOUTUBE_TITLE, safeYoutubeUrl, useAppStore } from '@/store/useAppStore';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
-import { CloseIcon, PlayIcon } from './ui/icons';
+import { CloseIcon, PlayIcon, PlusIcon } from './ui/icons';
 
 /** 'youtube.com/...'처럼 앞부분을 빼고 붙여 넣거나 http:// 로 시작해도 https 주소로 맞춘다 */
 const normalize = (url: string) => {
@@ -76,6 +76,7 @@ export default function YoutubeDialog({ arenaIndex, onClose }: { arenaIndex: num
       footer={
         <>
           <Button onClick={add} aria-disabled={full}>
+            <PlusIcon className="h-4 w-4" />
             영상 추가
           </Button>
           <Button type="submit" form="youtube-form" variant="primary" className="ml-auto">

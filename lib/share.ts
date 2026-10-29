@@ -45,6 +45,20 @@ async function uploadDataUrl(dataUrl: string) {
   return url;
 }
 
+/** 공유 링크 종류: 보기 전용은 /v/<id>, 편집 가능은 /s/<id> (같은 공유 데이터. 예전에 보낸 /s/ 링크는 그대로 편집 가능) */
+export type ShareMode = 'view' | 'edit';
+const SHARE_PATH: Record<ShareMode, string> = { view: 'v', edit: 's' };
+
+export const shareUrl = (id: string, mode: ShareMode) => `${window.location.origin}/${SHARE_PATH[mode]}/${id}`;
+
+/** 주소에서 공유 아이디를 읽는다. 그 종류의 공유 주소가 아니면 null, 아이디 모양이 틀리면 '' */
+export function shareIdIn(pathname: string, mode: ShareMode): string | null {
+  const match = pathname.match(new RegExp(`^/${SHARE_PATH[mode]}/([^/]*)/?$`));
+  if (!match) return null;
+  return /^[A-Za-z0-9]{4,16}$/.test(match[1]) ? match[1] : '';
+}
+
+/** 공유 데이터를 저장하고 아이디를 돌려준다 (주소는 shareUrl) */
 export async function createShortLink(board: BoardState) {
   if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Supabase 설정이 없습니다');
   const payload = structuredClone(board);
@@ -54,8 +68,7 @@ export async function createShortLink(board: BoardState) {
   if (payload.fontSettings.customFontUrl?.startsWith('data:')) {
     payload.fontSettings.customFontUrl = await uploadDataUrl(payload.fontSettings.customFontUrl);
   }
-  const id = await rpc<string>('create_share', { payload });
-  return `${window.location.origin}/s/${id}`;
+  return rpc<string>('create_share', { payload });
 }
 
 export async function loadShortLink(id: string): Promise<unknown | null> {

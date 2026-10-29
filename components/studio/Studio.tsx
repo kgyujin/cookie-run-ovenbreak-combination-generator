@@ -8,6 +8,7 @@ import { CATEGORY_LABELS, MAX_CHANGES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABEL
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { CheckIcon, CookieLogo, EyeIcon, EyeOffIcon, ImageIcon, PinIcon, SearchIcon } from '../ui/icons';
+import ImageEditor from './ImageEditor';
 import {
   AddDraft,
   ItemEdit,
@@ -83,19 +84,22 @@ async function readImages(files: ArrayLike<File> | null, local: boolean) {
   return { ok, errors };
 }
 
+/** 아이템 원본 이미지 주소: 방금 저장한 것 → 사이트 → (아직 사이트에 반영 전이면) 저장소 원본 */
+function originalSources(image: string, repo: string, version?: string, preview?: string) {
+  if (preview) return [preview]; // 방금 저장해서 사이트에는 아직 없는 이미지
+  const v = version ? `?v=${version.slice(0, 8)}` : ''; // 이미지를 바꾸면 주소도 바뀌어 예전 그림이 남지 않게
+  return [encodePath(image) + v, `https://raw.githubusercontent.com/${repo}/main${encodePath(`/public${image}`)}`];
+}
+
 /**
- * 아이템 그림: 작은 미리보기 → (아직 사이트에 반영 전이면) 저장소 원본 순서로 시도한다.
+ * 아이템 그림: 작은 미리보기 → 원본 순서로 시도한다.
  * 막 저장한 이미지도 바로 보이게.
  */
 function ItemImage({ image, repo, version, preview, className }: { image: string; repo: string; version?: string; preview?: string; className?: string }) {
   const sources = useMemo(() => {
-    if (preview) return [preview]; // 방금 저장해서 사이트에는 아직 없는 이미지
-    const v = version ? `?v=${version.slice(0, 8)}` : ''; // 이미지를 바꾸면 주소도 바뀌어 예전 그림이 남지 않게
-    return [
-      encodePath(`/thumbs${image.slice('/images'.length).replace(/\.[^.]+$/, '.webp')}`) + v,
-      encodePath(image) + v,
-      `https://raw.githubusercontent.com/${repo}/main${encodePath(`/public${image}`)}`,
-    ];
+    if (preview) return [preview];
+    const v = version ? `?v=${version.slice(0, 8)}` : '';
+    return [encodePath(`/thumbs${image.slice('/images'.length).replace(/\.[^.]+$/, '.webp')}`) + v, ...originalSources(image, repo, version)];
   }, [image, repo, version, preview]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [sources]);
@@ -1077,6 +1081,7 @@ function EditDialog({
     if (ok[0]) set('replace', { image: ok[0].image, size: ok[0].size });
   };
   const [dropping, setDropping] = useState(false);
+  const [editingImage, setEditingImage] = useState(false);
 
   // Alt + ←/→ : 이전/다음 아이템. 창 어디에 포커스가 있어도 받고, 끝에서도 브라우저 '뒤로 가기'로 페이지를 떠나지 않게 막는다
   // (맥의 Option + ←/→ 는 입력칸에서 낱말 단위 이동이라 입력칸 안에서는 그대로 둔다)
@@ -1088,13 +1093,14 @@ function EditDialog({
       if (!e.altKey || e.ctrlKey || e.metaKey || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
       if (mac && (e.target as HTMLElement).matches?.('input, textarea')) return;
       e.preventDefault();
+      if (editingImage) return; // 이미지 다듬기 창이 열려 있는 동안은 아이템을 넘기지 않는다 (다듬던 것이 사라지지 않게)
       const go = e.key === 'ArrowLeft' ? -1 : 1;
       const target = position.index + go;
       if (position.index >= 0 && target >= 0 && target < position.total) submitRef.current(go);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [position.index, position.total]);
+  }, [position.index, position.total, editingImage]);
 
   return (
     <Modal
@@ -1173,6 +1179,9 @@ function EditDialog({
                 }}
               />
             </label>
+            <button type="button" className="block text-caption font-semibold text-primary-ink underline-offset-2 hover:underline" onClick={() => setEditingImage(true)}>
+              이미지 다듬기 (투명하게, 2배로)
+            </button>
             <p className="text-caption text-ink-subtle [@media(hover:none)]:hidden">새 이미지를 여기에 끌어다 놓아도 돼요</p>
             {form.replace && (
               <button type="button" className="block text-caption text-ink-subtle underline underline-offset-2" onClick={() => set('replace', undefined)}>
@@ -1199,6 +1208,17 @@ function EditDialog({
         <ErrorText errors={errors} />
         <button type="submit" hidden />
       </form>
+      {editingImage && (
+        <ImageEditor
+          name={form.name}
+          sources={form.replace ? [`data:image;base64,${form.replace.image}`] : originalSources(item.image, data.repo, item.sha, previews[item.image])}
+          onApply={(replace) => {
+            set('replace', replace);
+            setEditingImage(false);
+          }}
+          onClose={() => setEditingImage(false)}
+        />
+      )}
     </Modal>
   );
 }
@@ -1223,6 +1243,8 @@ function AddDialog({
   const [rarity, setRarity] = useState<Rarity | undefined>();
   const [drafts, setDrafts] = useState<AddDraft[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const editing = drafts.find((d) => d.key === editingKey);
   const hasRarity = (c: StudioCategory) => RARITY_CATEGORIES.includes(c);
 
   const pick = async (files: ArrayLike<File> | null) => {
@@ -1348,15 +1370,31 @@ function AddDialog({
                     )}
                   </div>
                 </div>
-                <Button variant="ghost" className="self-center" onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-label={`${d.name} 빼기`}>
-                  빼기
-                </Button>
+                <div className="flex shrink-0 flex-col justify-center gap-1">
+                  <Button variant="ghost" onClick={() => setEditingKey(d.key)} aria-label={`${d.name} 이미지 다듬기`} title="투명하게, 2배로">
+                    다듬기
+                  </Button>
+                  <Button variant="ghost" onClick={() => setDrafts((list) => list.filter((x) => x.key !== d.key))} aria-label={`${d.name} 빼기`}>
+                    빼기
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>
         )}
         <ErrorText errors={errors} />
       </div>
+      {editing && (
+        <ImageEditor
+          name={editing.name}
+          sources={[`data:image;base64,${editing.image}`]}
+          onApply={(result) => {
+            change(editing.key, result);
+            setEditingKey(null);
+          }}
+          onClose={() => setEditingKey(null)}
+        />
+      )}
     </Modal>
   );
 }

@@ -6,10 +6,12 @@ import { useAppStore } from '@/store/useAppStore';
 import { getItemMap } from '@/lib/items';
 import { u } from '@/lib/board';
 import { LayoutKey } from '@/types';
+import { useViewOnly } from './ViewOnly';
 
 /**
  * 조합표의 이미지 칸 하나. 누르면 아이템 선택 창이 열린다.
  * 비어 있을 때만 카드 모양과 이름표가 보이고, 이미지 저장 시에는 둘 다 숨겨진다 (globals.css .is-exporting).
+ * 보기 전용 화면에서는 누를 수 없는 그림만 그리고, 빈 칸은 아예 그리지 않는다.
  */
 export default function Slot({
   image,
@@ -48,6 +50,19 @@ export default function Slot({
 }) {
   const item = useAppStore((s) => (image ? getItemMap(s.gameData).get(image) : undefined));
   const name = item?.name;
+  const viewOnly = useViewOnly();
+  const picture = image && !hideImage && (
+    <img src={(!full && item?.thumb) || image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
+  );
+
+  if (viewOnly) {
+    if (!image) return null;
+    return (
+      <div role="img" aria-label={name ? `${label}: ${name}` : label} title={item?.description ?? name} className={clsx('absolute overflow-hidden', className)} style={style} data-move={move}>
+        {picture}
+      </div>
+    );
+  }
 
   return (
     <button
@@ -59,8 +74,8 @@ export default function Slot({
       style={style}
       data-move={move}
     >
-      {image && hideImage ? null : image ? (
-        <img src={(!full && item?.thumb) || image} alt="" crossOrigin="anonymous" draggable={false} loading="lazy" decoding="async" className={clsx('absolute inset-0 h-full w-full', imageClassName)} />
+      {image ? (
+        picture
       ) : (
         <span
           data-edit-only

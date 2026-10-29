@@ -2,16 +2,18 @@
 
 import clsx from 'clsx';
 import { KeyboardEvent, ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { safeUrl, useAppStore } from '@/store/useAppStore';
+import { pickTheme, safeUrl, useAppStore } from '@/store/useAppStore';
 import { track } from '@/lib/analytics';
-import { backgroundCss } from '@/lib/board';
+import { HIDDEN_PARTS, backgroundCss } from '@/lib/board';
 import { BACKGROUND_PRESETS, isSameBackground } from '@/lib/backgrounds';
 import { formatScore } from '@/utils/scoreFormatter';
-import { BackgroundData, FontSettings, ScoreDisplayType } from '@/types';
+import { BackgroundData, FontSettings, HiddenPart, ScoreDisplayType } from '@/types';
 import SidePanel from './ui/SidePanel';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
-import { CheckIcon } from './ui/icons';
+import { CheckIcon, EraserIcon, PaletteIcon, ResetIcon, TrashIcon, UndoIcon, UploadIcon } from './ui/icons';
+import { Range, Section, Segmented, Toggle } from './settings/controls';
+import ThemeSection from './settings/ThemeSection';
 
 // 공유 서버(share-assets 버킷)가 받는 형식·크기와 맞춘다
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -64,12 +66,24 @@ const SECTIONS = [
   ['number', '번호'],
   ['cookie', '쿠키 크기'],
   ['style', '카드와 여백'],
+  ['visible', '보이는 영역'],
+  ['theme', '테마'],
 ] as const;
+
+/** 보이는 영역 스위치 이름 (lib/board.ts HIDDEN_PARTS) */
+const PART_LABELS: Record<HiddenPart, string> = {
+  pet: '펫',
+  treasure: '보물',
+  candy: '마법사탕과 축복',
+  dish: '요리',
+  sub: '대체 조합',
+  memo: '메모',
+};
 
 /** 초기화 기준. 이미 만든 공유 링크는 서버에 따로 저장되어 있어 어느 쪽이든 그대로 남는다 */
 const RESET_TEXT = {
-  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치를 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
-  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
+  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치, 보이는 영역을 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
+  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 메모, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
   all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
 } as const;
 
@@ -82,28 +96,21 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
   // 선달/이달 쿠키 비율은 12개 아레나에 함께 적용되므로 첫 아레나 값을 보여 준다
   const mainRatio = useAppStore((s) => s.arenas[0].mainCookieRatio);
   const subRatio = useAppStore((s) => s.arenas[0].subCookieRatio);
-  const { setBackground, setFontSettings: setF, setDisplaySettings, setBoardStyle: setS, setCookieRatio, reset, showToast } = useAppStore.getState();
-  const [snapshot] = useState(() => {
-    const s = useAppStore.getState();
-    return { background: s.background, fontSettings: s.fontSettings, displaySettings: s.displaySettings, boardStyle: s.boardStyle };
-  });
-  const [ratioSnapshot] = useState(() => ({ main: mainRatio, sub: subRatio }));
+  const { setBackground, setFontSettings: setF, setDisplaySettings, setBoardStyle: setS, setCookieRatio, applyTheme, reset, showToast } = useAppStore.getState();
+  // 패널을 열 때의 꾸미기 ('되돌리기'로 돌아갈 모습)
+  const [snapshot] = useState(() => pickTheme(useAppStore.getState()));
   const changed =
     background !== snapshot.background ||
     font !== snapshot.fontSettings ||
     style !== snapshot.boardStyle ||
     scoreDisplayType !== snapshot.displaySettings.scoreDisplayType ||
-    mainRatio !== ratioSnapshot.main ||
-    subRatio !== ratioSnapshot.sub;
+    mainRatio !== snapshot.cookieRatio.main ||
+    subRatio !== snapshot.cookieRatio.sub;
   const [confirm, setConfirm] = useState<'style' | 'content' | 'all' | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
 
   // 합치기(merge)가 아니라 통째로 바꿔야 나중에 추가된 값(번호 색, 글꼴 파일 등)까지 되돌아간다
-  const revert = () => {
-    useAppStore.setState(snapshot);
-    setCookieRatio('mainCookieRatio', ratioSnapshot.main);
-    setCookieRatio('subCookieRatio', ratioSnapshot.sub);
-  };
+  const revert = () => applyTheme(snapshot);
   const setBg = (patch: Partial<BackgroundData>) => setBackground({ ...background, ...patch });
   const [active, setActive] = useState<string>('bg');
   const navRef = useRef<HTMLElement>(null);
@@ -171,6 +178,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <>
             {/* disabled로 바꾸면 누른 직후 키보드 초점이 사라져서 aria-disabled 사용 */}
             <Button onClick={() => changed && revert()} aria-disabled={!changed} className="flex-1">
+              <UndoIcon className="h-4 w-4" />
               되돌리기
             </Button>
             <Button variant="primary" onClick={onClose} className="flex-1">
@@ -322,7 +330,8 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
                 <Range label="가로 이동" value={font.offsetX ?? 0} min={-200} max={200} onChange={(offsetX) => setF({ offsetX })} />
                 <Range label="세로 이동" value={font.offsetY ?? 0} min={-150} max={150} onChange={(offsetY) => setF({ offsetY })} />
                 {(!!font.offsetX || !!font.offsetY) && (
-                  <button type="button" onClick={() => setF({ offsetX: 0, offsetY: 0 })} className="text-caption font-semibold text-primary-ink hover:underline">
+                  <button type="button" onClick={() => setF({ offsetX: 0, offsetY: 0 })} className="inline-flex items-center gap-1 text-caption font-semibold text-primary-ink hover:underline">
+                    <ResetIcon />
                     이동 초기화
                   </button>
                 )}
@@ -420,19 +429,40 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               <p className="text-caption text-ink-subtle">아레나의 칸을 꾹 누르면 위치를 옮길 수 있어요. 12개 아레나에 함께 적용돼요.</p>
               {Object.keys(style.layout).length > 0 && (
                 <Button className="shrink-0" onClick={() => setS({ layout: {} })}>
+                  <ResetIcon />
                   칸 위치 처음대로
                 </Button>
               )}
             </div>
           </Section>
 
+          <Section id="visible" title="보이는 영역">
+            <p className="text-caption text-ink-subtle">끈 영역은 12개 아레나 모두에서 화면과 저장 이미지에 나오지 않아요. 넣어 둔 내용은 지워지지 않아요.</p>
+            {HIDDEN_PARTS.map((part) => (
+              <Toggle
+                key={part}
+                label={PART_LABELS[part]}
+                checked={!style.hidden.includes(part)}
+                onChange={(visible) => setS({ hidden: visible ? style.hidden.filter((p) => p !== part) : [...style.hidden, part] })}
+              />
+            ))}
+          </Section>
+
+          <ThemeSection />
+
           <Section id="reset" title="초기화">
-            <div className="grid grid-cols-3 gap-2">
-              <Button onClick={() => setConfirm('style')}>꾸미기만</Button>
+            {/* 좁은 패널(휴대폰)에서도 아이콘과 글자가 한 줄에 들어가게 버튼 안쪽 여백을 줄인다 */}
+            <div className="grid grid-cols-3 gap-2 [&>button]:gap-1.5 [&>button]:px-2">
+              <Button onClick={() => setConfirm('style')}>
+                <PaletteIcon />
+                꾸미기만
+              </Button>
               <Button className="!text-danger hover:!bg-danger/10" onClick={() => setConfirm('content')}>
+                <EraserIcon />
                 내용만
               </Button>
               <Button className="!text-danger hover:!bg-danger/10" onClick={() => setConfirm('all')}>
+                <TrashIcon />
                 전체
               </Button>
             </div>
@@ -543,38 +573,6 @@ function AlignGrid({
   );
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex cursor-pointer items-center justify-between gap-3">
-      <span className="text-caption font-semibold text-ink-muted">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={clsx('relative h-7 w-12 shrink-0 rounded-full border-[1.5px] transition-colors', checked ? 'border-primary-ink bg-primary-ink' : 'border-ink-subtle bg-surface-sunken')}
-      >
-        <span
-          className={clsx('absolute top-[2.5px] h-5 w-5 rounded-full shadow-e1 transition-[left]', checked ? 'left-[22px] bg-white' : 'left-[2.5px] bg-ink-subtle')}
-          aria-hidden="true"
-        />
-      </button>
-    </label>
-  );
-}
-
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section id={`set-${id}`} aria-labelledby={`set-${id}-title`} className="scroll-mt-2 space-y-4 px-5 py-5">
-      <h3 id={`set-${id}-title`} className="text-label-md text-ink">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
 function Field({ label, children }: { label: string; children: (id: string) => ReactNode }) {
   const id = useId();
   return (
@@ -633,109 +631,6 @@ function Stroke({ width, color, max, onChange }: { width: number; color: string;
       <Range label="외곽선" value={width} min={0} max={max} step={0.5} onChange={(w) => onChange(w, color)} />
       {width > 0 && <ColorField label="외곽선 색" value={color} onChange={(c) => onChange(width, c)} />}
     </>
-  );
-}
-
-/** 슬라이더 + 숫자 직접 입력 */
-function Range({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  unit = 'px',
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  unit?: string;
-  onChange: (v: number) => void;
-}) {
-  const id = useId();
-  const shown = String(Math.round(value * 100) / 100);
-  // 숫자 칸은 입력하는 동안에는 그대로 두고, 칸을 벗어나거나 Enter를 누를 때 범위에 맞춰 적용
-  const [text, setText] = useState(shown);
-  const [prev, setPrev] = useState(shown);
-  if (shown !== prev) {
-    setPrev(shown);
-    setText(shown);
-  }
-  const commit = () => {
-    const n = Number(text);
-    if (text.trim() === '' || Number.isNaN(n)) return setText(shown);
-    const next = Math.min(max, Math.max(min, n));
-    onChange(next);
-    setText(String(Math.round(next * 100) / 100));
-  };
-  return (
-    <div>
-      <div className="flex items-center justify-between">
-        <label htmlFor={id} className="text-caption font-semibold text-ink-muted">
-          {label}
-        </label>
-        <span className="flex items-center rounded-md border border-line bg-surface pr-2 focus-within:border-primary-ink">
-          <input
-            type="number"
-            value={text}
-            min={min}
-            max={max}
-            step={step}
-            aria-label={`${label} 값`}
-            onChange={(e) => setText(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => e.key === 'Enter' && commit()}
-            className="h-8 w-14 bg-transparent pl-2 text-right text-caption tabular-nums text-ink focus:outline-none"
-          />
-          <span className="text-caption text-ink-subtle">{unit}</span>
-        </span>
-      </div>
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="h-9 w-full accent-primary-ink"
-      />
-    </div>
-  );
-}
-
-function Segmented<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: [T, string][];
-  onChange: (v: T) => void;
-}) {
-  const name = useId();
-  return (
-    <fieldset>
-      <legend className="mb-1.5 text-caption font-semibold text-ink-muted">{label}</legend>
-      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(5.5em, 100%), 1fr))` }}>
-        {options.map(([v, text]) => (
-          <label
-            key={v}
-            className={clsx(
-              'relative flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-sm px-1 text-caption font-semibold tabular-nums transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-primary-ink',
-              value === v ? 'bg-surface text-ink shadow-e1 ring-1 ring-ink/40' : 'text-ink-muted hover:text-ink'
-            )}
-          >
-            <input type="radio" className="sr-only" name={name} value={v} checked={value === v} onChange={() => onChange(v)} />
-            {text}
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 }
 
@@ -813,8 +708,9 @@ function FileButton({
       />
       <label
         htmlFor={id}
-        className="flex h-touch cursor-pointer items-center justify-center rounded-md border-[1.5px] border-dashed border-line px-4 text-label-md text-ink-muted transition-colors hover:border-primary-ink hover:text-primary-ink peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-primary-ink"
+        className="flex h-touch cursor-pointer items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed border-line px-4 text-label-md text-ink-muted transition-colors hover:border-primary-ink hover:text-primary-ink peer-focus-visible:outline peer-focus-visible:outline-[3px] peer-focus-visible:outline-primary-ink"
       >
+        <UploadIcon />
         {label}
       </label>
       {error && (

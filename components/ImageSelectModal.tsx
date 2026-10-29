@@ -7,7 +7,7 @@ import { CATEGORY_LABELS, isNew } from '@/lib/items';
 import { GameItem } from '@/types';
 import Modal from './ui/Modal';
 import Button from './ui/Button';
-import { CheckIcon, SearchIcon } from './ui/icons';
+import { CheckIcon, ClearIcon, RefreshIcon, SearchIcon } from './ui/icons';
 
 const RARITY_LABELS = { legendary: '레전더리', epic: '에픽', rare: '레어', common: '커먼' } as const;
 type Rarity = keyof typeof RARITY_LABELS;
@@ -141,6 +141,7 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
           </div>
           {request.current && (
             <Button variant="secondary" onClick={() => select('')}>
+              <ClearIcon />
               선택 해제
             </Button>
           )}
@@ -183,6 +184,7 @@ export default function ImageSelectModal({ request, onClose }: { request: Picker
           <p className="text-label-md text-ink">아이템 목록을 불러오지 못했어요</p>
           <p className="mt-1 text-body-md text-ink-muted">인터넷 연결을 확인해 주세요.</p>
           <Button variant="primary" className="mt-4" onClick={() => (useAppStore.getState().loadGameData(), searchRef.current?.focus())}>
+            <RefreshIcon />
             다시 불러오기
           </Button>
         </div>

@@ -6,6 +6,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { getItemMap } from '@/lib/items';
 import { u } from '@/lib/board';
 import { LayoutKey } from '@/types';
+import { useViewOnly } from './ViewOnly';
 
 /**
  * 쿠키 크기 자동 맞춤: 선달과 이달 쿠키를 한 쌍으로 나란히 그린다.
@@ -13,7 +14,7 @@ import { LayoutKey } from '@/types';
  * - 크기와 간격은 몸통 영역(crop)으로 맞춘다. 양옆으로 뻗은 효과는 잘리지 않고 간격 쪽으로 넘쳐 보이며,
  *   바깥쪽 효과는 영역 안에 들어오게 그만큼 띄운다. 영역보다 넓어지면 비율을 유지한 채 함께 줄어든다
  * - 컨테이너 단위로 크기를 계산하므로 저장 이미지에도 같은 모양으로 그려진다
- * - 칸(Slot)은 그대로 누르는 자리로 두고 그림만 여기서 그린다. 그림을 눌러도 그 쿠키의 선택 창이 열린다
+ * - 칸(Slot)은 그대로 누르는 자리로 두고 그림만 여기서 그린다. 그림을 눌러도 그 쿠키의 선택 창이 열린다 (보기 전용 화면에서는 누를 수 없음)
  */
 export default function CookiePair({
   images,
@@ -41,6 +42,7 @@ export default function CookiePair({
 }) {
   const map = useAppStore((s) => getItemMap(s.gameData));
   const loaded = useAppStore((s) => !!s.gameData);
+  const viewOnly = useViewOnly();
   // 아이템 목록(그림 영역)을 불러오기 전에는 그리지 않는다 (크기가 바뀌며 깜빡이지 않게)
   if (!loaded) return null;
 
@@ -81,8 +83,8 @@ export default function CookiePair({
             )}
             <span
               aria-hidden="true"
-              onClick={onSelect[i]}
-              className="pointer-events-auto relative shrink-0 cursor-pointer"
+              onClick={viewOnly ? undefined : onSelect[i]}
+              className={clsx('relative shrink-0', !viewOnly && 'pointer-events-auto cursor-pointer')}
               style={{
                 width: `calc(${r * scale} * ${unit})`,
                 height: `calc(${scale} * ${unit})`,

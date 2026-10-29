@@ -45,6 +45,7 @@ const nextConfig = {
       beforeFiles: [
         // 짧은 링크는 정적 페이지로 처리 (아이디는 화면에서 주소를 읽어 불러옴 → 서버 함수 실행 없음)
         { source: '/s/:id', destination: '/' },
+        { source: '/v/:id', destination: '/v' },
       ],
     };
   },
