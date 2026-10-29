@@ -257,10 +257,10 @@ export function sanitizeBoard(raw: any): Partial<BoardState> {
   return out;
 }
 
-/** 아무것도 입력하지 않은 조합표인지 (공유 링크를 열 때 덮어쓰기 확인용) */
 /** 공유 링크 등으로 받은 데이터에 쓸 수 있는 조합표 내용이 있는지 (깨진 데이터는 빈 조합표로 열지 않게) */
 export const hasBoardData = (raw: unknown) => Object.keys(sanitizeBoard(raw)).length > 0;
 
+/** 아무것도 입력하지 않은 조합표인지 (공유 링크를 열 때 덮어쓰기 확인용) */
 export function isBoardEmpty(board: BoardState) {
   const filled = (v: string) => !!v;
   return (

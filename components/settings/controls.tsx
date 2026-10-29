@@ -40,17 +40,20 @@ export function Segmented<T extends string>({
   value,
   options,
   onChange,
+  itemWidth = '5.5em',
 }: {
   label: string;
   value: T;
   options: [T, string][];
   onChange: (v: T) => void;
+  /** 한 칸의 가장 작은 너비 (짧은 글자가 많을 때 줄여서 한 줄에) */
+  itemWidth?: string;
 }) {
   const name = useId();
   return (
     <fieldset>
       <legend className="mb-1.5 text-caption font-semibold text-ink-muted">{label}</legend>
-      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(5.5em, 100%), 1fr))` }}>
+      <div className="grid gap-1 rounded-md bg-surface-sunken p-1" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(${itemWidth}, 100%), 1fr))` }}>
         {options.map(([v, text]) => (
           <label
             key={v}

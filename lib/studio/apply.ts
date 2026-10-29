@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES } from './config';
-import { CATEGORY_LABELS, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, StudioOp, cleanName, nameOf } from './ops';
+import { CATEGORY_LABELS, MAX_OPS, MAX_TOTAL_IMAGE_BYTES, NOTE_SYMBOLS, NOTE_SYMBOLS_MESSAGE, StudioOp, cleanName, nameOf } from './ops';
 import type { TreeChange } from './github';
 
 export class OpError extends Error {}
@@ -180,6 +180,7 @@ export async function buildChanges(source: Source, ops: unknown, maxImageBytes =
         const title = String(raw.title ?? '').trim().slice(0, 40);
         const items = strList(raw.items, 20, 100);
         if (!isRealDate(date) || !title || items.length === 0) throw new OpError('업데이트 소식의 날짜, 제목, 내용을 확인해 주세요');
+        if ([title, ...items].some((t) => NOTE_SYMBOLS.test(t))) throw new OpError(`${title}: ${NOTE_SYMBOLS_MESSAGE}`);
         const list = await loadNotes();
         const note = { date, title, items };
         const exists = list.some((n) => sameNote(n, note));

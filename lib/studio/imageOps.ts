@@ -1,8 +1,9 @@
 /**
  * 관리 페이지 이미지 다듬기의 픽셀 계산 (화면과 상관없는 순수 함수, RGBA 8비트).
- * - 투명화: 가장자리와 이어진 배경색 지우기 (여러 색, 가장자리 부드럽게, 배경색이 묻은 테두리 색 되돌리기)
+ * - 투명화: 가장자리와 이어진 배경색 지우기 (여러 색, 가장자리 부드럽게, 배경색이 묻은 테두리 색 되돌리기),
+ *   AI가 찾은 캐릭터 자리만 남기기, 붓으로 지우거나 살리기
  * - 가장자리 깎기, 가장자리 흐리게, 투명한 여백 자르기, 바깥 여백 넣기
- * - 크기 바꾸기 (투명한 곳의 색이 섞이지 않게)
+ * - 크기 바꾸기 (투명한 곳의 색이 섞이지 않게), AI로 키운 그림의 색을 원본에 맞추기
  * - 투명한 곳의 색 채우기 (업스케일할 때 테두리에 검은 띠가 생기지 않게)
  */
 export interface Pixels {
@@ -12,6 +13,23 @@ export interface Pixels {
 }
 
 export type Rgb = [number, number, number];
+
+/** 칸마다 0~1 값 (AI가 찾은 캐릭터 자리) */
+export interface Mask {
+  width: number;
+  height: number;
+  data: Float32Array;
+}
+
+/** 붓으로 그은 한 획. 위치와 굵기는 그림 크기에 대한 비율이라 배율을 바꿔도 같은 자리에 남는다 */
+export interface Stroke {
+  /** true면 지우기, false면 살리기 (지우기 전 그림으로 되돌림) */
+  erase: boolean;
+  /** 붓 지름 (그림 너비에 대한 비율) */
+  size: number;
+  /** 지나간 점 [x, y] (그림 너비, 높이에 대한 비율) */
+  points: [number, number][];
+}
 
 export interface RemoveOptions {
   /** 지울 배경색 (여러 개면 가장 가까운 색 기준) */
@@ -244,34 +262,117 @@ function weights(from: number, to: number) {
 /** width × height로 크기를 바꾼 새 픽셀 (색은 투명도를 곱해서 섞어 투명한 곳의 색이 묻어나지 않게) */
 export function resample(src: Pixels, width: number, height: number): Pixels {
   if (width === src.width && height === src.height) return src;
-  const sw = src.width;
-  const sh = src.height;
-  // 투명도를 곱한 값으로 바꿔 둔다
-  const pre = new Float32Array(sw * sh * 4);
-  for (let p = 0; p < sw * sh; p++) {
-    const a = src.data[p * 4 + 3] / 255;
-    pre[p * 4] = src.data[p * 4] * a;
-    pre[p * 4 + 1] = src.data[p * 4 + 1] * a;
-    pre[p * 4 + 2] = src.data[p * 4 + 2] * a;
-    pre[p * 4 + 3] = src.data[p * 4 + 3];
+  return fromPremultiplied(resampleFloat(premultiplied(src), src.width, src.height, width, height, 4), width, height);
+}
+
+/** 투명도를 곱한 RGBA 실수 배열 (색은 0~255×투명도, 투명도는 0~255) */
+function premultiplied({ width, height, data }: Pixels) {
+  const pre = new Float32Array(width * height * 4);
+  for (let p = 0; p < width * height; p++) {
+    const a = data[p * 4 + 3] / 255;
+    pre[p * 4] = data[p * 4] * a;
+    pre[p * 4 + 1] = data[p * 4 + 1] * a;
+    pre[p * 4 + 2] = data[p * 4 + 2] * a;
+    pre[p * 4 + 3] = data[p * 4 + 3];
   }
-  const wx = weights(sw, width);
-  const wy = weights(sh, height);
-  const mid = new Float32Array(width * sh * 4);
-  for (let y = 0; y < sh; y++)
-    for (let x = 0; x < width; x++)
-      for (const [k, w] of wx[x]) for (let c = 0; c < 4; c++) mid[(y * width + x) * 4 + c] += pre[(y * sw + k) * 4 + c] * w;
-  const out = new Float32Array(width * height * 4);
-  for (let y = 0; y < height; y++)
-    for (const [k, w] of wy[y]) for (let x = 0; x < width; x++) for (let c = 0; c < 4; c++) out[(y * width + x) * 4 + c] += mid[(k * width + x) * 4 + c] * w;
+  return pre;
+}
+
+function fromPremultiplied(pre: Float32Array, width: number, height: number): Pixels {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let p = 0; p < width * height; p++) {
-    const a = out[p * 4 + 3];
+    const a = pre[p * 4 + 3];
     data[p * 4 + 3] = Math.round(a);
     if (a <= 0) continue;
-    for (let c = 0; c < 3; c++) data[p * 4 + c] = Math.round((out[p * 4 + c] / a) * 255);
+    for (let c = 0; c < 3; c++) data[p * 4 + c] = Math.round((pre[p * 4 + c] / a) * 255);
   }
   return { width, height, data };
+}
+
+/** 채널이 channels개인 실수 그림의 크기를 바꾼다 (줄일 때는 넓이 평균, 키울 때는 양선형) */
+export function resampleFloat(src: Float32Array, sw: number, sh: number, width: number, height: number, channels: number) {
+  if (width === sw && height === sh) return src;
+  const wx = weights(sw, width);
+  const wy = weights(sh, height);
+  const mid = new Float32Array(width * sh * channels);
+  for (let y = 0; y < sh; y++)
+    for (let x = 0; x < width; x++)
+      for (const [k, w] of wx[x]) for (let c = 0; c < channels; c++) mid[(y * width + x) * channels + c] += src[(y * sw + k) * channels + c] * w;
+  const out = new Float32Array(width * height * channels);
+  for (let y = 0; y < height; y++)
+    for (const [k, w] of wy[y]) for (let x = 0; x < width; x++) for (let c = 0; c < channels; c++) out[(y * width + x) * channels + c] += mid[(k * width + x) * channels + c] * w;
+  return out;
+}
+
+/**
+ * 크게 키운 그림(big)의 색을 원본(small)에 맞춘다: big을 원본 크기로 줄였을 때와 원본의 차이를 다시 키워 더한다.
+ * AI가 선은 살리되 색을 진하게 바꾸는 것을 되돌린다 (선과 질감은 그대로).
+ */
+export function matchColors(big: Pixels, small: Pixels): Pixels {
+  const preBig = premultiplied(big);
+  const preSmall = premultiplied(small);
+  const down = resampleFloat(preBig, big.width, big.height, small.width, small.height, 4);
+  for (let i = 0; i < down.length; i++) down[i] = preSmall[i] - down[i];
+  const diff = resampleFloat(down, small.width, small.height, big.width, big.height, 4);
+  for (let p = 0; p < big.width * big.height; p++) {
+    const a = Math.min(255, Math.max(0, preBig[p * 4 + 3] + diff[p * 4 + 3]));
+    // 색은 투명도를 넘지 않게 (투명도를 곱한 값이라)
+    for (let c = 0; c < 3; c++) preBig[p * 4 + c] = Math.min(a, Math.max(0, preBig[p * 4 + c] + diff[p * 4 + c]));
+    preBig[p * 4 + 3] = a;
+  }
+  return fromPremultiplied(preBig, big.width, big.height);
+}
+
+/**
+ * AI가 찾은 자리(mask)만 남긴다: level(0~1) 근처 edge 폭 안에서는 반투명하게 잇고, 그보다 낮으면 지우고 높으면 그대로 둔다.
+ * mask는 원본 크기여도 되고, 그림 크기에 맞춰 늘린다.
+ */
+export function applyMask(src: Pixels, mask: Mask, level: number, edge: number): Pixels {
+  const { width, height } = src;
+  const m = resampleFloat(mask.data, mask.width, mask.height, width, height, 1);
+  const lo = level - edge / 2;
+  const hi = level + edge / 2;
+  const data = new Uint8ClampedArray(src.data);
+  for (let p = 0; p < width * height; p++) {
+    const keep = hi > lo ? Math.min(1, Math.max(0, (m[p] - lo) / (hi - lo))) : m[p] >= level ? 1 : 0;
+    data[p * 4 + 3] = Math.round(data[p * 4 + 3] * keep);
+  }
+  return { width, height, data };
+}
+
+/** 붓 자국을 칸마다 0(안 칠함), 1(지우기), 2(살리기)로 (나중에 그은 획이 위에) */
+export function paintStrokes(width: number, height: number, strokes: Stroke[]): Uint8Array {
+  const out = new Uint8Array(width * height);
+  for (const { erase, size, points } of strokes) {
+    const value = erase ? 1 : 2;
+    const r = Math.max(0.5, (size * width) / 2);
+    const stamp = (cx: number, cy: number) => {
+      for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(height - 1, Math.ceil(cy + r)); y++)
+        for (let x = Math.max(0, Math.floor(cx - r)); x <= Math.min(width - 1, Math.ceil(cx + r)); x++)
+          if ((x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 <= r * r) out[y * width + x] = value;
+    };
+    // 점 사이는 붓 반지름의 절반 간격으로 찍어 이어지게
+    let [px, py] = [points[0][0] * width, points[0][1] * height];
+    stamp(px, py);
+    for (const [fx, fy] of points.slice(1)) {
+      const x = fx * width;
+      const y = fy * height;
+      const steps = Math.max(1, Math.ceil(Math.hypot(x - px, y - py) / Math.max(0.5, r / 2)));
+      for (let i = 1; i <= steps; i++) stamp(px + ((x - px) * i) / steps, py + ((y - py) * i) / steps);
+      [px, py] = [x, y];
+    }
+  }
+  return out;
+}
+
+/** 붓 자국대로 지우거나(투명) 살린다(before의 같은 칸으로 되돌림). before와 src는 크기가 같아야 함 */
+export function applyStrokes(src: Pixels, before: Pixels, paint: Uint8Array): Pixels {
+  const data = new Uint8ClampedArray(src.data);
+  for (let p = 0; p < paint.length; p++) {
+    if (paint[p] === 1) data[p * 4 + 3] = 0;
+    else if (paint[p] === 2) data.set(before.data.subarray(p * 4, p * 4 + 4), p * 4);
+  }
+  return { width: src.width, height: src.height, data };
 }
 
 /** 두 그림을 섞는다 (amount 0 = a, 1 = b, 크기가 같아야 함). 색은 투명도를 곱해서 섞어 투명한 곳의 색이 묻어나지 않게 */

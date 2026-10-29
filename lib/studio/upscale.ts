@@ -1,13 +1,25 @@
 import type * as TF from '@tensorflow/tfjs-core';
-import { Pixels, bleedColors, hasTransparency } from './imageOps';
+import { AiError, Graph, halfToFloat, loadErrorMessage, loadGraph, loadTf, once, runGraph } from './graphModel';
+import { Pixels, bleedColors, hasTransparency, matchColors } from './imageOps';
 
 /**
- * AI로 키우기 (관리 페이지 전용). Real-ESRGAN 애니 그림용 모델(RRDBNet 6블록, 4배)을 브라우저의 WebGL로 돌린다.
- * 늘 4배로 키우고, 2배나 3배는 쓰는 쪽에서 줄인다 (바로 작게 키우는 것보다 선이 깨끗함, 배율을 바꿔도 다시 계산하지 않게).
- * 가중치: public/models/realesrgan-x4-anime-6b.bin (scripts/convertUpscaleModel.py로 만든 float16)
+ * AI로 키우기 (관리 페이지 전용). 브라우저의 WebGL로 돌린다. 두 가지 모델 중 고른다.
+ * - waifu2x (CUNet, 2배): 원본 색과 선을 충실히 지킨다. 노이즈 제거 단계를 고르고, 4배는 2배를 두 번 한다.
+ *   가중치: public/models/waifu2x-cunet-2x*.bin (scripts/convertGraphModel.py)
+ * - Real-ESRGAN (애니 그림용 RRDBNet 6블록, 4배): 더 선명하게 그린다. 원본보다 색이 진해지지 않게 결과를 원본 색에 맞춘다.
+ *   가중치: public/models/realesrgan-x4-anime-6b.bin (scripts/convertUpscaleModel.py로 만든 float16)
+ * 2배, 3배는 쓰는 쪽에서 결과를 줄인다 (바로 작게 키우는 것보다 선이 깨끗함, 배율을 바꿔도 다시 계산하지 않게).
  * 투명한 그림은 색과 투명도를 따로 키운다 (투명도도 같은 모델로 키워 테두리가 흐려지지 않게).
  */
+export type Engine = 'waifu2x' | 'esrgan';
+/** waifu2x 노이즈 제거 단계 (-1이면 안 함) */
+export type Noise = -1 | 0 | 1 | 2 | 3;
+
 const MODEL_URL = '/models/realesrgan-x4-anime-6b.bin';
+const waifu2xUrl = (noise: Noise) => `/models/waifu2x-cunet-2x${noise < 0 ? '' : `-noise${noise}`}.bin`;
+/** waifu2x가 조각 둘레에서 더 보는 폭 (모델이 이만큼 줄여서 내놓음) */
+const W2X_CONTEXT = 18;
+const W2X_TILE = 128;
 const FEAT = 64;
 const GROW = 32;
 const BLOCKS = 6;
@@ -39,43 +51,27 @@ function convShapes() {
   return shapes;
 }
 
-/** float16 → float32 */
-function halfToFloat(half: Uint16Array) {
-  const out = new Float32Array(half.length);
-  for (let i = 0; i < half.length; i++) {
-    const h = half[i];
-    const sign = h & 0x8000 ? -1 : 1;
-    const exp = (h >> 10) & 0x1f;
-    const frac = h & 0x3ff;
-    out[i] = exp === 0 ? sign * 2 ** -14 * (frac / 1024) : exp === 31 ? (frac ? NaN : sign * Infinity) : sign * 2 ** (exp - 15) * (1 + frac / 1024);
-  }
-  return out;
-}
+const loadEsrgan = once(async () => {
+  const tf = await loadTf();
+  const res = await fetch(MODEL_URL);
+  if (!res.ok) throw new Error(`모델 파일 (${res.status})`);
+  const weights = halfToFloat(new Uint16Array(await res.arrayBuffer()));
+  const shapes = convShapes();
+  if (shapes.reduce((sum, [inC, outC]) => sum + 9 * inC * outC + outC, 0) !== weights.length) throw new Error('모델 파일 크기가 맞지 않음');
+  let offset = 0;
+  const take = (size: number) => weights.subarray(offset, (offset += size));
+  // tidy: 만드는 도중에 실패하면 이미 만든 텐서도 그래픽 메모리에서 지운다
+  const convs = tf.tidy(() => shapes.map(([inC, outC]) => ({ w: tf.tensor4d(take(9 * inC * outC), [3, 3, inC, outC]), b: tf.tensor1d(take(outC)) })));
+  const body = Array.from({ length: BLOCKS }, (_, block) => Array.from({ length: 3 }, (_, rdb) => convs.slice(1 + (block * 3 + rdb) * 5, 1 + (block * 3 + rdb) * 5 + 5)));
+  const [bodyConv, up1, up2, hr, last] = convs.slice(-5);
+  return { tf, model: { first: convs[0], body, bodyConv, up1, up2, hr, last } };
+});
 
-let loading: Promise<{ tf: typeof TF; model: Model }> | null = null;
-
-/** 계산 도구와 모델을 처음 쓸 때 한 번만 불러온다 (관리 페이지에서만 받음) */
-function load() {
-  loading ??= (async () => {
-    const tf = await import('@tensorflow/tfjs-core');
-    await import('@tensorflow/tfjs-backend-webgl');
-    if (!(await tf.setBackend('webgl'))) throw new Error('webgl');
-    const res = await fetch(MODEL_URL);
-    if (!res.ok) throw new Error(`모델 파일 (${res.status})`);
-    const weights = halfToFloat(new Uint16Array(await res.arrayBuffer()));
-    const shapes = convShapes();
-    if (shapes.reduce((sum, [inC, outC]) => sum + 9 * inC * outC + outC, 0) !== weights.length) throw new Error('모델 파일 크기가 맞지 않음');
-    let offset = 0;
-    const take = (size: number) => weights.subarray(offset, (offset += size));
-    // tidy: 만드는 도중에 실패하면 이미 만든 텐서도 그래픽 메모리에서 지운다
-    const convs = tf.tidy(() => shapes.map(([inC, outC]) => ({ w: tf.tensor4d(take(9 * inC * outC), [3, 3, inC, outC]), b: tf.tensor1d(take(outC)) })));
-    const body = Array.from({ length: BLOCKS }, (_, block) => Array.from({ length: 3 }, (_, rdb) => convs.slice(1 + (block * 3 + rdb) * 5, 1 + (block * 3 + rdb) * 5 + 5)));
-    const [bodyConv, up1, up2, hr, last] = convs.slice(-5);
-    return { tf, model: { first: convs[0], body, bodyConv, up1, up2, hr, last } };
-  })();
-  loading.catch(() => (loading = null)); // 실패하면 다음에 다시 시도
-  return loading;
-}
+const waifu2xModels = new Map<Noise, () => Promise<Graph>>();
+const loadWaifu2x = (noise: Noise) => {
+  if (!waifu2xModels.has(noise)) waifu2xModels.set(noise, once(async () => loadGraph(await loadTf(), waifu2xUrl(noise))));
+  return waifu2xModels.get(noise)!();
+};
 
 /** 모델 한 번 통과: [1, h, w, 3] (0~1) → [1, 4h, 4w, 3] */
 function forward(tf: typeof TF, m: Model, x: TF.Tensor4D): TF.Tensor4D {
@@ -134,6 +130,60 @@ async function upscaleChannels(tf: typeof TF, model: Model, input: Float32Array,
   return out;
 }
 
+/**
+ * 채널 3개(0~1) 그림을 waifu2x로 2배. 그림 바깥은 가장자리 색을 늘려 채우고, 조각마다 둘레 W2X_CONTEXT만큼 더 넣어 계산한다
+ * (모델이 그만큼 줄여서 내놓으므로 조각 경계가 이어진다). 모델은 짝수 크기만 받아서 홀수면 한 칸 늘려 계산하고 자른다.
+ */
+async function waifu2xChannels(tf: typeof TF, graph: Graph, input: Float32Array, width: number, height: number, onTile: () => void, signal?: AbortSignal) {
+  const evenW = width + (width % 2);
+  const evenH = height + (height % 2);
+  const C = W2X_CONTEXT;
+  const PW = evenW + 2 * C;
+  const PH = evenH + 2 * C;
+  const padded = new Float32Array(PW * PH * 3);
+  for (let y = 0; y < PH; y++) {
+    const sy = Math.min(height - 1, Math.max(0, y - C));
+    for (let x = 0; x < PW; x++) {
+      const sx = Math.min(width - 1, Math.max(0, x - C));
+      padded.set(input.subarray((sy * width + sx) * 3, (sy * width + sx) * 3 + 3), (y * PW + x) * 3);
+    }
+  }
+  const W = width * 2;
+  const out = new Float32Array(W * height * 2 * 3);
+  for (let ty = 0; ty < evenH; ty += W2X_TILE) {
+    for (let tx = 0; tx < evenW; tx += W2X_TILE) {
+      signal?.throwIfAborted();
+      const tw = Math.min(W2X_TILE, evenW - tx);
+      const th = Math.min(W2X_TILE, evenH - ty);
+      const iw = tw + 2 * C;
+      const ih = th + 2 * C;
+      const tile = new Float32Array(iw * ih * 3);
+      for (let y = 0; y < ih; y++) tile.set(padded.subarray(((ty + y) * PW + tx) * 3, ((ty + y) * PW + tx + iw) * 3), y * iw * 3);
+      const input4d = tf.tensor4d(tile, [1, ih, iw, 3]);
+      let data: Float32Array;
+      try {
+        const raw = await runGraph(tf, graph, input4d, { signal });
+        const result = tf.tidy(() => tf.clipByValue(raw, 0, 1));
+        raw.dispose();
+        try {
+          data = (await result.data()) as Float32Array;
+        } finally {
+          result.dispose();
+        }
+      } finally {
+        input4d.dispose();
+      }
+      // 결과는 조각의 정확히 2배 (늘려 계산한 칸은 그림 밖이면 버림)
+      const keepW = Math.min(tw, width - tx) * 2;
+      const keepH = Math.min(th, height - ty) * 2;
+      for (let y = 0; y < keepH; y++) out.set(data.subarray(y * tw * 2 * 3, (y * tw * 2 + keepW) * 3), ((ty * 2 + y) * W + tx * 2) * 3);
+      onTile();
+      await tf.nextFrame(); // 화면이 멈추지 않게
+    }
+  }
+  return out;
+}
+
 /** 색(0~1)과 투명도(0~1)를 8비트 RGBA로 */
 function toPixels(rgb: Float32Array, alpha: Float32Array | null, width: number, height: number): Pixels {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -146,22 +196,43 @@ function toPixels(rgb: Float32Array, alpha: Float32Array | null, width: number, 
   return { width, height, data };
 }
 
-export class UpscaleError extends Error {}
+export interface AiOptions {
+  engine: Engine;
+  /** waifu2x 노이즈 제거 단계 */
+  noise: Noise;
+  /** waifu2x를 몇 번 거칠지 (1이면 2배, 2이면 4배) */
+  passes: 1 | 2;
+}
 
-/** 4배로 키운 새 픽셀. onProgress(0~1). signal로 멈추면 AbortError */
-export async function upscale4x(src: Pixels, onProgress: (done: number) => void, signal?: AbortSignal): Promise<Pixels> {
-  let loaded: Awaited<ReturnType<typeof load>>;
+/** AI 결과의 배율 (waifu2x 2배나 4배, Real-ESRGAN 4배) */
+export const aiScale = (o: AiOptions) => (o.engine === 'esrgan' ? 4 : 2 ** o.passes);
+
+/** AI로 키운 새 픽셀 (aiScale배). onProgress(0~1). signal로 멈추면 AbortError */
+export async function upscaleAi(src: Pixels, options: AiOptions, onProgress: (done: number) => void, signal?: AbortSignal): Promise<Pixels> {
+  const { engine, noise, passes } = options;
+  let run: (input: Float32Array, width: number, height: number, onTile: () => void) => Promise<Float32Array>;
+  let tileCount: (width: number, height: number) => number;
   try {
-    loaded = await load();
+    if (engine === 'esrgan') {
+      const { tf, model } = await loadEsrgan();
+      run = (input, width, height, onTile) => upscaleChannels(tf, model, input, width, height, onTile, signal);
+      tileCount = (width, height) => Math.ceil(width / TILE) * Math.ceil(height / TILE);
+    } else {
+      const tf = await loadTf();
+      // 두 번째로 키울 때는 노이즈가 이미 없으므로 노이즈 제거 없는 모델을 쓴다
+      const [first, second] = await Promise.all([loadWaifu2x(noise), passes === 2 ? loadWaifu2x(-1) : null]);
+      run = async (input, width, height, onTile) => {
+        const out = await waifu2xChannels(tf, first, input, width, height, onTile, signal);
+        return second ? waifu2xChannels(tf, second, out, width * 2, height * 2, onTile, signal) : out;
+      };
+      tileCount = (width, height) =>
+        Math.ceil(width / W2X_TILE) * Math.ceil(height / W2X_TILE) + (passes === 2 ? Math.ceil((width * 2) / W2X_TILE) * Math.ceil((height * 2) / W2X_TILE) : 0);
+    }
   } catch (e) {
     console.error('Failed to load upscale model:', e);
-    throw new UpscaleError(
-      e instanceof Error && e.message === 'webgl'
-        ? '이 브라우저에서는 그래픽 가속(WebGL)을 쓸 수 없어 AI로 키울 수 없어요'
-        : 'AI 모델을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 해 주세요'
-    );
+    throw new AiError(loadErrorMessage(e, 'AI로 키울'));
   }
-  const { tf, model } = loaded;
+  onProgress(0); // 모델을 다 불러왔고 계산을 시작한다
   const { width, height } = src;
   const transparent = hasTransparency(src);
   const pixels = transparent ? bleedColors(src) : src;
@@ -172,15 +243,18 @@ export async function upscale4x(src: Pixels, onProgress: (done: number) => void,
     for (let c = 0; c < 3; c++) rgb[p * 3 + c] = pixels.data[p * 4 + c] / 255;
     if (alpha) alpha.fill(pixels.data[p * 4 + 3] / 255, p * 3, p * 3 + 3);
   }
-  const tiles = Math.ceil(width / TILE) * Math.ceil(height / TILE) * (alpha ? 2 : 1);
+  const tiles = tileCount(width, height) * (alpha ? 2 : 1);
   let done = 0;
   const step = () => onProgress(++done / tiles);
-  const bigRgb = await upscaleChannels(tf, model, rgb, width, height, step, signal);
+  const bigRgb = await run(rgb, width, height, step);
   let bigAlpha: Float32Array | null = null;
   if (alpha) {
-    const big = await upscaleChannels(tf, model, alpha, width, height, step, signal);
+    const big = await run(alpha, width, height, step);
     bigAlpha = new Float32Array(big.length / 3);
     for (let p = 0; p < bigAlpha.length; p++) bigAlpha[p] = big[p * 3];
   }
-  return toPixels(bigRgb, bigAlpha, width * SCALE, height * SCALE);
+  const scale = aiScale(options);
+  const result = toPixels(bigRgb, bigAlpha, width * scale, height * scale);
+  // Real-ESRGAN은 원본보다 색이 진해지는 버릇이 있어 원본 색에 맞춘다
+  return engine === 'esrgan' ? matchColors(result, src) : result;
 }

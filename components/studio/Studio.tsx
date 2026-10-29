@@ -4,9 +4,11 @@ import clsx from 'clsx';
 import { cloneElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CATEGORY_FOLDERS, RARITIES, RARITY_CATEGORIES, Rarity, StudioCategory } from '@/lib/studio/config';
-import { CATEGORY_LABELS, MAX_CHANGES, MAX_TOTAL_IMAGE_BYTES, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
+import { CATEGORY_LABELS, MAX_CHANGES, MAX_TOTAL_IMAGE_BYTES, NOTE_SYMBOLS, NOTE_SYMBOLS_MESSAGE, Note, RARITY_LABELS, cleanName } from '@/lib/studio/ops';
+import { objectParticle, topicParticle } from '@/lib/korean';
 import { EditSettings, processImage } from '@/lib/studio/editImage';
-import { upscale4x } from '@/lib/studio/upscale';
+import { findCharacter } from '@/lib/studio/segment';
+import { upscaleAi } from '@/lib/studio/upscale';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
 import { CheckIcon, CookieLogo, EyeIcon, EyeOffIcon, ImageIcon, PinIcon, SearchIcon } from '../ui/icons';
@@ -123,6 +125,7 @@ function ItemImage({ image, repo, version, preview, className }: { image: string
 /** 데이터 관리 화면. 바꾼 내용은 모아 두었다가 한 번에 저장(main에 커밋 1개)한다 */
 export default function Studio() {
   const [status, setStatus] = useState<'loading' | 'login' | 'ready' | 'error'>('loading');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [loginError, setLoginError] = useState('');
   const [data, setData] = useState<StudioData | null>(null);
   const [queue, setQueue] = useState<Queue>(emptyQueue);
@@ -167,6 +170,9 @@ export default function Studio() {
     } else if (res?.status === 401) {
       setStatus('login');
     } else {
+      // 서버가 까닭을 알려 주면 그대로 (로컬 모드의 파일 오류 등)
+      const body = await res?.json().catch(() => null);
+      setLoadError(typeof body?.error === 'string' ? body.error : null);
       setStatus('error');
     }
   }, []);
@@ -322,7 +328,7 @@ export default function Studio() {
           {status === 'error' && (
             <>
               <p role="alert" className="mt-4 text-body-md text-ink-muted">
-                불러오지 못했어요. GitHub 연결이 잠시 불안정할 수 있어요.
+                {loadError ?? '불러오지 못했어요. GitHub 연결이 잠시 불안정할 수 있어요.'}
               </p>
               <Button variant="primary" className="mt-5 w-full" onClick={() => (setStatus('loading'), load())}>
                 다시 시도
@@ -1061,7 +1067,8 @@ function EditDialog({
   const hasRarity = RARITY_CATEGORIES.includes(item.category);
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
   const sharedWith = data.items.filter((i) => i.name === item.name && i.image !== item.image).map((i) => CATEGORY_LABELS[i.category]);
-  const sharedHint = sharedWith.length ? ` 같은 이름의 ${Array.from(new Set(sharedWith)).join(', ')}에도 함께 적용돼요.` : '';
+  const sharedKinds = Array.from(new Set(sharedWith)).join(', ');
+  const sharedHint = sharedWith.length ? ` 같은 이름의 ${sharedKinds}에도 함께 적용돼요.` : '';
 
   /** 담기. 이전/다음으로 넘길 때는 바꾼 것이 있으면 담고 넘긴다 */
   const submit = (go?: -1 | 1) => {
@@ -1114,7 +1121,7 @@ function EditDialog({
           <Button
             variant="danger"
             onClick={() => {
-              if (!confirm(`${item.name}을(를) 지울까요? 저장하기 전에는 되돌릴 수 있어요.`)) return;
+              if (!confirm(`${item.name}${objectParticle(item.name)} 지울까요? 저장하기 전에는 되돌릴 수 있어요.`)) return;
               const error = onDelete();
               if (error) setErrors([error]);
             }}
@@ -1195,7 +1202,7 @@ function EditDialog({
         </div>
         <Field
           label="이름"
-          hint={`이름을 바꿔도 예전 이름으로 저장하거나 공유한 조합표는 그대로 열려요.${sharedWith.length ? ` 같은 이름의 ${Array.from(new Set(sharedWith)).join(', ')}은(는) 따로 바꿔 주세요.` : ''}`}
+          hint={`이름을 바꿔도 예전 이름으로 저장하거나 공유한 조합표는 그대로 열려요.${sharedWith.length ? ` 같은 이름의 ${sharedKinds}${topicParticle(sharedKinds)} 따로 바꿔 주세요.` : ''}`}
         >
           <input className="field" value={form.name} maxLength={40} onChange={(e) => set('name', e.target.value)} data-autofocus="fine-pointer" />
         </Field>
@@ -1241,7 +1248,7 @@ function AddDialog({
   onClose: () => void;
   onSubmit: (drafts: AddDraft[]) => string | null;
 }) {
-  // 새로 넣는 이미지에 붙일 종류와 등급 (넣은 뒤에는 이미지마다 바꿀 수 있다)
+  // 위에서 고른 종류와 등급은 이미 넣은 이미지와 새로 넣을 이미지에 모두 붙는다 (그 뒤에 이미지마다 바꿀 수 있다)
   const [category, setCategory] = useState(initialCategory);
   const [rarity, setRarity] = useState<Rarity | undefined>();
   const [drafts, setDrafts] = useState<AddDraft[]>([]);
@@ -1254,10 +1261,14 @@ function AddDialog({
   const batchAbort = useRef<AbortController | null>(null);
   useEffect(() => () => batchAbort.current?.abort(), []);
 
+  // 파일을 읽는 사이에 위쪽 선택을 바꿔도 새 이미지에는 지금 선택이 붙게
+  const choice = useRef({ category, rarity });
+  choice.current = { category, rarity };
   const pick = async (files: ArrayLike<File> | null) => {
     const { ok, errors } = await readImages(files, data.local);
     setErrors(errors);
-    setDrafts((d) => [...d, ...ok.map((f) => ({ ...f, key: newKey(), category, rarity: hasRarity(category) ? rarity : undefined }))]);
+    const now = choice.current;
+    setDrafts((d) => [...d, ...ok.map((f) => ({ ...f, key: newKey(), category: now.category, rarity: hasRarity(now.category) ? now.rarity : undefined }))]);
   };
   const change = (key: string, patch: Partial<AddDraft>) =>
     setDrafts((list) =>
@@ -1288,7 +1299,10 @@ function AddDialog({
       if (signal.aborted) return;
       try {
         const pixels = await loadPixels([`data:image;base64,${d.image}`]);
-        const result = await processImage(pixels, settings, (p) => upscale4x(p, () => {}, signal));
+        const result = await processImage(pixels, settings, {
+          upscale: (p, options) => upscaleAi(p, options, () => {}, signal),
+          segment: (p) => findCharacter(p, signal),
+        });
         if (signal.aborted) return;
         change(d.key, await toPngBase64(result));
       } catch (e) {
@@ -1358,7 +1372,15 @@ function AddDialog({
       >
         <div className={clsx('grid gap-3', hasRarity(category) && 'grid-cols-2')}>
           <Field label="종류">
-            <select className="field" value={category} onChange={(e) => setCategory(e.target.value as StudioCategory)}>
+            <select
+              className="field"
+              value={category}
+              onChange={(e) => {
+                const next = e.target.value as StudioCategory;
+                setCategory(next);
+                setDrafts((list) => list.map((d) => ({ ...d, category: next, rarity: hasRarity(next) ? (d.rarity ?? rarity) : undefined })));
+              }}
+            >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {CATEGORY_LABELS[c]}
@@ -1366,18 +1388,26 @@ function AddDialog({
               ))}
             </select>
           </Field>
-          {hasRarity(category) && <RaritySelect value={rarity} onChange={setRarity} />}
+          {hasRarity(category) && (
+            <RaritySelect
+              value={rarity}
+              onChange={(next) => {
+                setRarity(next);
+                setDrafts((list) => list.map((d) => (hasRarity(d.category) ? { ...d, rarity: next } : d)));
+              }}
+            />
+          )}
         </div>
         <DropZone onFiles={pick} local={data.local} />
         {drafts.length > 0 && (
           <ul className="space-y-2" aria-label="올릴 이미지">
-            {drafts.map((d) => (
+            {drafts.map((d, i) => (
               <li key={d.key} className="flex gap-3 rounded-md border border-line p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`data:image;base64,${d.image}`} alt="" className="h-16 w-16 shrink-0 self-center rounded bg-surface-sunken/60 object-contain" />
                 <div className="min-w-0 flex-1 space-y-2">
                   <label className="block">
-                    <span className="sr-only">이름</span>
+                    <span className="sr-only">{i + 1}번째 이미지 이름</span>
                     <input className="field" value={d.name} maxLength={40} onChange={(e) => change(d.key, { name: e.target.value })} />
                   </label>
                   <div className="flex gap-2">
@@ -1703,7 +1733,7 @@ function NotesTab({
     e.preventDefault();
     const items = body.split('\n').map((l) => l.trim()).filter(Boolean);
     if (!date || !title.trim() || items.length === 0) return setErrors(['날짜, 제목, 내용을 모두 적어 주세요']);
-    if (items.some((l) => /[·ㅡ]/.test(l) || /[·ㅡ]/.test(title))) return setErrors(['· 나 ㅡ 같은 기호 대신 쉼표나 문장으로 써 주세요']);
+    if ([title, ...items].some((l) => NOTE_SYMBOLS.test(l))) return setErrors([NOTE_SYMBOLS_MESSAGE]);
     if (items.length > 20 || items.some((l) => l.length > 100)) return setErrors(['내용은 20줄까지, 한 줄에 100자까지 쓸 수 있어요']);
     const note = { date, title: title.trim(), items };
     let error: string | null = null;
@@ -1764,8 +1794,8 @@ function NotesTab({
           .filter((n) => !n.from)
           .map((note) => (
             <NoteCard key={note.key} note={note} badge="추가 예정" pending>
-              <NoteAction onClick={() => fill(note, { key: note.key })}>고치기</NoteAction>
-              <NoteAction onClick={() => undo(note.key)}>빼기</NoteAction>
+              <NoteAction of={note.title} onClick={() => fill(note, { key: note.key })}>고치기</NoteAction>
+              <NoteAction of={note.title} onClick={() => undo(note.key)}>빼기</NoteAction>
             </NoteCard>
           ))}
         {updates.map((saved, i) => {
@@ -1774,20 +1804,21 @@ function NotesTab({
           if (pending?.remove)
             return (
               <NoteCard key={i} note={saved} badge="삭제 예정" pending removed>
-                <NoteAction onClick={() => undo(pending.key)}>삭제 취소</NoteAction>
+                <NoteAction of={saved.title} onClick={() => undo(pending.key)}>삭제 취소</NoteAction>
               </NoteCard>
             );
           if (pending)
             return (
               <NoteCard key={i} note={pending} badge="고침 예정" pending>
-                <NoteAction onClick={() => fill(pending, { key: pending.key })}>고치기</NoteAction>
-                <NoteAction onClick={() => undo(pending.key)}>원래대로</NoteAction>
+                <NoteAction of={pending.title} onClick={() => fill(pending, { key: pending.key })}>고치기</NoteAction>
+                <NoteAction of={pending.title} onClick={() => undo(pending.key)}>원래대로</NoteAction>
               </NoteCard>
             );
           return (
             <NoteCard key={i} note={saved}>
-              <NoteAction onClick={() => fill(saved, { from: saved })}>고치기</NoteAction>
+              <NoteAction of={saved.title} onClick={() => fill(saved, { from: saved })}>고치기</NoteAction>
               <NoteAction
+                of={saved.title}
                 onClick={() => {
                   if (!confirm(`'${saved.title}' 소식을 지울까요? 저장하기 전에는 되돌릴 수 있어요.`)) return;
                   const error = onNotes((list) => [...list.filter((n) => !(n.from && sameNote(n.from, saved))), { key: newKey(), ...saved, from: saved, remove: true }]);
@@ -1838,9 +1869,10 @@ function NoteCard({
   );
 }
 
-function NoteAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+/** 소식 카드의 작은 버튼. 화면 읽기 프로그램에는 어느 소식의 버튼인지 함께 읽어 준다 */
+function NoteAction({ of, onClick, children }: { of: string; onClick: () => void; children: string }) {
   return (
-    <button type="button" onClick={onClick} className="-my-2 inline-flex min-h-[36px] items-center text-caption text-ink-subtle underline underline-offset-2 hover:text-ink">
+    <button type="button" onClick={onClick} aria-label={`${of} ${children}`} className="-my-2 inline-flex min-h-[36px] items-center text-caption text-ink-subtle underline underline-offset-2 hover:text-ink">
       {children}
     </button>
   );

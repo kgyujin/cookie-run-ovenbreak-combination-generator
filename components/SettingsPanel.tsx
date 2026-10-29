@@ -63,7 +63,7 @@ const SECTIONS = [
   ['font', '글꼴'],
   ['season', '시즌명'],
   ['score', '점수'],
-  ['number', '번호'],
+  ['number', '아레나 번호'],
   ['cookie', '쿠키 크기'],
   ['style', '카드와 여백'],
   ['visible', '보이는 영역'],
@@ -82,8 +82,8 @@ const PART_LABELS: Record<HiddenPart, string> = {
 
 /** 초기화 기준. 이미 만든 공유 링크는 서버에 따로 저장되어 있어 어느 쪽이든 그대로 남는다 */
 const RESET_TEXT = {
-  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수와 번호 모양, 쿠키 크기, 카드와 여백, 칸 위치, 보이는 영역을 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
-  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 사탕과 축복, 요리, 점수, 메모, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
+  style: ['꾸미기 초기화', '조합은 그대로 두고 배경, 글꼴, 시즌명과 점수, 번호의 모양, 쿠키 크기, 카드와 여백, 칸 위치, 보이는 영역을 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
+  content: ['내용 초기화', '꾸미기는 그대로 두고 시즌명, 시즌 요리와 재료, 아레나마다 넣은 쿠키, 펫, 보물, 마법사탕과 축복, 요리, 점수, 메모, 영상 링크를 모두 지울까요? 실행 취소로 되돌릴 수 있어요.'],
   all: ['전체 초기화', '내용과 꾸미기를 모두 지우고 처음 상태로 되돌릴까요? 실행 취소로 되돌릴 수 있어요.'],
 } as const;
 
@@ -426,7 +426,7 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
             <Range label="아레나 사이 간격" value={style.gap} min={0} max={80} onChange={(gap) => setS({ gap })} />
             <Range label="저장 이미지 바깥 여백" value={style.exportPadding} min={0} max={160} step={4} onChange={(exportPadding) => setS({ exportPadding })} />
             <div className="flex items-center justify-between gap-3">
-              <p className="text-caption text-ink-subtle">아레나의 칸을 꾹 누르면 위치를 옮길 수 있어요. 12개 아레나에 함께 적용돼요.</p>
+              <p className="text-caption text-ink-subtle">아레나의 칸을 꾹 누르면 위치를 옮길 수 있어요. 키보드로는 칸에서 Alt와 방향키를 눌러요 (Shift를 함께 누르면 10px씩). 12개 아레나에 함께 적용돼요.</p>
               {Object.keys(style.layout).length > 0 && (
                 <Button className="shrink-0" onClick={() => setS({ layout: {} })}>
                   <ResetIcon />
@@ -699,11 +699,19 @@ function FileButton({
         accept={accept}
         className="peer sr-only"
         onChange={async (e) => {
-          const file = e.target.files?.[0];
+          const input = e.currentTarget;
+          const file = input.files?.[0];
+          input.value = ''; // 같은 파일을 다시 골라도 바뀌게
           if (!file) return;
           const message = validate(file);
           setError(message);
-          if (!message) onData(await readFile(file), file);
+          if (message) return;
+          try {
+            onData(await readFile(file), file);
+          } catch (err) {
+            console.error('Failed to read file:', err);
+            setError('파일을 읽지 못했어요. 다른 파일로 해 주세요');
+          }
         }}
       />
       <label

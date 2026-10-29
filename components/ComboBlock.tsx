@@ -66,7 +66,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
   const setArenaMemo = useAppStore((s) => s.setArenaMemo);
   const scoreDisplayType = useAppStore((s) => s.displaySettings.scoreDisplayType);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
-  const { sectionRef, guides, onPointerDown } = useMoveDrag();
+  const { sectionRef, guides, onPointerDown, onKeyDown: onMoveKey } = useMoveDrag();
   const viewOnly = useViewOnly();
   const at = (key: LayoutKey) => moved(boardStyle.layout[key]);
   // 설정에서 숨긴 영역은 그리지 않는다 (내용은 그대로 남아 다시 켜면 보인다)
@@ -165,6 +165,7 @@ export default memo(function ComboBlock({ arenaIndex }: { arenaIndex: number }) 
     <section
       ref={sectionRef}
       onPointerDown={viewOnly ? undefined : onPointerDown}
+      onKeyDown={viewOnly ? undefined : onMoveKey}
       data-ratio-area
       aria-label={`${n}번 아레나`}
       className="arena relative w-full"

@@ -179,7 +179,9 @@ export async function exportBoardImage(captureArea: HTMLElement, background: Bac
     if (!blob) throw new Error('이미지 변환 실패');
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = `쿠키런_조합표_${new Date().toISOString().slice(0, 10)}.${ext}`;
+    // 파일 이름의 날짜는 이 컴퓨터 시간대 기준 (UTC로 하면 한국 아침 9시 전에는 어제 날짜가 됨)
+    const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+    link.download = `쿠키런_조합표_${today}.${ext}`;
     link.href = url;
     // 문서에 붙여서 눌러야 파일 이름이 지켜지는 브라우저가 있다
     document.body.appendChild(link);

@@ -1,6 +1,6 @@
 'use client';
 
-import { PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { ARENA_HEIGHT } from '@/lib/board';
 import { LayoutKey } from '@/types';
@@ -10,6 +10,10 @@ const LONG_PRESS = 500; // ms
 const SLOP = 8; // 꾹 누르는 동안 이만큼(화면 px) 움직이면 스크롤이나 클릭으로 본다
 const SNAP = 8; // 다른 칸과 이만큼(화면 px) 가까우면 줄을 맞춘다
 
+const ARROWS: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+/** 저장하거나 공유할 때와 같은 범위 안에서만 (sanitizeBoard) */
+const fit = (v: number, limit: number) => Math.max(-limit, Math.min(limit, Math.round(v * 10) / 10));
+
 /** 맞춘 줄 (보드 px, 아레나 왼쪽 위 기준). 끄는 동안 점선으로 보여 준다 */
 export type Guide = { axis: 'x' | 'y'; at: number };
 
@@ -18,7 +22,7 @@ let dragging = false;
 /**
  * 아레나 칸을 꾹 눌러(0.5초) 옮긴다. [data-move] 칸을 누르면 같은 이름의 칸이 함께 움직이고(12개 아레나 공통),
  * 다른 칸이나 아레나의 왼쪽, 가운데, 오른쪽(위, 가운데, 아래) 줄에 가까워지면 그 줄에 맞춘다.
- * 짧게 누르면 지금처럼 그 칸의 선택 창이 열린다.
+ * 짧게 누르면 지금처럼 그 칸의 선택 창이 열린다. 키보드로는 칸에서 Alt+방향키 (Shift를 함께 누르면 10px씩).
  */
 export function useMoveDrag() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -111,8 +115,6 @@ export function useMoveDrag() {
       moving = true;
       const x = snap('x', ev.clientX - sx);
       const y = snap('y', ev.clientY - sy);
-      // 저장하거나 공유할 때와 같은 범위 안에서만 (sanitizeBoard)
-      const fit = (v: number, limit: number) => Math.max(-limit, Math.min(limit, Math.round(v * 10) / 10));
       useAppStore.getState().setLayout(key, [fit(ox + x.d / unit, 764), fit(oy + y.d / unit, ARENA_HEIGHT)]);
       const lines: Guide[] = [];
       if (x.at !== undefined) lines.push({ axis: 'x', at: (x.at - area.left) / unit });
@@ -149,5 +151,19 @@ export function useMoveDrag() {
     window.addEventListener('contextmenu', swallowClick);
   };
 
-  return { sectionRef, guides, onPointerDown };
+  // 키보드로 옮기기 (비율 조절 막대는 방향키를 따로 쓰고, Mac의 입력 칸에서는 Option+방향키가 단어 이동이라 빼고)
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLElement>) => {
+    const dir = ARROWS[e.key];
+    const target = e.target as HTMLElement;
+    const item = target.closest<HTMLElement>('[data-move]');
+    if (!dir || !e.altKey || e.ctrlKey || e.metaKey || !item || target.closest('.ratio-handle')) return;
+    if (/Mac|iPhone|iPad/.test(navigator.platform) && target.matches('input, textarea')) return;
+    e.preventDefault();
+    const key = item.dataset.move as LayoutKey;
+    const step = e.shiftKey ? 10 : 1;
+    const [x, y] = useAppStore.getState().boardStyle.layout[key] ?? [0, 0];
+    useAppStore.getState().setLayout(key, [fit(x + dir[0] * step, 764), fit(y + dir[1] * step, ARENA_HEIGHT)]);
+  };
+
+  return { sectionRef, guides, onPointerDown, onKeyDown };
 }

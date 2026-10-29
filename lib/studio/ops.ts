@@ -46,6 +46,10 @@ export const CATEGORY_LABELS: Record<StudioCategory, string> = {
   blessings: '축복',
 };
 
+/** 업데이트 소식에 쓰지 않는 기호 (scripts/generateImageData.js 검사와 같음) */
+export const NOTE_SYMBOLS = /[·•ㅡ—–]/;
+export const NOTE_SYMBOLS_MESSAGE = "'·', 'ㅡ', '•', '—' 같은 기호 대신 쉼표나 문장으로 써 주세요";
+
 export const RARITY_LABELS: Record<Rarity, string> = { legendary: '레전더리', epic: '에픽', rare: '레어', common: '커먼' };
 
 /** '/images/cookies/epic/파김치.png' → '파김치' */

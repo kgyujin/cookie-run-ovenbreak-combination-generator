@@ -6,9 +6,19 @@ const DIGIT_HAS_FINAL = [true, true, false, true, false, false, true, true, true
  * 사용자가 붙인 이름을 문장에 넣을 때 '테마 2 테마를'처럼 같은 말이 반복되지 않게 한다.
  */
 export function objectParticle(word: string) {
+  return particle(word, '을', '를');
+}
+
+/** 이름 뒤에 붙는 보조사 (쿠키는, 펫은). 받침을 알 수 없으면 '은(는)' */
+export function topicParticle(word: string) {
+  return particle(word, '은', '는');
+}
+
+/** 끝 글자에 받침이 있으면 withFinal, 없으면 without, 알 수 없으면 둘 다 */
+function particle(word: string, withFinal: string, without: string) {
   const last = word.trim().slice(-1);
   const code = last.charCodeAt(0);
-  if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 ? '을' : '를';
-  if (/[0-9]/.test(last)) return DIGIT_HAS_FINAL[Number(last)] ? '을' : '를';
-  return '을(를)';
+  if (code >= 0xac00 && code <= 0xd7a3) return (code - 0xac00) % 28 ? withFinal : without;
+  if (/[0-9]/.test(last)) return DIGIT_HAS_FINAL[Number(last)] ? withFinal : without;
+  return `${withFinal}(${without})`;
 }

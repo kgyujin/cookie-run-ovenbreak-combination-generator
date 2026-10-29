@@ -47,10 +47,12 @@ export async function GET() {
   const source = session ? githubSource(session.token, BRANCH) : localSource;
   let files, meta, updates;
   try {
-    [files, meta, updates] = await Promise.all([source.listImages(), source.readFile('data/item-meta.json'), source.readFile('data/updates.json')]);
+    const [list, metaFile, updatesFile] = await Promise.all([source.listImages(), source.readFile('data/item-meta.json'), source.readFile('data/updates.json')]);
+    [files, meta, updates] = [list, JSON.parse(metaFile?.text || '{}'), JSON.parse(updatesFile?.text || '[]')];
   } catch (e) {
-    if (!session) throw e;
-    return json({ error: GITHUB_DOWN }, 502);
+    if (session) return json({ error: GITHUB_DOWN }, 502);
+    console.error('Failed to read local data files:', e);
+    return json({ error: '프로젝트 폴더의 데이터 파일(data/item-meta.json, data/updates.json)을 읽지 못했어요. 터미널의 오류를 확인해 주세요' }, 500);
   }
   const items = Array.from(files.entries()).flatMap(([path, sha]) => {
     const [, , folder, ...rest] = path.split('/');
@@ -63,8 +65,8 @@ export async function GET() {
     local: !session,
     repo: REPO,
     items,
-    meta: JSON.parse(meta?.text || '{}'),
-    updates: JSON.parse(updates?.text || '[]'),
+    meta,
+    updates,
   });
 }
 
